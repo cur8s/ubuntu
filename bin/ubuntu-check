@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+export UBUNTU_BOOTSTRAP_ROOT="$ROOT_DIR"
+
+# shellcheck source=../lib/common.sh
+source "$ROOT_DIR/lib/common.sh"
+# shellcheck source=../lib/checks.sh
+source "$ROOT_DIR/lib/checks.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: sudo ./bin/ubuntu-check [--profile NAME]
+
+Runs verification steps for the modules enabled by a profile.
+
+Options:
+  -p, --profile NAME  Profile from profiles/ to verify. Defaults to base.
+  -h, --help          Show this help.
+USAGE
+}
+
+profile_name="base"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -p|--profile)
+      [ "$#" -ge 2 ] || die "missing value for $1"
+      profile_name="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      profile_name="$1"
+      shift
+      ;;
+  esac
+done
+
+load_profile "$profile_name"
+
+: "${UBUNTU_BOOTSTRAP_MODULES:=}"
+
+export UBUNTU_BOOTSTRAP_PROFILE="$profile_name"
+export UBUNTU_BOOTSTRAP_MODULES
+
+require_root
+require_ubuntu
+run_enabled_modules_step verify
+finish_checks

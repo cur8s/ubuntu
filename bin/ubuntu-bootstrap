@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+export UBUNTU_BOOTSTRAP_ROOT="$ROOT_DIR"
+
+# shellcheck source=../lib/common.sh
+source "$ROOT_DIR/lib/common.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: sudo ./bin/ubuntu-bootstrap [--profile NAME]
+
+Runs the configured bootstrap phases for a fresh Ubuntu host.
+
+Options:
+  -p, --profile NAME  Profile from profiles/ to apply. Defaults to base.
+  -h, --help          Show this help.
+USAGE
+}
+
+profile_name="base"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -p|--profile)
+      [ "$#" -ge 2 ] || die "missing value for $1"
+      profile_name="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      profile_name="$1"
+      shift
+      ;;
+  esac
+done
+
+load_profile "$profile_name"
+
+: "${UBUNTU_BOOTSTRAP_PHASES:=00-preflight 10-base-system 20-security 30-networking 40-third-party-repos 50-packages 60-services 90-verify}"
+: "${UBUNTU_BOOTSTRAP_MODULES:=}"
+
+export UBUNTU_BOOTSTRAP_PROFILE="$profile_name"
+export UBUNTU_BOOTSTRAP_PHASES
+export UBUNTU_BOOTSTRAP_MODULES
+export UBUNTU_APT_UPDATE_STAMP="${UBUNTU_APT_UPDATE_STAMP:-/tmp/ubuntu-bootstrap-apt-updated.$$}"
+
+log "using profile: $profile_name"
+log "enabled modules: ${UBUNTU_BOOTSTRAP_MODULES:-none}"
+
+for phase in $UBUNTU_BOOTSTRAP_PHASES; do
+  run_phase "$phase"
+done
+
+log "bootstrap complete"

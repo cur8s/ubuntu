@@ -4,6 +4,34 @@ This repository contains scripts and supporting tools for turning a fresh Ubuntu
 
 The project will collect repeatable setup steps for system updates, security hardening, users and access, networking, observability, runtime dependencies, and operational checks.
 
+## Usage
+
+Run the bootstrap entrypoint on a fresh Ubuntu host:
+
+```sh
+sudo ./bin/ubuntu-bootstrap --profile base
+```
+
+Profiles live in `profiles/` and select the modules that should be applied to a host. The default `base` profile is intentionally conservative; cloud, bare-metal, and k3s-oriented profiles can enable additional modules such as Tailscale and osquery.
+
+Run verification checks without applying changes:
+
+```sh
+sudo ./bin/ubuntu-check --profile base
+```
+
+## Repository Layout
+
+- `bin/`: user-facing entrypoints.
+- `lib/`: shared shell helpers for logging, APT, systemd, and checks.
+- `profiles/`: host profiles that choose modules and phase order.
+- `phases/`: ordered lifecycle steps run by the bootstrap entrypoint.
+- `modules/`: idempotent units of setup such as SSH, firewall, Tailscale, and osquery.
+- `docs/`: project policy and operational notes.
+- `tests/`: local syntax and smoke checks for this repository.
+
+See `docs/support-policy.md` and `docs/third-party-apt-repos.md` for the package and operating system policies that guide module design.
+
 ## Philosophy
 
 The goal of this project is to provide a stable, repeatable foundation for building and running applications. It is not a place to evaluate the latest operating system releases.
