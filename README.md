@@ -12,6 +12,13 @@ Run the bootstrap entrypoint on a fresh Ubuntu host:
 sudo ./bin/ubuntu-bootstrap --profile base
 ```
 
+If you use `mise`, the repository adds `bin/` and `tests/` to PATH when the environment is activated:
+
+```sh
+mise trust
+sudo ubuntu-bootstrap --profile base
+```
+
 Profiles live in `profiles/` and select the modules that should be applied to a host. The default `base` profile is intentionally conservative; cloud, bare-metal, and k3s-oriented profiles can enable additional modules such as Tailscale and osquery.
 
 Run verification checks without applying changes:
@@ -23,12 +30,12 @@ sudo ./bin/ubuntu-check --profile base
 For disposable DigitalOcean VM testing, use the lab wrapper:
 
 ```sh
-./bin/lab-vm init
-./bin/lab-vm init-key
-./bin/lab-vm create
-./bin/lab-vm bootstrap --profile base
-./bin/lab-vm check --profile base
-./bin/lab-vm destroy --force
+lab-vm init
+lab-vm init-key
+lab-vm create
+lab-vm bootstrap --profile base
+lab-vm check --profile base
+lab-vm destroy --force
 ```
 
 See `lab/README.md` for the SSH key and Droplet workflow.
