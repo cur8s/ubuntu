@@ -20,6 +20,19 @@ Run verification checks without applying changes:
 sudo ./bin/ubuntu-check --profile base
 ```
 
+For disposable DigitalOcean VM testing, use the lab wrapper:
+
+```sh
+./bin/lab-vm init
+./bin/lab-vm init-key
+./bin/lab-vm create
+./bin/lab-vm bootstrap --profile base
+./bin/lab-vm check --profile base
+./bin/lab-vm destroy --force
+```
+
+See `lab/README.md` for the SSH key and Droplet workflow.
+
 ## Repository Layout
 
 - `bin/`: user-facing entrypoints.
@@ -28,6 +41,7 @@ sudo ./bin/ubuntu-check --profile base
 - `phases/`: ordered lifecycle steps run by the bootstrap entrypoint.
 - `modules/`: idempotent units of setup such as SSH, firewall, Tailscale, and osquery.
 - `docs/`: project policy and operational notes.
+- `lab/`: local DigitalOcean lab VM configuration and cloud-init templates.
 - `tests/`: local syntax and smoke checks for this repository.
 
 See `docs/support-policy.md` and `docs/third-party-apt-repos.md` for the package and operating system policies that guide module design.
