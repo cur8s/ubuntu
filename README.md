@@ -19,7 +19,7 @@ mise trust
 sudo env TAILSCALE_AUTHKEY=tskey-auth-... ubuntu-bootstrap
 ```
 
-The bootstrap applies one opinionated baseline. Modules are internal implementation units, not user-facing host roles.
+The bootstrap applies one opinionated baseline in a fixed order.
 
 Run verification checks without applying changes:
 
@@ -43,14 +43,12 @@ See `lab/README.md` for the SSH key and Droplet workflow.
 ## Repository Layout
 
 - `bin/`: user-facing entrypoints.
-- `lib/`: shared shell helpers for logging, APT, systemd, and checks.
-- `phases/`: ordered lifecycle steps run by the bootstrap entrypoint.
-- `modules/`: idempotent units of setup such as SSH, firewall, Tailscale, and osquery.
+- `lib/common.sh`: small shared shell primitives.
 - `docs/`: project policy and operational notes.
 - `lab/`: local DigitalOcean lab VM configuration and cloud-init templates.
 - `tests/`: local syntax and smoke checks for this repository.
 
-See `docs/support-policy.md` and `docs/third-party-apt-repos.md` for the package and operating system policies that guide module design.
+See `docs/support-policy.md` and `docs/third-party-apt-repos.md` for the package and operating system policies that guide baseline design.
 
 ## Philosophy
 

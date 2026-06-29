@@ -3,16 +3,15 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
-export UBUNTU_BOOTSTRAP_ROOT="$ROOT_DIR"
 
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: sudo ./bin/ubuntu-bootstrap
+Usage: sudo env TAILSCALE_AUTHKEY=tskey-auth-... ./bin/ubuntu-bootstrap
 
-Applies the opinionated Ubuntu baseline to a fresh host.
+Applies the opinionated Ubuntu 24.04 baseline to a fresh host.
 
 Options:
   -h, --help  Show this help.
@@ -32,15 +31,147 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-configure_baseline
+SSH_PORT="${SSH_PORT:-22}"
+FIREWALL_ALLOW_TCP="${FIREWALL_ALLOW_TCP:-22}"
+TAILSCALE_UP_FLAGS="${TAILSCALE_UP_FLAGS:---ssh}"
 
-export UBUNTU_APT_UPDATE_STAMP="${UBUNTU_APT_UPDATE_STAMP:-/tmp/ubuntu-bootstrap-apt-updated.$$}"
+require_root
+require_ubuntu_2404
+require_command apt-get
+require_command systemctl
 
-log "using opinionated baseline"
-log "baseline modules: ${UBUNTU_BOOTSTRAP_MODULES:-none}"
+codename="$(os_release_value VERSION_CODENAME)"
+log "detected Ubuntu codename: $codename"
+log "applying opinionated Ubuntu baseline"
 
-for phase in $UBUNTU_BOOTSTRAP_PHASES; do
-  run_phase "$phase"
+apt_install \
+  ca-certificates \
+  curl \
+  gnupg \
+  sudo
+
+require_command curl
+require_command gpg
+
+log "installing Tailscale APT source"
+tmp="$(mktemp)"
+curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${codename}.noarmor.gpg" > "$tmp"
+install -D -m 0644 "$tmp" /usr/share/keyrings/tailscale-archive-keyring.gpg
+rm -f "$tmp"
+
+tmp="$(mktemp)"
+curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${codename}.tailscale-keyring.list" > "$tmp"
+install -D -m 0644 "$tmp" /etc/apt/sources.list.d/tailscale.list
+rm -f "$tmp"
+
+log "installing osquery APT source"
+tmp="$(mktemp)"
+keyring_tmp="$(mktemp)"
+curl -fsSL "https://pkg.osquery.io/deb/pubkey.gpg" > "$tmp"
+gpg --dearmor < "$tmp" > "$keyring_tmp"
+install -D -m 0644 "$keyring_tmp" /usr/share/keyrings/osquery-archive-keyring.gpg
+rm -f "$tmp" "$keyring_tmp"
+
+write_file_if_changed /etc/apt/sources.list.d/osquery.list 0644 root root <<'EOF'
+deb [arch=amd64 signed-by=/usr/share/keyrings/osquery-archive-keyring.gpg] https://pkg.osquery.io/deb deb main
+EOF
+
+apt_install \
+  openssh-server \
+  ufw \
+  unattended-upgrades \
+  apt-listchanges \
+  fail2ban \
+  tailscale \
+  osquery
+
+sshd_config_dir="/etc/ssh/sshd_config.d"
+mkdir -p "$sshd_config_dir"
+
+write_file_if_changed "$sshd_config_dir/10-production-baseline.conf" 0644 root root <<EOF
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+AllowTcpForwarding yes
+ClientAliveInterval 300
+ClientAliveCountMax 2
+Port ${SSH_PORT}
+EOF
+
+sshd -t
+if systemctl is-active --quiet ssh.service; then
+  log "systemctl restart ssh.service"
+  systemctl restart ssh.service
+fi
+
+ufw default deny incoming
+ufw default allow outgoing
+for port in $FIREWALL_ALLOW_TCP; do
+  ufw allow "${port}/tcp"
 done
+ufw --force enable
+
+write_file_if_changed /etc/apt/apt.conf.d/20auto-upgrades 0644 root root <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+
+write_file_if_changed /etc/apt/apt.conf.d/52unattended-upgrades-production 0644 root root <<'EOF'
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+EOF
+
+write_file_if_changed /etc/fail2ban/jail.d/sshd-production.conf 0644 root root <<'EOF'
+[sshd]
+enabled = true
+backend = systemd
+maxretry = 5
+findtime = 10m
+bantime = 1h
+EOF
+
+log "systemctl enable --now fail2ban.service"
+systemctl enable --now fail2ban.service
+
+log "systemctl enable --now tailscaled.service"
+systemctl enable --now tailscaled.service
+
+if tailscale status >/dev/null 2>&1; then
+  log "tailscale is already connected"
+else
+  [ -n "${TAILSCALE_AUTHKEY:-}" ] || die "TAILSCALE_AUTHKEY is required to join Tailscale"
+
+  log "joining Tailscale tailnet with provided auth key"
+  # shellcheck disable=SC2086
+  tailscale up --authkey "$TAILSCALE_AUTHKEY" ${TAILSCALE_UP_FLAGS}
+fi
+
+write_file_if_changed /etc/osquery/osquery.conf 0644 root root <<'JSON'
+{
+  "options": {
+    "config_plugin": "filesystem",
+    "logger_plugin": "filesystem",
+    "disable_events": "false"
+  },
+  "schedule": {
+    "system_info": {
+      "query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
+      "interval": 3600
+    },
+    "listening_ports": {
+      "query": "SELECT pid, port, protocol, address FROM listening_ports;",
+      "interval": 3600
+    }
+  }
+}
+JSON
+
+log "systemctl enable --now osqueryd.service"
+systemctl enable --now osqueryd.service
 
 log "bootstrap complete"

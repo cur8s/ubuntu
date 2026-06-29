@@ -7,8 +7,8 @@ export UBUNTU_BOOTSTRAP_ROOT="$ROOT_DIR"
 
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
-# shellcheck source=../lib/doctl.sh
-source "$ROOT_DIR/lib/doctl.sh"
+# shellcheck source=../lab/lib/doctl.sh
+source "$ROOT_DIR/lab/lib/doctl.sh"
 
 usage() {
   cat <<'USAGE'

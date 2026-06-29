@@ -4,7 +4,7 @@
 source "${UBUNTU_BOOTSTRAP_ROOT:?}/lib/common.sh"
 
 lab_state_dir() {
-  printf '%s/.state\n' "$(bootstrap_root)"
+  printf '%s/.state\n' "$UBUNTU_BOOTSTRAP_ROOT"
 }
 
 lab_config_file() {
@@ -16,7 +16,7 @@ lab_state_file() {
 }
 
 lab_cloud_init_file() {
-  printf '%s/lab/cloud-init.yaml\n' "$(bootstrap_root)"
+  printf '%s/lab/cloud-init.yaml\n' "$UBUNTU_BOOTSTRAP_ROOT"
 }
 
 lab_init_config() {
@@ -24,7 +24,7 @@ lab_init_config() {
   local state_dir
   local config_file
 
-  root="$(bootstrap_root)"
+  root="$UBUNTU_BOOTSTRAP_ROOT"
   state_dir="$(lab_state_dir)"
   config_file="$(lab_config_file)"
 
@@ -309,7 +309,7 @@ lab_sync_repo() {
   local target
 
   lab_validate_remote_dir
-  root="$(bootstrap_root)"
+  root="$UBUNTU_BOOTSTRAP_ROOT"
   target="$(lab_ssh_target)"
 
   log "syncing repo to $target:$DO_REMOTE_DIR"
