@@ -2,7 +2,7 @@
 
 This repository contains scripts and supporting tools for turning a fresh Ubuntu 24.04 LTS Server install into a hardened production baseline. It is intended for clean bare-metal or cloud server environments that should all look the same before application-specific repos take over.
 
-The baseline covers system updates, security hardening, SSH, firewalling, Tailscale connectivity, osquery visibility, and verification checks. It intentionally does not install workload runtimes or applications; those belong in separate repos.
+The baseline covers system updates, security hardening, SSH, firewalling, Tailscale connectivity, osquery visibility, Lynis auditing, and verification checks. It intentionally does not install workload runtimes or applications; those belong in separate repos.
 
 ## Usage
 

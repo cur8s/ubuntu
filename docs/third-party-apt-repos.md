@@ -18,4 +18,6 @@ Tailscale uses Tailscale's Ubuntu package repository under `https://pkgs.tailsca
 
 osquery uses osquery's Debian package repository under `https://pkg.osquery.io/deb`.
 
+Lynis uses CISOfy's community Debian package repository under `https://packages.cisofy.com/community/lynis/deb/`.
+
 When adding a new repository-backed package, keep the setup and verification close to the rest of the baseline so the trust decision is easy to audit.

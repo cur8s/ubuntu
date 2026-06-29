@@ -121,6 +121,10 @@ check_apt_package osquery
 check_command osqueryi
 check_systemd_unit osqueryd.service
 
+check_file /etc/apt/sources.list.d/cisofy-lynis.list
+check_apt_package lynis
+check_command lynis
+
 if [ "$CHECK_FAILURES" -gt 0 ]; then
   die "$CHECK_FAILURES verification check(s) failed"
 fi
