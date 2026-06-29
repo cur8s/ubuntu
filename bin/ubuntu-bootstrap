@@ -118,27 +118,4 @@ else
   tailscale up --authkey "$TAILSCALE_AUTHKEY" ${TAILSCALE_UP_FLAGS}
 fi
 
-write_file_if_changed /etc/osquery/osquery.conf 0644 root root <<'JSON'
-{
-  "options": {
-    "config_plugin": "filesystem",
-    "logger_plugin": "filesystem",
-    "disable_events": "false"
-  },
-  "schedule": {
-    "system_info": {
-      "query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
-      "interval": 3600
-    },
-    "listening_ports": {
-      "query": "SELECT pid, port, protocol, address FROM listening_ports;",
-      "interval": 3600
-    }
-  }
-}
-JSON
-
-log "systemctl enable --now osqueryd.service"
-systemctl enable --now osqueryd.service
-
 log "bootstrap complete"

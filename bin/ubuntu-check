@@ -116,10 +116,8 @@ else
 fi
 
 check_file /etc/apt/sources.list.d/osquery.list
-check_file /etc/osquery/osquery.conf
 check_apt_package osquery
 check_command osqueryi
-check_systemd_unit osqueryd.service
 
 check_file /etc/apt/sources.list.d/cisofy-lynis.list
 check_apt_package lynis
