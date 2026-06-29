@@ -14,7 +14,7 @@ Major operating system upgrades should be planned work. They should not happen a
 
 ## Third-Party Packages
 
-Third-party packages may be used when they are operationally important and come from a source we can audit. Each third-party package should live in its own module and should document:
+Third-party packages may be used when they are operationally important and come from a source we can audit. Each third-party package should have a small installer under `install/` and should document:
 
 - The official upstream package source.
 - The APT keyring and source list it installs.

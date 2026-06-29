@@ -43,6 +43,7 @@ See `lab/README.md` for the SSH key and Droplet workflow.
 ## Repository Layout
 
 - `bin/`: user-facing entrypoints.
+- `install/`: simple package installer scripts called by `ubuntu-bootstrap`.
 - `lib/common.sh`: small shared shell primitives.
 - `docs/`: project policy and operational notes.
 - `lab/`: local DigitalOcean lab VM configuration and cloud-init templates.

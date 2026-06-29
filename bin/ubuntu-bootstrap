@@ -52,9 +52,9 @@ apt_install \
 require_command curl
 require_command gpg
 
-"$ROOT_DIR/bin/tailscale-install.sh"
-"$ROOT_DIR/bin/osquery-install.sh"
-"$ROOT_DIR/bin/lynis-install.sh"
+"$ROOT_DIR/install/tailscale.sh"
+"$ROOT_DIR/install/osquery.sh"
+"$ROOT_DIR/install/lynis.sh"
 
 apt_install \
   ufw \
