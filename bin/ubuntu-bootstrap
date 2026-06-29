@@ -40,27 +40,20 @@ require_ubuntu_2404
 require_command apt-get
 require_command systemctl
 require_command sshd
+require_command curl
+require_command gpg
+require_command ufw
+require_command unattended-upgrade
 
 log "applying opinionated Ubuntu baseline"
 
 apt_install \
-  ca-certificates \
-  curl \
-  gnupg \
-  sudo
-
-require_command curl
-require_command gpg
+  apt-listchanges \
+  fail2ban
 
 "$ROOT_DIR/install/tailscale.sh"
 "$ROOT_DIR/install/osquery.sh"
 "$ROOT_DIR/install/lynis.sh"
-
-apt_install \
-  ufw \
-  unattended-upgrades \
-  apt-listchanges \
-  fail2ban
 
 sshd_config_dir="/etc/ssh/sshd_config.d"
 mkdir -p "$sshd_config_dir"
