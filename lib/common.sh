@@ -44,16 +44,6 @@ require_ubuntu_2404() {
   [ "$codename" = "noble" ] || die "this bootstrap only supports Ubuntu 24.04 LTS (noble), found: $codename"
 }
 
-apt_install() {
-  [ "$#" -gt 0 ] || return 0
-
-  log "apt-get update"
-  DEBIAN_FRONTEND=noninteractive apt-get update
-
-  log "apt-get install: $*"
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
-}
-
 write_file_if_changed() {
   local path="$1"
   local mode="${2:-0644}"
