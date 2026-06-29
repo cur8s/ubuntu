@@ -1,8 +1,8 @@
 # Philosophy
 
-This project exists to create a stable, repeatable foundation for building and running applications on Ubuntu hosts.
+This project exists to create a stable, repeatable foundation for building and running applications on Ubuntu 24.04 LTS hosts.
 
-It is not a test bed for the newest operating system release. The default posture is to prefer the previous Ubuntu LTS, apply security updates promptly, and defer major operating system upgrades until the next LTS and the surrounding ecosystem have had time to stabilize.
+It is not a test bed for arbitrary operating system releases. The default posture is to target Ubuntu 24.04 LTS, apply security updates promptly, and treat major operating system upgrades as explicit project work.
 
 The operating principle is boring infrastructure:
 

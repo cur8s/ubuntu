@@ -6,4 +6,4 @@ set -Eeuo pipefail
 # shellcheck source=../lib/common.sh
 source "$UBUNTU_BOOTSTRAP_ROOT/lib/common.sh"
 
-run_enabled_modules_step install
+run_modules_step install

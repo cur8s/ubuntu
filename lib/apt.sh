@@ -29,10 +29,6 @@ apt_install_packages() {
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
 }
 
-apt_package_installed() {
-  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'install ok installed'
-}
-
 apt_install_keyring_from_url() {
   local name="$1"
   local url="$2"

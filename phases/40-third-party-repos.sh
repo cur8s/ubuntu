@@ -6,7 +6,7 @@ set -Eeuo pipefail
 # shellcheck source=../lib/common.sh
 source "$UBUNTU_BOOTSTRAP_ROOT/lib/common.sh"
 
-run_enabled_modules_step repo
+run_modules_step repo
 
 if [ -n "${UBUNTU_APT_UPDATE_STAMP:-}" ]; then
   rm -f "$UBUNTU_APT_UPDATE_STAMP"

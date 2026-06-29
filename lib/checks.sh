@@ -47,7 +47,7 @@ check_apt_package() {
 check_systemd_unit() {
   local unit="$1"
 
-  if command -v systemctl >/dev/null 2>&1 && systemctl is-enabled --quiet "$unit"; then
+  if systemctl is-enabled --quiet "$unit"; then
     check_ok "systemd unit enabled: $unit"
   else
     check_fail "systemd unit not enabled: $unit"

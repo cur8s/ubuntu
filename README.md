@@ -1,6 +1,6 @@
 # Ubuntu Production Bootstrap
 
-This repository contains scripts and supporting tools for turning a fresh Ubuntu install into a hardened production baseline. It is intended for clean Ubuntu environments that should all look the same before application-specific repos take over.
+This repository contains scripts and supporting tools for turning a fresh Ubuntu 24.04 LTS install into a hardened production baseline. It is intended for clean Ubuntu environments that should all look the same before application-specific repos take over.
 
 The baseline covers system updates, security hardening, SSH, firewalling, Tailscale connectivity, osquery visibility, and verification checks. It intentionally does not install workload runtimes or applications; those belong in separate repos.
 
@@ -9,14 +9,14 @@ The baseline covers system updates, security hardening, SSH, firewalling, Tailsc
 Run the bootstrap entrypoint on a fresh Ubuntu host:
 
 ```sh
-sudo ./bin/ubuntu-bootstrap
+sudo env TAILSCALE_AUTHKEY=tskey-auth-... ./bin/ubuntu-bootstrap
 ```
 
 If you use `mise`, the repository adds `bin/` and `tests/` to PATH when the environment is activated:
 
 ```sh
 mise trust
-sudo ubuntu-bootstrap
+sudo env TAILSCALE_AUTHKEY=tskey-auth-... ubuntu-bootstrap
 ```
 
 The bootstrap applies one opinionated baseline. Modules are internal implementation units, not user-facing host roles.
@@ -56,6 +56,6 @@ See `docs/support-policy.md` and `docs/third-party-apt-repos.md` for the package
 
 The goal of this project is to provide a stable, repeatable foundation for building and running applications. It is not a place to evaluate the latest operating system releases.
 
-The baseline targets the previous Ubuntu LTS rather than the current one. This gives the broader ecosystem, including security tools, drivers, and third-party packages, time to mature before it becomes part of the platform.
+The baseline targets Ubuntu 24.04 LTS (`noble`). Hosts running another Ubuntu release fail preflight instead of receiving a partial or best-effort setup.
 
 This project optimizes for boring infrastructure. Security updates and point releases should be applied promptly, but major operating system upgrades are intentionally deferred until the next LTS has been released and the ecosystem has stabilized. The intended result is fewer surprises, lower maintenance overhead, and more time spent developing applications instead of troubleshooting operating system compatibility issues.

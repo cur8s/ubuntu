@@ -38,5 +38,6 @@ configure_baseline
 
 require_root
 require_ubuntu
-run_enabled_modules_step verify
+require_command systemctl
+run_modules_step verify
 finish_checks

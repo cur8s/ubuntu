@@ -45,34 +45,33 @@ ubuntu_codename() {
   local codename
 
   codename="$(os_release_value VERSION_CODENAME || true)"
-  if [ -n "$codename" ]; then
-    printf '%s\n' "$codename"
-    return 0
-  fi
-
-  require_command lsb_release
-  lsb_release -sc
+  [ -n "$codename" ] || die "could not detect Ubuntu codename from /etc/os-release"
+  printf '%s\n' "$codename"
 }
 
 require_ubuntu() {
   local os_id
+  local codename
 
   os_id="$(os_release_value ID || true)"
   [ "$os_id" = "ubuntu" ] || die "this bootstrap only supports Ubuntu hosts"
+
+  codename="$(ubuntu_codename)"
+  [ "$codename" = "noble" ] || die "this bootstrap only supports Ubuntu 24.04 LTS (noble), found: $codename"
 }
 
 configure_baseline() {
-  UBUNTU_BOOTSTRAP_PHASES="00-preflight 10-base-system 20-security 30-networking 40-third-party-repos 50-packages 60-services 90-verify"
+  UBUNTU_BOOTSTRAP_PHASES="00-preflight 10-base-system 40-third-party-repos 50-packages 60-services 90-verify"
   UBUNTU_BOOTSTRAP_MODULES="ssh firewall unattended-upgrades fail2ban tailscale osquery"
+  UBUNTU_BOOTSTRAP_REPO_MODULES="tailscale osquery"
 
-  UBUNTU_TARGET_CODENAME="${UBUNTU_TARGET_CODENAME:-}"
   SSH_PORT="${SSH_PORT:-22}"
   FIREWALL_ALLOW_TCP="${FIREWALL_ALLOW_TCP:-22}"
   TAILSCALE_UP_FLAGS="${TAILSCALE_UP_FLAGS:---ssh}"
 
   export UBUNTU_BOOTSTRAP_PHASES
   export UBUNTU_BOOTSTRAP_MODULES
-  export UBUNTU_TARGET_CODENAME
+  export UBUNTU_BOOTSTRAP_REPO_MODULES
   export SSH_PORT
   export FIREWALL_ALLOW_TCP
   export TAILSCALE_UP_FLAGS
@@ -100,15 +99,6 @@ run_phase() {
   UBUNTU_BOOTSTRAP_CURRENT_PHASE="$phase" bash "$path"
 }
 
-module_enabled() {
-  local module="$1"
-
-  case " ${UBUNTU_BOOTSTRAP_MODULES:-} " in
-    *" $module "*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 module_step_path() {
   local module="$1"
   local step="$2"
@@ -121,30 +111,26 @@ module_step_path() {
 run_module_step() {
   local module="$1"
   local step="$2"
-  local required="${3:-optional}"
   local path
 
-  module_enabled "$module" || return 0
-
   path="$(module_step_path "$module" "$step")"
-  if [ ! -f "$path" ]; then
-    if [ "$required" = "required" ]; then
-      die "module step not found: $module/$step"
-    fi
-
-    log "skip module step: $module/$step"
-    return 0
-  fi
+  [ -f "$path" ] || die "module step not found: $module/$step"
 
   log "module: $module/$step"
   UBUNTU_BOOTSTRAP_CURRENT_MODULE="$module" bash "$path"
 }
 
-run_enabled_modules_step() {
+run_modules_step() {
   local step="$1"
   local module
+  local modules
 
-  for module in ${UBUNTU_BOOTSTRAP_MODULES:-}; do
+  case "$step" in
+    repo) modules="${UBUNTU_BOOTSTRAP_REPO_MODULES:-}" ;;
+    *) modules="${UBUNTU_BOOTSTRAP_MODULES:-}" ;;
+  esac
+
+  for module in $modules; do
     run_module_step "$module" "$step"
   done
 }

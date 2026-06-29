@@ -23,9 +23,5 @@ ClientAliveCountMax 2
 Port ${SSH_PORT:-22}
 EOF
 
-if command -v sshd >/dev/null 2>&1; then
-  sshd -t
-  systemd_restart_if_active ssh.service
-else
-  warn "sshd command not found; SSH config was written but not validated"
-fi
+sshd -t
+systemd_restart_if_active ssh.service

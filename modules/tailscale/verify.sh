@@ -11,10 +11,8 @@ check_apt_package tailscale
 check_command tailscale
 check_systemd_unit tailscaled.service
 
-if [ "${TAILSCALE_REQUIRE_CONNECTED:-0}" = "1" ]; then
-  if tailscale status >/dev/null 2>&1; then
-    check_ok "tailscale status is available"
-  else
-    check_fail "tailscale status is not available"
-  fi
+if tailscale status >/dev/null 2>&1; then
+  check_ok "tailscale status is available"
+else
+  check_fail "tailscale status is not available"
 fi

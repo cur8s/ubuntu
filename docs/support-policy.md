@@ -2,9 +2,9 @@
 
 ## Ubuntu Baseline
 
-The project targets the previous Ubuntu LTS as its production baseline. This keeps the platform behind the newest major operating system release while still receiving long-term security support.
+The project targets Ubuntu 24.04 LTS (`noble`) as its production baseline.
 
-`UBUNTU_TARGET_CODENAME` may be set to enforce a specific Ubuntu codename. When the value is unset, the preflight phase verifies that the host is Ubuntu but does not reject a specific codename.
+The preflight phase rejects non-Ubuntu hosts and Ubuntu releases other than `noble`. This repo should fail loudly instead of trying to adapt itself to a different platform.
 
 ## Updates
 

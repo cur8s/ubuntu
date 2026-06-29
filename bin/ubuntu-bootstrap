@@ -37,7 +37,7 @@ configure_baseline
 export UBUNTU_APT_UPDATE_STAMP="${UBUNTU_APT_UPDATE_STAMP:-/tmp/ubuntu-bootstrap-apt-updated.$$}"
 
 log "using opinionated baseline"
-log "enabled modules: ${UBUNTU_BOOTSTRAP_MODULES:-none}"
+log "baseline modules: ${UBUNTU_BOOTSTRAP_MODULES:-none}"
 
 for phase in $UBUNTU_BOOTSTRAP_PHASES; do
   run_phase "$phase"
