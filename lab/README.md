@@ -68,13 +68,13 @@ Copy the repo to the VM:
 Run the bootstrap:
 
 ```sh
-./bin/lab-vm bootstrap --profile base
+./bin/lab-vm bootstrap
 ```
 
 Run verification:
 
 ```sh
-./bin/lab-vm check --profile base
+./bin/lab-vm check
 ```
 
 Open SSH:

@@ -4,7 +4,7 @@
 
 The project targets the previous Ubuntu LTS as its production baseline. This keeps the platform behind the newest major operating system release while still receiving long-term security support.
 
-Profiles may set `UBUNTU_TARGET_CODENAME` to enforce a specific Ubuntu codename. When the value is unset, the preflight phase verifies that the host is Ubuntu but does not reject a specific codename.
+`UBUNTU_TARGET_CODENAME` may be set to enforce a specific Ubuntu codename. When the value is unset, the preflight phase verifies that the host is Ubuntu but does not reject a specific codename.
 
 ## Updates
 

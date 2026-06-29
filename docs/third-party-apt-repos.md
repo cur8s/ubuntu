@@ -18,7 +18,7 @@ verify.sh     # prove the package and service are present
 - Use `signed-by=` in `/etc/apt/sources.list.d/*.list`.
 - Do not use the legacy global `apt-key` trust store.
 - Keep repository setup separate from package installation.
-- Allow repo URLs, key URLs, suites, and components to be overridden by profile variables.
+- Allow repo URLs, key URLs, suites, and components to be overridden by explicit environment variables when a module needs that flexibility.
 
 ## Current Examples
 
@@ -26,4 +26,4 @@ The `tailscale` module uses Tailscale's Ubuntu package repository under `https:/
 
 The `osquery` module uses osquery's Debian package repository under `https://pkg.osquery.io/deb`.
 
-When adding a new repository-backed package, follow the same module contract before enabling it in a profile.
+When adding a new repository-backed package, follow the same module contract before enabling it in the baseline.

@@ -26,7 +26,6 @@ Commands:
   destroy --force       Destroy the lab Droplet.
 
 Common options:
-  -p, --profile NAME    Profile to use for bootstrap/check. Defaults to base.
   -h, --help            Show this help.
 
 Local configuration lives in .state/digitalocean.env and is not committed.
@@ -44,19 +43,12 @@ if [ "$command_name" = "-h" ] || [ "$command_name" = "--help" ]; then
 fi
 shift
 
-profile_name="base"
 force="0"
 ssh_args=()
 remote_dir_quoted=""
-profile_quoted=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -p|--profile)
-      [ "$#" -ge 2 ] || die "missing value for $1"
-      profile_name="$2"
-      shift 2
-      ;;
     --force)
       force="1"
       shift
@@ -114,14 +106,12 @@ case "$command_name" in
     load_lab_config
     lab_sync_repo
     remote_dir_quoted="$(printf '%q' "$DO_REMOTE_DIR")"
-    profile_quoted="$(printf '%q' "$profile_name")"
-    lab_remote "cd $remote_dir_quoted && sudo ./bin/ubuntu-bootstrap --profile $profile_quoted"
+    lab_remote "cd $remote_dir_quoted && sudo ./bin/ubuntu-bootstrap"
     ;;
   check)
     load_lab_config
     remote_dir_quoted="$(printf '%q' "$DO_REMOTE_DIR")"
-    profile_quoted="$(printf '%q' "$profile_name")"
-    lab_remote "cd $remote_dir_quoted && sudo ./bin/ubuntu-check --profile $profile_quoted"
+    lab_remote "cd $remote_dir_quoted && sudo ./bin/ubuntu-check"
     ;;
   destroy)
     load_lab_config

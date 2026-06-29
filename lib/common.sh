@@ -61,21 +61,21 @@ require_ubuntu() {
   [ "$os_id" = "ubuntu" ] || die "this bootstrap only supports Ubuntu hosts"
 }
 
-load_profile() {
-  local profile="$1"
-  local root
-  local profile_path
+configure_baseline() {
+  UBUNTU_BOOTSTRAP_PHASES="00-preflight 10-base-system 20-security 30-networking 40-third-party-repos 50-packages 60-services 90-verify"
+  UBUNTU_BOOTSTRAP_MODULES="ssh firewall unattended-upgrades fail2ban tailscale osquery"
 
-  root="$(bootstrap_root)"
-  case "$profile" in
-    */*) profile_path="$profile" ;;
-    *) profile_path="$root/profiles/${profile}.conf" ;;
-  esac
+  UBUNTU_TARGET_CODENAME="${UBUNTU_TARGET_CODENAME:-}"
+  SSH_PORT="${SSH_PORT:-22}"
+  FIREWALL_ALLOW_TCP="${FIREWALL_ALLOW_TCP:-22}"
+  TAILSCALE_UP_FLAGS="${TAILSCALE_UP_FLAGS:---ssh}"
 
-  [ -f "$profile_path" ] || die "profile not found: $profile"
-
-  # shellcheck disable=SC1090
-  source "$profile_path"
+  export UBUNTU_BOOTSTRAP_PHASES
+  export UBUNTU_BOOTSTRAP_MODULES
+  export UBUNTU_TARGET_CODENAME
+  export SSH_PORT
+  export FIREWALL_ALLOW_TCP
+  export TAILSCALE_UP_FLAGS
 }
 
 phase_path() {
