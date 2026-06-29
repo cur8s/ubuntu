@@ -41,8 +41,6 @@ require_command apt-get
 require_command systemctl
 require_command sshd
 
-codename="$(os_release_value VERSION_CODENAME)"
-log "detected Ubuntu codename: $codename"
 log "applying opinionated Ubuntu baseline"
 
 apt_install \
@@ -54,16 +52,7 @@ apt_install \
 require_command curl
 require_command gpg
 
-log "installing Tailscale APT source"
-tmp="$(mktemp)"
-curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${codename}.noarmor.gpg" > "$tmp"
-install -D -m 0644 "$tmp" /usr/share/keyrings/tailscale-archive-keyring.gpg
-rm -f "$tmp"
-
-tmp="$(mktemp)"
-curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${codename}.tailscale-keyring.list" > "$tmp"
-install -D -m 0644 "$tmp" /etc/apt/sources.list.d/tailscale.list
-rm -f "$tmp"
+"$ROOT_DIR/bin/tailscale-install.sh"
 
 log "installing osquery APT source"
 tmp="$(mktemp)"
@@ -82,7 +71,6 @@ apt_install \
   unattended-upgrades \
   apt-listchanges \
   fail2ban \
-  tailscale \
   osquery
 
 sshd_config_dir="/etc/ssh/sshd_config.d"
