@@ -53,25 +53,13 @@ require_command curl
 require_command gpg
 
 "$ROOT_DIR/bin/tailscale-install.sh"
-
-log "installing osquery APT source"
-tmp="$(mktemp)"
-keyring_tmp="$(mktemp)"
-curl -fsSL "https://pkg.osquery.io/deb/pubkey.gpg" > "$tmp"
-gpg --dearmor < "$tmp" > "$keyring_tmp"
-install -D -m 0644 "$keyring_tmp" /usr/share/keyrings/osquery-archive-keyring.gpg
-rm -f "$tmp" "$keyring_tmp"
-
-write_file_if_changed /etc/apt/sources.list.d/osquery.list 0644 root root <<'EOF'
-deb [arch=amd64 signed-by=/usr/share/keyrings/osquery-archive-keyring.gpg] https://pkg.osquery.io/deb deb main
-EOF
+"$ROOT_DIR/bin/osquery-install.sh"
 
 apt_install \
   ufw \
   unattended-upgrades \
   apt-listchanges \
-  fail2ban \
-  osquery
+  fail2ban
 
 sshd_config_dir="/etc/ssh/sshd_config.d"
 mkdir -p "$sshd_config_dir"
