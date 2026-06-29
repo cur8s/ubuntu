@@ -48,9 +48,9 @@ require_command unattended-upgrade
 log "applying opinionated Ubuntu baseline"
 
 apt_install \
-  apt-listchanges \
-  fail2ban
+  apt-listchanges
 
+"$ROOT_DIR/install/fail2ban.sh"
 "$ROOT_DIR/install/tailscale.sh"
 "$ROOT_DIR/install/osquery.sh"
 "$ROOT_DIR/install/lynis.sh"
