@@ -23,4 +23,6 @@ Lynis uses CISOfy's community Debian package repository under `https://packages.
 
 Docker uses Docker's Ubuntu package repository under `https://download.docker.com/linux/ubuntu`, but remains an optional installer and is not part of the default baseline.
 
+PostgreSQL uses the PostgreSQL project's Apt Repository under `https://apt.postgresql.org/pub/repos/apt`, but remains an optional installer and is not part of the default baseline.
+
 When adding a new repository-backed package, keep the install script and verification close to the rest of the baseline so the trust decision is easy to audit.
