@@ -98,7 +98,6 @@ else
 fi
 
 check_apt_package unattended-upgrades
-check_file /etc/apt/apt.conf.d/20auto-upgrades
 
 check_apt_package fail2ban
 check_file /etc/fail2ban/jail.d/sshd-production.conf

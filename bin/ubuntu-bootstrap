@@ -80,11 +80,6 @@ for port in $FIREWALL_ALLOW_TCP; do
 done
 ufw --force enable
 
-write_file_if_changed /etc/apt/apt.conf.d/20auto-upgrades 0644 root root <<'EOF'
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Unattended-Upgrade "1";
-EOF
-
 write_file_if_changed /etc/fail2ban/jail.d/sshd-production.conf 0644 root root <<'EOF'
 [sshd]
 enabled = true
