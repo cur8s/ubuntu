@@ -11,7 +11,7 @@ usage() {
   cat <<'USAGE'
 Usage: sudo ./bin/ubuntu-check
 
-Verifies the opinionated Ubuntu 24.04 baseline.
+Verifies the opinionated Ubuntu 24.04 Server baseline.
 
 Options:
   -h, --help  Show this help.
@@ -86,7 +86,6 @@ require_root
 require_ubuntu_2404
 require_command systemctl
 
-check_apt_package openssh-server
 check_file /etc/ssh/sshd_config.d/10-production-baseline.conf
 check_command sshd
 
