@@ -1,0 +1,22 @@
+---
+- name: Reboot host if Ubuntu requires it
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check whether Ubuntu requires a reboot
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot when required by Ubuntu package updates
+      ansible.builtin.reboot:
+        msg: "Rebooting because /var/run/reboot-required exists"
+        reboot_timeout: 600
+      when: reboot_required.stat.exists
+
+    - name: Report no reboot required
+      ansible.builtin.debug:
+        msg: "No reboot required."
+      when: not reboot_required.stat.exists

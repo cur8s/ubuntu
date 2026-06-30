@@ -68,6 +68,17 @@ ansible-playbook \
   ansible/playbooks/examples/install-postgres.yml
 '''
 
+[tasks.test-vm-reboot-if-needed]
+description = "Reboot the DigitalOcean test VM if Ubuntu requires it"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/reboot-if-needed.yml
+'''
+
 [tasks.test-vm-delete]
 description = "Delete the DigitalOcean test VM"
 run = '''
