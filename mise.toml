@@ -1,0 +1,42 @@
+# Workstation CLIs are intentionally managed outside mise for now.
+# Expected commands: op, ansible, doctl.
+
+[env]
+DO_TEST_VM_NAME = "cur8s-ubuntu-test"
+DO_SSH_KEY_ID = "57436897"
+
+[tasks.test-vm-create]
+description = "Create the DigitalOcean test VM"
+run = '''
+doctl compute droplet create "$DO_TEST_VM_NAME" \
+  --image "ubuntu-24-04-x64" \
+  --size "s-1vcpu-1gb" \
+  --region "tor1" \
+  --ssh-keys "$DO_SSH_KEY_ID" \
+  --wait \
+  --format ID,Name,PublicIPv4,Status \
+  --no-header
+'''
+
+[tasks.test-vm-ssh]
+description = "SSH to the DigitalOcean test VM"
+run = '''
+doctl compute ssh "$DO_TEST_VM_NAME" \
+  --ssh-user "root" \
+  --ssh-key-path "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
+  --ssh-retry-max 30
+'''
+
+[tasks.test-vm-status]
+description = "Show the DigitalOcean test VM status"
+run = '''
+doctl compute droplet get "$DO_TEST_VM_NAME" \
+  --format ID,Name,PublicIPv4,Status \
+  --no-header
+'''
+
+[tasks.test-vm-delete]
+description = "Delete the DigitalOcean test VM"
+run = '''
+doctl compute droplet delete "$DO_TEST_VM_NAME" --force
+'''
