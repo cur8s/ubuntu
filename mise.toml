@@ -21,10 +21,10 @@ doctl compute droplet create "$DO_TEST_VM_NAME" \
 [tasks.test-vm-ssh]
 description = "SSH to the DigitalOcean test VM"
 run = '''
-doctl compute ssh "$DO_TEST_VM_NAME" \
-  --ssh-user "root" \
-  --ssh-key-path "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
-  --ssh-retry-max 30
+ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o ConnectionAttempts=30 \
+  "root@$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)"
 '''
 
 [tasks.test-vm-status]
@@ -41,7 +41,6 @@ run = '''
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
-  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   ansible/playbooks/baseline/converge.yml
 '''
@@ -52,7 +51,6 @@ run = '''
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
-  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   ansible/playbooks/examples/install-docker.yml
 '''
@@ -63,7 +61,6 @@ run = '''
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
-  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   ansible/playbooks/examples/install-postgres.yml
 '''
@@ -74,7 +71,6 @@ run = '''
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
-  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   ansible/playbooks/baseline/reboot-if-needed.yml
 '''
