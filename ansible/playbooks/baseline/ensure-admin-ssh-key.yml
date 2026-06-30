@@ -1,0 +1,65 @@
+---
+- name: Ensure administrator SSH key is trusted
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    admin_ssh_user: root
+    admin_ssh_public_key_file: "{{ lookup('env', 'ADMIN_SSH_PUBLIC_KEY_RENDERED') }}"
+    admin_ssh_authorized_keys_path: /root/.ssh/authorized_keys
+
+  tasks:
+    - name: Require administrator SSH public key file path
+      ansible.builtin.assert:
+        that:
+          - admin_ssh_public_key_file | length > 0
+        fail_msg: >-
+          Set admin_ssh_public_key_file or ADMIN_SSH_PUBLIC_KEY_RENDERED
+          to the rendered administrator SSH public key path.
+
+    - name: Read administrator SSH public key
+      ansible.builtin.set_fact:
+        admin_ssh_public_key: "{{ lookup('ansible.builtin.file', admin_ssh_public_key_file) | trim }}"
+
+    - name: Assert administrator SSH public key format
+      ansible.builtin.assert:
+        that:
+          - admin_ssh_public_key is match('^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)) [A-Za-z0-9+/]+={0,3}( .*)?$')
+        fail_msg: "Rendered administrator SSH public key is not a supported OpenSSH public key."
+
+    - name: Ensure administrator SSH directory exists
+      ansible.builtin.file:
+        path: "{{ admin_ssh_authorized_keys_path | dirname }}"
+        state: directory
+        owner: "{{ admin_ssh_user }}"
+        group: "{{ admin_ssh_user }}"
+        mode: "0700"
+
+    - name: Ensure administrator authorized keys file exists
+      ansible.builtin.copy:
+        dest: "{{ admin_ssh_authorized_keys_path }}"
+        content: ""
+        force: false
+        owner: "{{ admin_ssh_user }}"
+        group: "{{ admin_ssh_user }}"
+        mode: "0600"
+
+    - name: Ensure administrator SSH key is authorized
+      ansible.builtin.lineinfile:
+        path: "{{ admin_ssh_authorized_keys_path }}"
+        line: "{{ admin_ssh_public_key }}"
+        state: present
+        owner: "{{ admin_ssh_user }}"
+        group: "{{ admin_ssh_user }}"
+        mode: "0600"
+
+    - name: Read authorized keys for administrator user
+      ansible.builtin.slurp:
+        src: "{{ admin_ssh_authorized_keys_path }}"
+      register: admin_authorized_keys
+
+    - name: Assert administrator SSH key is authorized
+      ansible.builtin.assert:
+        that:
+          - admin_ssh_public_key in (admin_authorized_keys.content | b64decode)

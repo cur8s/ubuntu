@@ -16,7 +16,9 @@ The administrator SSH private key is secret material. It must live outside this 
 
 Private key material must not be committed, embedded in source-controlled provisioning assets, or written into reusable templates.
 
-The administrator SSH public key is distributable configuration. It may be rendered into cloud-init, NoCloud datasource media, or cloud provider metadata so that new hosts trust the administrator key during provisioning.
+The administrator SSH public key is distributable configuration. It may be rendered into cloud provider metadata, installation-time provisioning assets, or convergence inputs so that new hosts trust the administrator key.
+
+Cloud provider metadata may establish the initial SSH path. Baseline convergence enforces the final administrator SSH public key state after the first SSH connection is available.
 
 Operational documentation defines the concrete key storage, rendering, and rotation workflow.
 
@@ -29,5 +31,3 @@ It does not define host provisioning, the operational steps for creating or rota
 **Revisions**
 
 Initial version.
-
-Added administrator key handling expectations.

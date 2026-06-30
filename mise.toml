@@ -4,6 +4,22 @@
 [env]
 DO_TEST_VM_NAME = "cur8s-ubuntu-test"
 DO_SSH_KEY_ID = "57436897"
+OP_ADMIN_SSH_KEY_VAULT = "Development"
+OP_ADMIN_SSH_KEY_ITEM = "cur8s-ubuntu-lab"
+OP_ADMIN_SSH_PUBLIC_KEY_FIELD = "public key"
+ADMIN_SSH_PUBLIC_KEY_TEMPLATE = "provisioning/ssh/admin-public-key.pub.tpl"
+ADMIN_SSH_PUBLIC_KEY_RENDERED = ".generated/ssh/admin.pub"
+
+[tasks.render-admin-ssh-public-key]
+description = "Render the administrator SSH public key from 1Password"
+run = '''
+mkdir -p "$(dirname "$ADMIN_SSH_PUBLIC_KEY_RENDERED")"
+op inject \
+  --in-file "$ADMIN_SSH_PUBLIC_KEY_TEMPLATE" \
+  --out-file "$ADMIN_SSH_PUBLIC_KEY_RENDERED" \
+  --force \
+  --file-mode 0644
+'''
 
 [tasks.test-vm-create]
 description = "Create the DigitalOcean test VM"
@@ -37,11 +53,13 @@ doctl compute droplet get "$DO_TEST_VM_NAME" \
 
 [tasks.test-vm-converge]
 description = "Converge the baseline on the DigitalOcean test VM"
+depends = ["render-admin-ssh-public-key"]
 run = '''
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  --extra-vars "admin_ssh_public_key_file=$(pwd)/$ADMIN_SSH_PUBLIC_KEY_RENDERED" \
   ansible/playbooks/baseline/converge.yml
 '''
 

@@ -4,23 +4,19 @@ Remaining work to bring the repository fully in line with the RFCs.
 
 Next groups to work on:
 
-1. Phase 1: Provisioning And Admin Access
-2. Phase 2: Tailscale Join And Management Path
+1. Phase 2: Tailscale Join And Management Path
+2. Phase 3: SSH Trust And Hardening Follow-up
 
 ## Phase 1: Provisioning And Admin Access
 
 Define how a new machine receives trusted administrator SSH access before Ansible convergence starts.
 
-- [ ] Add a 1Password workflow for reading or rendering the administrator SSH public key.
-- [ ] Add a cloud-init template for delivering the administrator SSH public key.
-- [ ] Update DigitalOcean test VM creation to use the intended cloud-init or provider metadata flow.
-- [ ] Replace the temporary DigitalOcean SSH key generation/import workflow with the 1Password-backed public key workflow.
-- [ ] Decide whether DigitalOcean SSH key import should remain supported for lab setup when the key is not already present in DigitalOcean.
-- [ ] If DigitalOcean SSH key import remains supported, preserve the old behavior: look up the key by name, import the public key only when missing, and pass the resulting key ID to droplet creation.
-- [ ] Preserve the cloud-init lab defaults when adding the new provisioning template: `disable_root: false`, `ssh_pwauth: false`, and `package_update: false`.
-- [ ] Preserve the lab MOTD intent when useful: mark disposable test VMs as Cur8s Ubuntu bootstrap lab hosts.
-- [ ] Document administrator key storage, rendering, rotation, and recovery.
-- [ ] Add an operational guide for provisioning a new cloud VM.
+- [x] Add a 1Password workflow for reading or rendering the administrator SSH public key.
+- [x] Update DigitalOcean test VM creation to use provider SSH key metadata for initial reachability.
+- [x] Add the 1Password-rendered administrator public key workflow for convergence.
+- [x] Decide whether DigitalOcean SSH key import should remain supported for lab setup when the key is not already present in DigitalOcean.
+- [x] Add an operational guide for provisioning a new cloud VM.
+- [x] Enforce the administrator SSH public key during baseline convergence.
 
 ## Phase 2: Tailscale Join And Management Path
 
@@ -36,11 +32,26 @@ Move from public bootstrap access toward the intended private management network
 - [ ] Decide whether public SSH remains acceptable for bootstrap and recovery.
 - [ ] Decide how to enforce the Management Network as the exclusive administration path.
 
-## Phase 3: SSH Hardening Follow-up
+## Phase 3: SSH Trust And Hardening Follow-up
 
-Tighten the SSH baseline after the management path is clear.
+Track completed SSH trust work and the remaining SSH hardening/key-handling work.
 
-The current Ansible baseline already disables SSH password authentication, disables keyboard-interactive SSH authentication, enables public key authentication, disables X11 forwarding, and allows root login only with keys for bootstrap and recovery.
+Completed SSH work:
+
+- [x] Use provider SSH key metadata for initial cloud VM reachability.
+- [x] Render the administrator SSH public key from 1Password for convergence.
+- [x] Enforce the administrator SSH public key in root's `authorized_keys` during baseline convergence.
+- [x] Install and validate OpenSSH server during baseline convergence.
+- [x] Manage the baseline OpenSSH drop-in at `/etc/ssh/sshd_config.d/10-cur8s-baseline.conf`.
+- [x] Disable SSH password authentication.
+- [x] Disable keyboard-interactive SSH authentication.
+- [x] Enable SSH public key authentication.
+- [x] Disable X11 forwarding.
+- [x] Allow root SSH only with keys for bootstrap and recovery.
+- [x] Validate OpenSSH syntax before reload.
+- [x] Assert the effective OpenSSH policy with `sshd -T`.
+
+Remaining SSH work:
 
 The temporary bootstrap also configured these additional SSH settings:
 
@@ -55,6 +66,9 @@ Port ${SSH_PORT}
 - [ ] Add `ClientAliveInterval 300` to the Ansible SSH baseline.
 - [ ] Add `ClientAliveCountMax 2` to the Ansible SSH baseline.
 - [ ] Add `sshd -T` assertions for `clientaliveinterval 300` and `clientalivecountmax 2`.
+- [ ] Replace the hard-coded DigitalOcean SSH key ID with lookup or verification against the 1Password-rendered administrator public key.
+- [ ] Decide whether `test-vm-ssh` and Ansible commands should constrain SSH to the rendered administrator public key with `IdentitiesOnly yes`.
+- [ ] Document administrator SSH key storage, rendering, rotation, and recovery.
 - [ ] Defer `PermitRootLogin no` until Tailscale SSH and/or a non-root administrator account is implemented; otherwise bootstrap and recovery access may break.
 - [ ] Do not add `Port ${SSH_PORT}` unless the baseline explicitly chooses non-standard SSH ports; it complicates Ansible, recovery, and network rules without much security value.
 - [ ] Do not add `AllowTcpForwarding yes` as hardening; it is an explicit allowance and should wait for a forwarding policy decision.
@@ -67,6 +81,7 @@ Add a dedicated verification path once the baseline convergence behavior has set
 - [ ] Add a dedicated baseline verification playbook or mode.
 - [ ] Use the captured `ubuntu-check` behavior as source material for the first verification pass.
 - [ ] Verify Ubuntu release conformance.
+- [ ] Verify the administrator SSH public key is authorized.
 - [ ] Verify OpenSSH baseline policy.
 - [ ] Verify the OpenSSH config drop-in exists.
 - [ ] Verify unattended package maintenance.
@@ -115,4 +130,5 @@ Turn the lab workflow into a clearer operating model.
 Add bare-metal provisioning after the cloud VM path is proven.
 
 - [ ] Add bare-metal Autoinstall assets.
-- [ ] Add a NoCloud datasource template for bare-metal administrator key delivery.
+- [ ] Decide whether Autoinstall alone is sufficient for bare-metal administrator key delivery.
+- [ ] Add a NoCloud datasource template only if Autoinstall cannot cover the bare-metal administrator key workflow.

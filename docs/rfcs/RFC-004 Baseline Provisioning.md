@@ -16,34 +16,39 @@ Provisioning has a single purpose: to produce a host that is ready for baseline 
 Its responsibilities are limited to:
 
 * installing the supported Ubuntu release
-* delivering the administrator SSH public key defined by RFC-003
+* delivering an initial SSH trust path for the administrator SSH public key defined by RFC-003
 * producing a host that is reachable over SSH
 
 Provisioning does not apply the Host Baseline. Package installation, operating system configuration, security hardening, networking, firewall configuration, Tailscale, software updates, and every other aspect of the Host Baseline belong to baseline convergence.
 
+Baseline convergence enforces the final administrator SSH public key state after the first SSH connection is available.
+
 **Cloud Provisioning**
 
-Cloud virtual machines use the cloud provider’s Ubuntu image together with cloud-init.
+Cloud virtual machines use the cloud provider’s Ubuntu image and provider-native SSH key metadata.
 
-The Host Baseline uses cloud-init only to deliver the administrator SSH public key during instance creation.
+Cloud provider SSH key metadata creates a key-based bootstrap path and avoids provider-specific password-based bootstrap behavior.
+
+Cloud provisioning does not rely on cloud-init for the Host Baseline. After provider metadata establishes initial reachability, baseline convergence enforces the final administrator SSH public key state.
 
 **Bare-Metal Provisioning**
 
-Bare-metal hosts use Ubuntu Autoinstall together with cloud-init.
+Bare-metal hosts use Ubuntu Autoinstall.
 
-The Host Baseline uses two installation media:
+The Host Baseline expects bare-metal provisioning to produce a supported Ubuntu installation that is reachable over SSH. Autoinstall should deliver the initial SSH trust path when possible.
 
-* Ubuntu Server installation media.
-* A second NoCloud datasource containing the cloud-init configuration.
-
-The NoCloud datasource delivers the same administrator SSH public key that a cloud provider would supply through cloud-init. As a result, cloud and bare-metal installations share the same provisioning architecture, differing only in how the cloud-init configuration is delivered.
+If Autoinstall alone is not sufficient for a target environment, a NoCloud datasource or another installation-time mechanism may be added later.
 
 **Scope**
 
 This RFC defines the provisioning architecture for the Host Baseline.
 
-It does not define baseline convergence, the contents of the cloud-init configuration, or the automation applied after provisioning.
+It does not define baseline convergence, the exact contents of provider-specific provisioning assets, or the automation applied after provisioning.
 
 **Revisions**
 
 Initial version.
+
+Clarified provider SSH metadata and convergence responsibilities.
+
+Removed cloud-init from the cloud VM provisioning path.
