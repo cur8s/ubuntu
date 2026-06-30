@@ -41,6 +41,25 @@
       ansible.builtin.command: /usr/sbin/sshd -t
       changed_when: false
 
+    - name: Apply pending OpenSSH reload
+      ansible.builtin.meta: flush_handlers
+
+    - name: Read effective OpenSSH configuration
+      ansible.builtin.command: /usr/sbin/sshd -T
+      register: sshd_effective_config
+      changed_when: false
+
+    - name: Assert baseline OpenSSH policy is active
+      ansible.builtin.assert:
+        that:
+          - "'passwordauthentication no' in sshd_effective_config.stdout_lines"
+          - "'kbdinteractiveauthentication no' in sshd_effective_config.stdout_lines"
+          - "'pubkeyauthentication yes' in sshd_effective_config.stdout_lines"
+          - >-
+            'permitrootlogin prohibit-password' in sshd_effective_config.stdout_lines
+            or 'permitrootlogin without-password' in sshd_effective_config.stdout_lines
+          - "'x11forwarding no' in sshd_effective_config.stdout_lines"
+
   handlers:
     - name: Reload OpenSSH
       ansible.builtin.service:
