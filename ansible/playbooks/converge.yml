@@ -1,0 +1,4 @@
+---
+- import_playbook: lockdown-ssh.yml
+- import_playbook: install-osquery.yml
+- import_playbook: install-lynis.yml

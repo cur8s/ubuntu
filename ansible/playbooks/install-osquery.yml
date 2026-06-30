@@ -1,5 +1,5 @@
 ---
-- name: Install baseline inspection and audit tools
+- name: Install osquery for baseline interactive inspection
   hosts: all
   become: true
   gather_facts: false
@@ -82,45 +82,4 @@
 
     - name: Validate osquery interactive command is available
       ansible.builtin.command: osqueryi --version
-      changed_when: false
-
-    - name: Download CISOfy signing key
-      ansible.builtin.get_url:
-        url: https://packages.cisofy.com/keys/cisofy-software-public.key
-        dest: /tmp/cisofy-software-public.key
-        owner: root
-        group: root
-        mode: "0644"
-      register: cisofy_signing_key
-
-    - name: Check CISOfy keyring
-      ansible.builtin.stat:
-        path: /usr/share/keyrings/cisofy-software-public.gpg
-      register: cisofy_keyring
-
-    - name: Trust packages signed by CISOfy
-      ansible.builtin.command:
-        cmd: >-
-          gpg --dearmor --yes --output
-          /usr/share/keyrings/cisofy-software-public.gpg
-          /tmp/cisofy-software-public.key
-      changed_when: cisofy_signing_key.changed or not cisofy_keyring.stat.exists
-
-    - name: Add Lynis apt repository
-      ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/cisofy-lynis.list
-        owner: root
-        group: root
-        mode: "0644"
-        content: |
-          deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/cisofy-software-public.gpg] https://packages.cisofy.com/community/lynis/deb/ stable main
-
-    - name: Install Lynis for manual audit
-      ansible.builtin.apt:
-        name: lynis
-        state: present
-        update_cache: true
-
-    - name: Validate Lynis command is available
-      ansible.builtin.command: lynis --version
       changed_when: false

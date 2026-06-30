@@ -43,8 +43,7 @@ ansible-playbook \
   --user root \
   --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
-  ansible/playbooks/lockdown-ssh.yml \
-  ansible/playbooks/install-inspection-tools.yml
+  ansible/playbooks/converge.yml
 '''
 
 [tasks.test-vm-delete]
