@@ -35,6 +35,8 @@
           PubkeyAuthentication yes
           PermitRootLogin prohibit-password
           X11Forwarding no
+          ClientAliveInterval 300
+          ClientAliveCountMax 2
       notify: Reload OpenSSH
 
     - name: Validate active OpenSSH configuration
@@ -59,6 +61,8 @@
             'permitrootlogin prohibit-password' in sshd_effective_config.stdout_lines
             or 'permitrootlogin without-password' in sshd_effective_config.stdout_lines
           - "'x11forwarding no' in sshd_effective_config.stdout_lines"
+          - "'clientaliveinterval 300' in sshd_effective_config.stdout_lines"
+          - "'clientalivecountmax 2' in sshd_effective_config.stdout_lines"
 
   handlers:
     - name: Reload OpenSSH
