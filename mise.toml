@@ -43,7 +43,7 @@ ansible-playbook \
   --user root \
   --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
-  ansible/playbooks/converge.yml
+  ansible/playbooks/baseline/converge.yml
 '''
 
 [tasks.test-vm-install-docker]
@@ -76,7 +76,7 @@ ansible-playbook \
   --user root \
   --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
-  ansible/playbooks/reboot-if-needed.yml
+  ansible/playbooks/baseline/reboot-if-needed.yml
 '''
 
 [tasks.test-vm-delete]
