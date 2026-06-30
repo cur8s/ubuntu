@@ -14,12 +14,12 @@ During the development of this repository, Linux 7.0 replaced PREEMPT_NONE with 
 
 This repository deliberately gives the ecosystem that time by adopting the previous Ubuntu LTS rather than the current one. By the time an Ubuntu release becomes the Host Baseline, the Linux kernel, PostgreSQL, and the surrounding ecosystem have had an additional two years to discover, understand, document, and adapt to these kinds of cross-project interactions. The objective is to spend engineering effort building and operating software rather than becoming early adopters of operating system behavior.
 
-Scope
+**Scope**
 
 This RFC defines how the Ubuntu release that forms the Host Baseline is selected.
 
 It does not define package selection, upgrade procedures, or implementation details.
 
-Revisions
+**Revisions**
 
 Initial version.

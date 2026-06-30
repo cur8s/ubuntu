@@ -10,7 +10,7 @@ The authoritative definition of the Host Baseline lives in the Host Control Repo
 
 Because the repository is the source of truth, every change is reviewable and reproducible. Manual changes made directly on a host are transient. If a configuration decision matters, it belongs in the Host Control Repository and is applied through baseline convergence.
 
-Ansible
+**Ansible**
 
 The Host Control Repository uses Ansible as its convergence engine.
 
@@ -20,12 +20,12 @@ This keeps the architecture simple: Git is the source of truth, the Host Control
 
 Ansible is an implementation choice rather than an architectural requirement. Future convergence mechanisms are acceptable provided they preserve the same architectural properties: an external source of truth, repeatable convergence, configuration drift correction, and no required host-side management agent.
 
-Scope
+**Scope**
 
 This RFC defines how hosts become and remain conformant after provisioning.
 
 It does not define provisioning, the organization of the Host Control Repository, or the implementation details of Ansible playbooks.
 
-Revisions
+**Revisions**
 
 Initial version.

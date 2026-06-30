@@ -14,12 +14,12 @@ The SSH Trust Model defined by RFC-003 establishes the bootstrap trust relations
 
 Tailscale is an implementation choice rather than an architectural requirement. Future implementations are acceptable provided they preserve the architectural properties established by this RFC.
 
-Scope
+**Scope**
 
 This RFC defines the management network for the Host Baseline.
 
 It does not define the SSH Trust Model, host provisioning, or the implementation details of Tailscale.
 
-Revisions
+**Revisions**
 
 Initial version.

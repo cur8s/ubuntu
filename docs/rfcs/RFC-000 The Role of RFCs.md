@@ -18,12 +18,12 @@ The audience for these RFCs is anyone evolving this repository: humans, automati
 
 RFC numbers are stable identifiers, not a reading order. They are never renumbered or reused. The recommended reading order is maintained separately from the identifiers themselves.
 
-Scope
+**Scope**
 
 This RFC defines the purpose, authority, and evolution model of the Ubuntu RFCs.
 
 It does not define the Ubuntu host model, supported operating system versions, security posture, package policy, or automation architecture. Those concerns are established by subsequent RFCs.
 
-Revisions
+**Revisions**
 
 Initial version.
