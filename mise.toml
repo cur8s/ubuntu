@@ -46,6 +46,28 @@ ansible-playbook \
   ansible/playbooks/converge.yml
 '''
 
+[tasks.test-vm-install-docker]
+description = "Install Docker on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-docker.yml
+'''
+
+[tasks.test-vm-install-postgres]
+description = "Install PostgreSQL on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --private-key "$HOME/.ssh/cur8s-ubuntu-lab_ed25519" \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-postgres.yml
+'''
+
 [tasks.test-vm-delete]
 description = "Delete the DigitalOcean test VM"
 run = '''
