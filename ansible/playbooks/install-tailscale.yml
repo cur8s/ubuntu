@@ -47,6 +47,21 @@
         enabled: true
         state: started
 
+    - name: Enable Tailscale client auto-updates
+      ansible.builtin.command: tailscale set --auto-update
+      changed_when: false
+
+    - name: Read Tailscale preferences
+      ansible.builtin.command: tailscale debug prefs
+      register: tailscale_preferences
+      changed_when: false
+
+    - name: Assert Tailscale auto-updates are enabled
+      ansible.builtin.assert:
+        that:
+          - (tailscale_preferences.stdout | from_json).AutoUpdate.Check
+          - (tailscale_preferences.stdout | from_json).AutoUpdate.Apply
+
     - name: Validate Tailscale command is available
       ansible.builtin.command: tailscale version
       changed_when: false
