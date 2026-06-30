@@ -81,6 +81,7 @@ ansible-playbook \
 
 [tasks.test-vm-delete]
 description = "Delete the DigitalOcean test VM"
+confirm = "Delete the DigitalOcean test VM? This cannot be undone."
 run = '''
 doctl compute droplet delete "$DO_TEST_VM_NAME" --force
 '''
