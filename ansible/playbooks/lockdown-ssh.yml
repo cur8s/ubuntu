@@ -1,0 +1,48 @@
+---
+- name: Lock down OpenSSH for baseline hosts
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Wait for SSH to become reachable
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: Ensure OpenSSH server package is present
+      ansible.builtin.apt:
+        name: openssh-server
+        state: present
+
+    - name: Ensure sshd config directory exists
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Configure baseline OpenSSH policy
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/10-cur8s-baseline.conf
+        owner: root
+        group: root
+        mode: "0644"
+        validate: /usr/sbin/sshd -t -f %s
+        content: |
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          PubkeyAuthentication yes
+          PermitRootLogin prohibit-password
+          X11Forwarding no
+      notify: Reload OpenSSH
+
+    - name: Validate active OpenSSH configuration
+      ansible.builtin.command: /usr/sbin/sshd -t
+      changed_when: false
+
+  handlers:
+    - name: Reload OpenSSH
+      ansible.builtin.service:
+        name: ssh
+        state: reloaded
