@@ -65,6 +65,16 @@ ansible-playbook \
   ansible/playbooks/examples/install-postgres.yml
 '''
 
+[tasks.test-vm-install-zot]
+description = "Install zot on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-zot.yml
+'''
+
 [tasks.test-vm-reboot-if-needed]
 description = "Reboot the DigitalOcean test VM if Ubuntu requires it"
 run = '''
