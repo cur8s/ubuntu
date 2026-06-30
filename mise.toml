@@ -3,12 +3,16 @@
 
 [env]
 DO_TEST_VM_NAME = "cur8s-ubuntu-test"
+TAILSCALE_TEST_VM_HOST = "cur8s-ubuntu-test.puma-mora.ts.net"
 DO_SSH_KEY_ID = "57436897"
 OP_ADMIN_SSH_KEY_VAULT = "Development"
 OP_ADMIN_SSH_KEY_ITEM = "cur8s-ubuntu-lab"
 OP_ADMIN_SSH_PUBLIC_KEY_FIELD = "public key"
 ADMIN_SSH_PUBLIC_KEY_TEMPLATE = "provisioning/ssh/admin-public-key.pub.tpl"
 ADMIN_SSH_PUBLIC_KEY_RENDERED = ".generated/ssh/admin.pub"
+OP_TAILSCALE_AUTHKEY_VAULT = "Development"
+OP_TAILSCALE_AUTHKEY_ITEM = "ubuntu-tailscale-auth-key"
+OP_TAILSCALE_AUTHKEY_FIELD = "password"
 
 [tasks.render-admin-ssh-public-key]
 description = "Render the administrator SSH public key from 1Password"
@@ -43,6 +47,20 @@ ssh \
   "root@$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)"
 '''
 
+[tasks.test-vm-tailscale-ssh]
+description = "Test Tailscale SSH to the DigitalOcean test VM"
+run = '''
+ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o PreferredAuthentications=none \
+  -o PubkeyAuthentication=no \
+  -o PasswordAuthentication=no \
+  -o KbdInteractiveAuthentication=no \
+  -o NumberOfPasswordPrompts=0 \
+  "root@$TAILSCALE_TEST_VM_HOST" \
+  true
+'''
+
 [tasks.test-vm-status]
 description = "Show the DigitalOcean test VM status"
 run = '''
@@ -55,6 +73,11 @@ doctl compute droplet get "$DO_TEST_VM_NAME" \
 description = "Converge the baseline on the DigitalOcean test VM"
 depends = ["render-admin-ssh-public-key"]
 run = '''
+TAILSCALE_AUTHKEY="$(
+  op read "op://$OP_TAILSCALE_AUTHKEY_VAULT/$OP_TAILSCALE_AUTHKEY_ITEM/$OP_TAILSCALE_AUTHKEY_FIELD"
+)"
+export TAILSCALE_AUTHKEY
+
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \

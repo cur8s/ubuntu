@@ -22,13 +22,13 @@ Define how a new machine receives trusted administrator SSH access before Ansibl
 
 Move from public bootstrap access toward the intended private management network.
 
-- [ ] Decide how Tailscale auth keys are stored and passed, likely through 1Password.
-- [ ] Join the host to Tailscale during baseline convergence.
-- [ ] Use the temporary bootstrap behavior as the starting point: `TAILSCALE_UP_FLAGS` defaults to `--ssh`, then convergence runs `tailscale up --authkey "$TAILSCALE_AUTHKEY" ${TAILSCALE_UP_FLAGS}` when the host is not already connected.
-- [ ] Make Tailscale join idempotent by checking `tailscale status` before requiring an auth key.
-- [ ] Enable Tailscale SSH.
-- [ ] Validate that the host is joined to the tailnet.
-- [ ] Validate that Tailscale SSH is enabled.
+- [x] Decide how Tailscale auth keys are stored and passed: the reusable auth key lives in 1Password and is read into a process-local `TAILSCALE_AUTHKEY` environment variable by the mise converge task.
+- [x] Join the host to Tailscale during baseline convergence.
+- [x] Use the temporary bootstrap behavior as the starting point: convergence runs `tailscale up --auth-key "$TAILSCALE_AUTHKEY" --ssh --accept-dns=false` when the host is not already connected.
+- [x] Make Tailscale join idempotent by checking `tailscale status --json` before requiring an auth key.
+- [x] Enable Tailscale SSH.
+- [x] Validate that the host is joined to the tailnet.
+- [x] Validate that Tailscale SSH is enabled.
 - [ ] Decide whether public SSH remains acceptable for bootstrap and recovery.
 - [ ] Decide how to enforce the Management Network as the exclusive administration path.
 
