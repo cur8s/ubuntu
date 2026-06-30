@@ -16,14 +16,6 @@ Remaining work to bring the repository fully in line with the RFCs.
 - [ ] Add a NoCloud datasource template for bare-metal administrator key delivery.
 - [ ] Document administrator key storage, rendering, rotation, and recovery.
 
-## Baseline Preconditions
-
-- [ ] Assert that the target host is Ubuntu 24.04 LTS.
-- [ ] Assert that the Ubuntu codename is `noble`.
-- [ ] Fail early on unsupported Ubuntu releases.
-- [ ] Implement the old preflight behavior by reading `/etc/os-release` and requiring `ID=ubuntu` and `VERSION_CODENAME=noble`.
-- [ ] Decide whether to assert supported CPU architectures before adding third-party package repositories.
-
 ## SSH Hardening Follow-up
 
 The current Ansible baseline already disables SSH password authentication, disables keyboard-interactive SSH authentication, enables public key authentication, disables X11 forwarding, and allows root login only with keys for bootstrap and recovery.
@@ -91,6 +83,7 @@ Port ${SSH_PORT}
 
 - [ ] Add production-oriented mise tasks or another production host workflow.
 - [ ] Add inventory or host targeting beyond the single DigitalOcean test VM.
+- [ ] Decide whether to pin `ansible_python_interpreter=/usr/bin/python3` in inventory or mise tasks to avoid Ansible interpreter discovery warnings.
 - [ ] Decide whether `test-vm-*` remains only the lab workflow.
 - [ ] Record that the old repo sync/bootstrap/check flow is intentionally replaced by local Ansible-over-SSH.
 
