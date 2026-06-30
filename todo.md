@@ -4,13 +4,36 @@ Remaining work to bring the repository fully in line with the RFCs.
 
 Next groups to work on:
 
-1. Bootstrap And Management Access
+1. Initialize Host Workflow
 2. SSH Hardening Policy
 
-## Bootstrap And Management Access
+## Initialize Host Workflow
 
-Decide how initial access, recovery access, and day-to-day tailnet administration fit together.
+Create a fresh-host initialization path that turns a provider-created Ubuntu VM into a managed Cur8s baseline host.
 
+- [ ] Add `ansible/playbooks/baseline/initialize.yml` as the first-run host setup playbook.
+- [ ] Keep `test-vm-create` raw and provider-specific, using the DigitalOcean registered SSH key for initial root access.
+- [ ] Keep cloud-init out of the DigitalOcean path for now.
+- [ ] Run `initialize.yml` as `root`, because a fresh cloud VM only has provider-created bootstrap access.
+- [ ] Verify Ubuntu 24.04 noble at the start of initialization.
+- [ ] Render the `ansible` and `admin` public keys from 1Password.
+- [ ] Create the `ansible` user for automation.
+- [ ] Create the `admin` user for human administration.
+- [ ] Install the rendered SSH public keys into each user's `authorized_keys`.
+- [ ] Configure passwordless sudo for `ansible`.
+- [ ] Configure passwordless sudo for `admin`.
+- [ ] Install Tailscale during initialization.
+- [ ] Join Tailscale during initialization with Tailscale SSH enabled.
+- [ ] Update Ubuntu packages during initialization.
+- [ ] Reboot unconditionally during initialization.
+- [ ] Wait for the host to return after reboot.
+- [ ] Validate after reboot that `ansible` exists, has SSH access, and can use passwordless sudo.
+- [ ] Validate after reboot that `admin` exists, has SSH access, and can use passwordless sudo.
+- [ ] Validate after reboot that Tailscale is running, joined, and has Tailscale SSH enabled.
+- [ ] Add `mise run test-vm-init` for the first-run initialization workflow.
+- [ ] Document that `test-vm-init` updates packages and always reboots.
+- [ ] Keep `test-vm-converge` as the no-reboot steady-state baseline command.
+- [ ] After initialization is proven, switch `test-vm-converge` to run as `--user ansible --become`.
 - [ ] Document administrator SSH key storage, rendering, rotation, and recovery.
 - [ ] Replace the hard-coded DigitalOcean SSH key ID with lookup or verification against the 1Password-rendered administrator public key.
 - [ ] Decide whether `test-vm-ssh` and Ansible commands should constrain SSH to the rendered administrator public key with `IdentitiesOnly yes`.
