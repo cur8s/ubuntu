@@ -21,18 +21,13 @@
           APT::Periodic::Update-Package-Lists "1";
           APT::Periodic::Unattended-Upgrade "1";
 
-    - name: Limit unattended upgrades to supported Ubuntu maintenance pockets
+    - name: Configure unattended-upgrades reboot policy
       ansible.builtin.copy:
         dest: /etc/apt/apt.conf.d/51cur8s-unattended-upgrades
         owner: root
         group: root
         mode: "0644"
         content: |
-          Unattended-Upgrade::Allowed-Origins {
-              "${distro_id}:${distro_codename}";
-              "${distro_id}:${distro_codename}-security";
-              "${distro_id}:${distro_codename}-updates";
-          };
           Unattended-Upgrade::Automatic-Reboot "false";
 
     - name: Enable apt package maintenance timers
@@ -54,9 +49,7 @@
         that:
           - "'APT::Periodic::Update-Package-Lists \"1\";' in apt_config.stdout_lines"
           - "'APT::Periodic::Unattended-Upgrade \"1\";' in apt_config.stdout_lines"
-          - "'Unattended-Upgrade::Allowed-Origins:: \"${distro_id}:${distro_codename}\";' in apt_config.stdout_lines"
-          - "'Unattended-Upgrade::Allowed-Origins:: \"${distro_id}:${distro_codename}-security\";' in apt_config.stdout_lines"
-          - "'Unattended-Upgrade::Allowed-Origins:: \"${distro_id}:${distro_codename}-updates\";' in apt_config.stdout_lines"
+          - "'Unattended-Upgrade::Automatic-Reboot \"false\";' in apt_config.stdout_lines"
 
     - name: Validate apt package maintenance timers are enabled
       ansible.builtin.command: systemctl is-enabled "{{ item }}"
@@ -65,6 +58,24 @@
         - apt-daily-upgrade.timer
       changed_when: false
 
-    - name: Validate unattended-upgrade command is available
-      ansible.builtin.command: unattended-upgrade --help
+    - name: Validate apt package maintenance timers are active
+      ansible.builtin.command: systemctl is-active "{{ item }}"
+      loop:
+        - apt-daily.timer
+        - apt-daily-upgrade.timer
+      changed_when: false
+
+    - name: Read scheduled apt package maintenance timers
+      ansible.builtin.command: systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager --no-legend
+      register: apt_timers
+      changed_when: false
+
+    - name: Assert apt package maintenance timers have scheduled runs
+      ansible.builtin.assert:
+        that:
+          - "'apt-daily.timer' in apt_timers.stdout"
+          - "'apt-daily-upgrade.timer' in apt_timers.stdout"
+
+    - name: Validate unattended-upgrades dry run
+      ansible.builtin.command: unattended-upgrade --dry-run --debug
       changed_when: false
