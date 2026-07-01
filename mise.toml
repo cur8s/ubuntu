@@ -3,6 +3,7 @@
 
 [env]
 DROPLET_NAME = "cur8s-ubuntu-test"
+DO_BOOTSTRAP_KEY_NAME = "ubuntu-bootstrap"
 BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
 ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
 ADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-admin.pub"
@@ -22,7 +23,7 @@ op read --force --out-file "$ADMIN_PUB_KEY" "op://devops/ubuntu-admin/public key
 [tasks."key:upload"]
 description = "Upload the bootstrap SSH public key to DigitalOcean"
 run = '''
-doctl compute ssh-key import ubuntu-bootstrap \
+doctl compute ssh-key import "$DO_BOOTSTRAP_KEY_NAME" \
   --public-key-file "$BOOTSTRAP_PUB_KEY" \
   --format ID,Name
 '''
@@ -31,7 +32,7 @@ doctl compute ssh-key import ubuntu-bootstrap \
 description = "Delete the bootstrap SSH public key from DigitalOcean"
 confirm = "Delete the bootstrap SSH public key from DigitalOcean? This cannot be undone."
 run = '''
-bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r '.[] | select(.name == "ubuntu-bootstrap") | .id')"
+bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r --arg name "$DO_BOOTSTRAP_KEY_NAME" '.[] | select(.name == $name) | .id')"
 
 doctl compute ssh-key delete "$bootstrap_key_id" --force
 '''
@@ -42,7 +43,7 @@ quiet = true
 run = '''
 echo "Creating the DigitalOcean Ubuntu test VM"
 droplet_count="$(doctl compute droplet list "$DROPLET_NAME" --output json | jq length)"
-bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r '.[] | select(.name == "ubuntu-bootstrap") | .id')"
+bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r --arg name "$DO_BOOTSTRAP_KEY_NAME" '.[] | select(.name == $name) | .id')"
 
 if [ "$droplet_count" -ne 0 ]; then
   echo "A DigitalOcean Droplet named $DROPLET_NAME already exists." >&2
