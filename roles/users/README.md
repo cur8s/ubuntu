@@ -22,5 +22,4 @@ The role applies fixed baseline policy: it creates `ansible` and `admin`, gives 
 `tasks/main.yml` explicitly configures the fixed `ansible` and `admin` accounts and delegates to small role-internal task files:
 
 * `validate-user.yml`
-* `create-passwordless-sudo-user.yml`
-* `install-ssh-authorized-key.yml`
+* `configure-user.yml`

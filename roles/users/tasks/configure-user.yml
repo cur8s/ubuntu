@@ -1,6 +1,6 @@
 ---
 # ==========================================================================
-# User Account
+# Create User Account 
 # ==========================================================================
 - name: Create user
   ansible.builtin.user:
@@ -11,7 +11,7 @@
     password_lock: true
 
 # ==========================================================================
-# Sudo Access
+# Grant Sudo Access
 # ==========================================================================
 - name: Install passwordless sudo rule
   ansible.builtin.copy:
@@ -23,7 +23,7 @@
     validate: /usr/sbin/visudo -cf %s
 
 # ==========================================================================
-# Verification
+# Verify Sudo Access
 # ==========================================================================
 - name: Verify passwordless sudo
   ansible.builtin.command:
@@ -35,3 +35,13 @@
       - -n
       - /usr/bin/true
   changed_when: false
+
+# ==========================================================================
+# SSH Access
+# ==========================================================================
+- name: Install SSH public key
+  ansible.posix.authorized_key:
+    user: "{{ ubuntu_user_name }}"
+    key: "{{ ubuntu_user_public_key }}"
+    state: present
+    manage_dir: true
