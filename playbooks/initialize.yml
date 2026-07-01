@@ -1,11 +1,11 @@
 ---
-- name: Bootstrap baseline Ubuntu users
+- name: Initialize baseline Ubuntu users
   hosts: all
   gather_facts: false
   become: true
   vars:
-    bootstrap_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
-    bootstrap_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    initialize_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    initialize_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
 
   pre_tasks:
     # ==========================================================================
@@ -14,8 +14,8 @@
     - name: Require extracted public key file paths
       ansible.builtin.assert:
         that:
-          - bootstrap_ansible_public_key_file | length > 0
-          - bootstrap_admin_public_key_file | length > 0
+          - initialize_ansible_public_key_file | length > 0
+          - initialize_admin_public_key_file | length > 0
         fail_msg: Run through mise so ANSIBLE_PUB_KEY and ADMIN_PUB_KEY point at extracted public key files.
 
     # ==========================================================================
@@ -26,17 +26,17 @@
         path: "{{ item }}"
       delegate_to: localhost
       become: false
-      register: bootstrap_public_key_files
+      register: initialize_public_key_files
       loop:
-        - "{{ bootstrap_ansible_public_key_file }}"
-        - "{{ bootstrap_admin_public_key_file }}"
+        - "{{ initialize_ansible_public_key_file }}"
+        - "{{ initialize_admin_public_key_file }}"
 
     - name: Require extracted public key files to exist
       ansible.builtin.assert:
         that:
           - item.stat.exists
         fail_msg: "Missing extracted public key file: {{ item.item }}"
-      loop: "{{ bootstrap_public_key_files.results }}"
+      loop: "{{ initialize_public_key_files.results }}"
       loop_control:
         label: "{{ item.item }}"
 
@@ -46,5 +46,5 @@
   roles:
     - role: users
       vars:
-        ubuntu_users_ansible_public_key: "{{ lookup('ansible.builtin.file', bootstrap_ansible_public_key_file) | trim }}"
-        ubuntu_users_admin_public_key: "{{ lookup('ansible.builtin.file', bootstrap_admin_public_key_file) | trim }}"
+        ubuntu_users_ansible_public_key: "{{ lookup('ansible.builtin.file', initialize_ansible_public_key_file) | trim }}"
+        ubuntu_users_admin_public_key: "{{ lookup('ansible.builtin.file', initialize_admin_public_key_file) | trim }}"
