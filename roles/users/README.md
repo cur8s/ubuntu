@@ -19,7 +19,6 @@ The role applies fixed baseline policy: it creates `ansible` and `admin`, gives 
 
 ## Task Layout
 
-`tasks/main.yml` explicitly configures the fixed `ansible` and `admin` accounts and delegates to small role-internal task files:
+`tasks/main.yml` validates both public keys before changing the host, then explicitly configures the fixed `ansible` and `admin` accounts through one role-internal task file:
 
-* `validate-user.yml`
 * `configure-user.yml`

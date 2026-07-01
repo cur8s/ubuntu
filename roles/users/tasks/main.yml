@@ -4,16 +4,16 @@
 # Inputs
 # ==========================================================================
 - name: Validate ansible user SSH key
-  ansible.builtin.include_tasks: validate-user.yml
-  vars:
-    ubuntu_user_name: ansible
-    ubuntu_user_public_key: "{{ ubuntu_users_ansible_public_key | default('') }}"
+  ansible.builtin.assert:
+    that:
+      - (ubuntu_users_ansible_public_key | default('')) is match('^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$')
+    fail_msg: SSH public key for ansible must be an ssh-ed25519 OpenSSH public key.
 
 - name: Validate admin user SSH key
-  ansible.builtin.include_tasks: validate-user.yml
-  vars:
-    ubuntu_user_name: admin
-    ubuntu_user_public_key: "{{ ubuntu_users_admin_public_key | default('') }}"
+  ansible.builtin.assert:
+    that:
+      - (ubuntu_users_admin_public_key | default('')) is match('^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$')
+    fail_msg: SSH public key for admin must be an ssh-ed25519 OpenSSH public key.
 
 # ==========================================================================
 # Ansible User
