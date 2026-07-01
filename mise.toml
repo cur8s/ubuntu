@@ -1,0 +1,15 @@
+# Workstation CLIs are intentionally managed outside mise for now.
+# Expected commands: op.
+
+[tasks.keys]
+description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
+quiet = true
+run = '''
+echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"
+mkdir -p .generated/ssh
+
+op read --force --out-file .generated/ssh/ubuntu-bootstrap.pub "op://devops/ubuntu-bootstrap/public key"
+op read --force --out-file .generated/ssh/ubuntu-bootstrap.fingerprint "op://devops/ubuntu-bootstrap/fingerprint"
+op read --force --out-file .generated/ssh/ubuntu-ansible.pub "op://devops/ubuntu-ansible/public key"
+op read --force --out-file .generated/ssh/ubuntu-admin.pub "op://devops/ubuntu-admin/public key"
+'''
