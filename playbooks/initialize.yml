@@ -1,44 +1,42 @@
 ---
-- name: Initialize baseline Ubuntu users
-  hosts: all
+- name: Validate local initialization inputs
+  hosts: localhost
   gather_facts: false
-  become: true
   vars:
+    initialize_bootstrap_public_key_file: "{{ lookup('ansible.builtin.env', 'BOOTSTRAP_PUB_KEY') }}"
     initialize_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
     initialize_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
 
-  pre_tasks:
-    # ==========================================================================
-    # Inputs
-    # ==========================================================================
-    - name: Require extracted public key file paths
-      ansible.builtin.assert:
-        that:
-          - initialize_ansible_public_key_file | length > 0
-          - initialize_admin_public_key_file | length > 0
-        fail_msg: Run through mise so ANSIBLE_PUB_KEY and ADMIN_PUB_KEY point at extracted public key files.
-
+  tasks:
     # ==========================================================================
     # Extracted Key Files
     # ==========================================================================
-    - name: Check extracted public key files
-      ansible.builtin.stat:
-        path: "{{ item }}"
-      delegate_to: localhost
-      become: false
-      register: initialize_public_key_files
-      loop:
-        - "{{ initialize_ansible_public_key_file }}"
-        - "{{ initialize_admin_public_key_file }}"
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ initialize_bootstrap_public_key_file }}"
+          - "{{ initialize_ansible_public_key_file }}"
+          - "{{ initialize_admin_public_key_file }}"
 
-    - name: Require extracted public key files to exist
-      ansible.builtin.assert:
-        that:
-          - item.stat.exists
-        fail_msg: "Missing extracted public key file: {{ item.item }}"
-      loop: "{{ initialize_public_key_files.results }}"
-      loop_control:
-        label: "{{ item.item }}"
+- name: Install replacement users over bootstrap SSH
+  hosts: all
+  gather_facts: false
+  remote_user: root
+  become: true
+  vars:
+    initialize_bootstrap_public_key_file: "{{ lookup('ansible.builtin.env', 'BOOTSTRAP_PUB_KEY') }}"
+    initialize_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    initialize_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ initialize_bootstrap_public_key_file }}"
+
+  pre_tasks:
+    # ==========================================================================
+    # Bootstrap Connection
+    # ==========================================================================
+    - name: Wait for bootstrap SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 180
 
   # ==========================================================================
   # Baseline Users
@@ -61,6 +59,48 @@
         target_host: "{{ inventory_hostname }}"
 
     - name: Validate admin SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: admin
+        public_key_file: "{{ initialize_admin_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"
+
+- name: Lock down SSH over ansible SSH
+  hosts: all
+  gather_facts: false
+  remote_user: ansible
+  become: true
+  vars:
+    initialize_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    initialize_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ initialize_ansible_public_key_file }}"
+
+  pre_tasks:
+    # ==========================================================================
+    # Ansible Connection
+    # ==========================================================================
+    - name: Wait for ansible SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 60
+
+  # ==========================================================================
+  # SSH Lockdown
+  # ==========================================================================
+  roles:
+    - role: ssh
+
+  post_tasks:
+    # ==========================================================================
+    # Validate Locked Down Access
+    # ==========================================================================
+    - name: Validate ansible SSH and sudo access after SSH lockdown
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: ansible
+        public_key_file: "{{ initialize_ansible_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"
+
+    - name: Validate admin SSH and sudo access after SSH lockdown
       ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
       vars:
         user_name: admin

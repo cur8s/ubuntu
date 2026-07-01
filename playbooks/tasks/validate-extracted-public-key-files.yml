@@ -1,0 +1,30 @@
+---
+# ==========================================================================
+# Inputs
+# ==========================================================================
+- name: Require extracted public key file paths
+  ansible.builtin.assert:
+    that:
+      - item | length > 0
+    fail_msg: Run through mise so extracted public key file path variables are set.
+  loop: "{{ extracted_public_key_files }}"
+
+# ==========================================================================
+# Extracted Key Files
+# ==========================================================================
+- name: Check extracted public key files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  delegate_to: localhost
+  become: false
+  register: extracted_public_key_file_stats
+  loop: "{{ extracted_public_key_files }}"
+
+- name: Require extracted public key files to exist
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Missing extracted public key file: {{ item.item }}"
+  loop: "{{ extracted_public_key_file_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"

@@ -30,6 +30,8 @@
       - -o
       - BatchMode=yes
       - -o
+      - ConnectTimeout=10
+      - -o
       - StrictHostKeyChecking=accept-new
       - -o
       - IdentitiesOnly=yes

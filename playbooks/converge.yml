@@ -1,0 +1,65 @@
+---
+- name: Validate local convergence inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    converge_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+
+  tasks:
+    # ==========================================================================
+    # Extracted Key Files
+    # ==========================================================================
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ converge_ansible_public_key_file }}"
+          - "{{ converge_admin_public_key_file }}"
+
+- name: Converge baseline Ubuntu host over ansible SSH
+  hosts: all
+  gather_facts: false
+  remote_user: ansible
+  become: true
+  vars:
+    converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    converge_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ converge_ansible_public_key_file }}"
+
+  pre_tasks:
+    # ==========================================================================
+    # Ansible Connection
+    # ==========================================================================
+    - name: Wait for ansible SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+  # ==========================================================================
+  # Baseline Roles
+  # ==========================================================================
+  roles:
+    - role: users
+      vars:
+        ubuntu_users_ansible_public_key: "{{ lookup('ansible.builtin.file', converge_ansible_public_key_file) | trim }}"
+        ubuntu_users_admin_public_key: "{{ lookup('ansible.builtin.file', converge_admin_public_key_file) | trim }}"
+
+    - role: ssh
+
+  post_tasks:
+    # ==========================================================================
+    # Validate Baseline Access
+    # ==========================================================================
+    - name: Validate ansible SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: ansible
+        public_key_file: "{{ converge_ansible_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"
+
+    - name: Validate admin SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: admin
+        public_key_file: "{{ converge_admin_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"

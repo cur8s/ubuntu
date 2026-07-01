@@ -1,0 +1,80 @@
+---
+# ==========================================================================
+# OpenSSH Configuration Directory
+# ==========================================================================
+- name: Ensure OpenSSH config drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# ==========================================================================
+# Baseline OpenSSH Policy
+# ==========================================================================
+- name: Install baseline OpenSSH policy
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      PermitRootLogin prohibit-password
+      X11Forwarding no
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+  notify: Reload OpenSSH
+
+# ==========================================================================
+# Validate OpenSSH Policy
+# ==========================================================================
+- name: Validate OpenSSH configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sshd
+      - -t
+  changed_when: false
+
+# ==========================================================================
+# OpenSSH Socket
+# ==========================================================================
+- name: Ensure OpenSSH socket is enabled and listening
+  ansible.builtin.systemd_service:
+    name: ssh.socket
+    enabled: true
+    state: started
+
+- name: Apply pending OpenSSH reload
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure OpenSSH socket is listening after reload
+  ansible.builtin.systemd_service:
+    name: ssh.socket
+    enabled: true
+    state: started
+
+- name: Read effective OpenSSH configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sshd
+      - -T
+  register: ubuntu_ssh_effective_config
+  changed_when: false
+
+- name: Assert baseline OpenSSH policy is active
+  ansible.builtin.assert:
+    that:
+      - "'passwordauthentication no' in ubuntu_ssh_effective_config.stdout_lines"
+      - "'kbdinteractiveauthentication no' in ubuntu_ssh_effective_config.stdout_lines"
+      - "'pubkeyauthentication yes' in ubuntu_ssh_effective_config.stdout_lines"
+      - >-
+        'permitrootlogin prohibit-password' in ubuntu_ssh_effective_config.stdout_lines
+        or 'permitrootlogin without-password' in ubuntu_ssh_effective_config.stdout_lines
+      - "'x11forwarding no' in ubuntu_ssh_effective_config.stdout_lines"
+      - "'clientaliveinterval 300' in ubuntu_ssh_effective_config.stdout_lines"
+      - "'clientalivecountmax 2' in ubuntu_ssh_effective_config.stdout_lines"
