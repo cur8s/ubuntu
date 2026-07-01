@@ -1,23 +1,29 @@
 # Workstation CLIs are intentionally managed outside mise for now.
 # Expected commands: op, doctl, jq, ssh.
 
+[env]
+DROPLET_NAME = "cur8s-ubuntu-test"
+BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
+ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
+ADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-admin.pub"
+
 [tasks."key:extract"]
 description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
 quiet = true
 run = '''
 echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"
-mkdir -p .generated/ssh
+mkdir -p "$(dirname "$BOOTSTRAP_PUB_KEY")"
 
-op read --force --out-file .generated/ssh/ubuntu-bootstrap.pub "op://devops/ubuntu-bootstrap/public key"
-op read --force --out-file .generated/ssh/ubuntu-ansible.pub "op://devops/ubuntu-ansible/public key"
-op read --force --out-file .generated/ssh/ubuntu-admin.pub "op://devops/ubuntu-admin/public key"
+op read --force --out-file "$BOOTSTRAP_PUB_KEY" "op://devops/ubuntu-bootstrap/public key"
+op read --force --out-file "$ANSIBLE_PUB_KEY" "op://devops/ubuntu-ansible/public key"
+op read --force --out-file "$ADMIN_PUB_KEY" "op://devops/ubuntu-admin/public key"
 '''
 
 [tasks."key:upload"]
 description = "Upload the bootstrap SSH public key to DigitalOcean"
 run = '''
 doctl compute ssh-key import ubuntu-bootstrap \
-  --public-key-file .generated/ssh/ubuntu-bootstrap.pub \
+  --public-key-file "$BOOTSTRAP_PUB_KEY" \
   --format ID,Name
 '''
 
@@ -35,15 +41,15 @@ description = "Create the DigitalOcean Ubuntu test VM"
 quiet = true
 run = '''
 echo "Creating the DigitalOcean Ubuntu test VM"
-droplet_count="$(doctl compute droplet list cur8s-ubuntu-test --output json | jq length)"
+droplet_count="$(doctl compute droplet list "$DROPLET_NAME" --output json | jq length)"
 bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r '.[] | select(.name == "ubuntu-bootstrap") | .id')"
 
 if [ "$droplet_count" -ne 0 ]; then
-  echo "A DigitalOcean Droplet named cur8s-ubuntu-test already exists." >&2
+  echo "A DigitalOcean Droplet named $DROPLET_NAME already exists." >&2
   exit 1
 fi
 
-doctl compute droplet create cur8s-ubuntu-test \
+doctl compute droplet create "$DROPLET_NAME" \
   --image ubuntu-24-04-x64 \
   --size s-1vcpu-1gb \
   --region tor1 \
@@ -56,7 +62,7 @@ doctl compute droplet create cur8s-ubuntu-test \
 description = "List matching DigitalOcean Ubuntu test VMs"
 quiet = true
 run = '''
-doctl compute droplet list cur8s-ubuntu-test \
+doctl compute droplet list "$DROPLET_NAME" \
   --format ID,Name,PublicIPv4,Status,Image
 '''
 
@@ -66,13 +72,20 @@ run = '''
 ssh \
   -o StrictHostKeyChecking=accept-new \
   -o IdentitiesOnly=yes \
-  -i .generated/ssh/ubuntu-bootstrap.pub \
-  "root@$(doctl compute droplet list cur8s-ubuntu-test --format PublicIPv4 --no-header)"
+  -i "$BOOTSTRAP_PUB_KEY" \
+  "root@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
 '''
 
 [tasks."vm:delete"]
 description = "Delete the DigitalOcean Ubuntu test VM"
 confirm = "Delete the DigitalOcean Ubuntu test VM? This cannot be undone."
 run = '''
-doctl compute droplet delete cur8s-ubuntu-test --force
+doctl compute droplet delete "$DROPLET_NAME" --force
+'''
+
+[tasks.clean]
+description = "Delete the DigitalOcean Ubuntu test VM and generated local files"
+depends = ["vm:delete"]
+run = '''
+rm -rf "$MISE_CONFIG_ROOT/.generated"
 '''
