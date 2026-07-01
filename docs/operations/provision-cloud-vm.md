@@ -6,6 +6,8 @@ The provider bootstrap SSH private key stays in 1Password. The matching public k
 
 The `ansible` and `admin` SSH private keys also stay in 1Password. Their public keys are rendered from 1Password and installed during host initialization.
 
+The provider bootstrap, `ansible`, and `admin` SSH public keys must all use the `ssh-ed25519` OpenSSH public key type.
+
 The SSH test commands use the rendered public keys as OpenSSH identity hints. They also create a local symlink at `.generated/ssh/1password-agent.sock` so OpenSSH can address the 1Password SSH agent without the space in the macOS `Group Containers` path.
 
 The create task passes `--ssh-keys "$DO_SSH_KEY_ID"`. This provider-specific metadata prevents DigitalOcean from creating a temporary root password and forcing an interactive password change on first login.

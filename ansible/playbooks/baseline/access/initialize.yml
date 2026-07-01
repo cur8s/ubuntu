@@ -1,0 +1,20 @@
+---
+- import_playbook: ensure-access-user.yml
+  vars:
+    baseline_access_user_name: ansible
+    baseline_access_user_public_key_file: >-
+      {{
+        baseline_ansible_public_key_file |
+        default(lookup('ansible.builtin.env', 'ANSIBLE_SSH_PUBLIC_KEY_RENDERED'), true)
+      }}
+
+- import_playbook: ensure-access-user.yml
+  vars:
+    baseline_access_user_name: admin
+    baseline_access_user_public_key_file: >-
+      {{
+        baseline_admin_public_key_file |
+        default(lookup('ansible.builtin.env', 'ADMIN_USER_SSH_PUBLIC_KEY_RENDERED'), true)
+      }}
+
+- import_playbook: validate-access-users.yml

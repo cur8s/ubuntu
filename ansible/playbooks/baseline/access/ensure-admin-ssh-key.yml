@@ -8,6 +8,7 @@
     admin_ssh_user: root
     admin_ssh_public_key_file: "{{ lookup('env', 'ADMIN_SSH_PUBLIC_KEY_RENDERED') }}"
     admin_ssh_authorized_keys_path: /root/.ssh/authorized_keys
+    admin_ssh_public_key_pattern: '^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$'
 
   tasks:
     - name: Require administrator SSH public key file path
@@ -25,8 +26,8 @@
     - name: Assert administrator SSH public key format
       ansible.builtin.assert:
         that:
-          - admin_ssh_public_key is match('^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)) [A-Za-z0-9+/]+={0,3}( .*)?$')
-        fail_msg: "Rendered administrator SSH public key is not a supported OpenSSH public key."
+          - admin_ssh_public_key is match(admin_ssh_public_key_pattern)
+        fail_msg: "Rendered administrator SSH public key must be an ssh-ed25519 OpenSSH public key."
 
     - name: Ensure administrator SSH directory exists
       ansible.builtin.file:

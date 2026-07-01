@@ -14,8 +14,8 @@ A host conforms to the Host Baseline when it satisfies the following requirement
 
 * the supported Ubuntu LTS release
 * unattended-upgrades for Ubuntu security and stable bug-fix maintenance
-* the administrator SSH key for bootstrap and recovery access
-* OpenSSH configured for key-based access with password authentication disabled
+* the Ed25519 administrator SSH key for bootstrap and recovery access
+* OpenSSH configured for Ed25519 key-based access with password authentication disabled
 
 **Ubuntu Release and Package Maintenance**
 
@@ -28,6 +28,8 @@ The host keeps Ubuntu packages current using Ubuntu's normal unattended package 
 The host satisfies the SSH Trust Model defined by RFC-003: SSH Trust Model.
 
 The host trusts the administrator SSH public key defined by RFC-003. This key establishes the bootstrap trust relationship and remains available for recovery access.
+
+Baseline SSH public keys use the `ssh-ed25519` OpenSSH public key type.
 
 OpenSSH is configured for key-based access. Password-based SSH authentication is not part of the baseline.
 
@@ -42,3 +44,5 @@ It does not define how those requirements are implemented or how workload-specif
 **Revisions**
 
 Initial version.
+
+Clarified that baseline SSH public keys use the `ssh-ed25519` OpenSSH public key type.

@@ -12,6 +12,12 @@ Identity-aware management networks may be layered on top of the Host Baseline, b
 
 The mechanism used to deliver the administrator public key is defined by RFC-004: Baseline Provisioning.
 
+**Approved SSH Public Key Type**
+
+Baseline SSH public keys must use the `ssh-ed25519` OpenSSH public key type.
+
+RSA, ECDSA, DSA, and other SSH public key types are not approved for baseline administrator, automation, or named administrative user access.
+
 **Administrator Key Handling**
 
 The administrator SSH private key is secret material. It must live outside this repository in an approved secrets manager.
@@ -19,6 +25,8 @@ The administrator SSH private key is secret material. It must live outside this 
 Private key material must not be committed, embedded in source-controlled provisioning assets, or written into reusable templates.
 
 The administrator SSH public key is distributable configuration. It may be rendered into cloud provider metadata, installation-time provisioning assets, or convergence inputs so that new hosts trust the administrator key.
+
+Rendered administrator and administrative user public keys must use the approved SSH public key type.
 
 Cloud provider metadata may establish the initial SSH path. Baseline convergence enforces the final administrator SSH public key state after the first SSH connection is available.
 
@@ -33,3 +41,5 @@ It does not define host provisioning, the operational steps for creating or rota
 **Revisions**
 
 Initial version.
+
+Defined `ssh-ed25519` as the only approved baseline SSH public key type.

@@ -263,7 +263,7 @@ ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
-  ansible/playbooks/baseline/reboot-if-needed.yml
+  ansible/playbooks/baseline/packages/reboot-if-needed.yml
 '''
 
 [tasks.test-vm-delete]

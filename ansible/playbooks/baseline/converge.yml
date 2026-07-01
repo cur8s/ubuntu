@@ -1,6 +1,5 @@
 ---
-- import_playbook: require-ubuntu-release.yml
-- import_playbook: ensure-admin-ssh-key.yml
-- import_playbook: lockdown-ssh.yml
-- import_playbook: enable-unattended-upgrades.yml
-- import_playbook: update-ubuntu-packages.yml
+- import_playbook: preflight/require-ubuntu-release.yml
+- import_playbook: access/converge.yml
+- import_playbook: packages/enable-unattended-upgrades.yml
+- import_playbook: packages/update-ubuntu-packages.yml
