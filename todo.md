@@ -9,30 +9,12 @@ Next groups to work on:
 
 ## Initialize Host Workflow
 
-Create a fresh-host initialization path that turns a provider-created Ubuntu VM into a managed Cur8s baseline host.
+Create a fresh-host initialization path that turns a provider-created Ubuntu VM into a host with non-root SSH access.
 
-- [ ] Add `ansible/playbooks/baseline/initialize.yml` as the first-run host setup playbook.
-- [ ] Keep `test-vm-create` raw and provider-specific, using the DigitalOcean registered SSH key for initial root access.
-- [ ] Keep cloud-init out of the DigitalOcean path for now.
-- [ ] Run `initialize.yml` as `root`, because a fresh cloud VM only has provider-created bootstrap access.
-- [ ] Verify Ubuntu 24.04 noble at the start of initialization.
-- [ ] Render the `ansible` and `admin` public keys from 1Password.
-- [ ] Create the `ansible` user for automation.
-- [ ] Create the `admin` user for human administration.
-- [ ] Install the rendered SSH public keys into each user's `authorized_keys`.
-- [ ] Configure passwordless sudo for `ansible`.
-- [ ] Configure passwordless sudo for `admin`.
-- [ ] Install Tailscale during initialization.
-- [ ] Join Tailscale during initialization with Tailscale SSH enabled.
-- [ ] Update Ubuntu packages during initialization.
-- [ ] Reboot unconditionally during initialization.
-- [ ] Wait for the host to return after reboot.
-- [ ] Validate after reboot that `ansible` exists, has SSH access, and can use passwordless sudo.
-- [ ] Validate after reboot that `admin` exists, has SSH access, and can use passwordless sudo.
-- [ ] Validate after reboot that Tailscale is running, joined, and has Tailscale SSH enabled.
-- [ ] Add `mise run test-vm-init` for the first-run initialization workflow.
-- [ ] Document that `test-vm-init` updates packages and always reboots.
-- [ ] Keep `test-vm-converge` as the no-reboot steady-state baseline command.
+- [ ] Run `mise run test-vm-init` against a fresh DigitalOcean test VM and fix any initialization issues.
+- [ ] Prove `mise run test-vm-ssh-ansible` works.
+- [ ] Prove `mise run test-vm-ssh-admin` works.
+- [ ] Decide the next initialization step after SSH access is proven.
 - [ ] After initialization is proven, switch `test-vm-converge` to run as `--user ansible --become`.
 - [ ] Document administrator SSH key storage, rendering, rotation, and recovery.
 - [ ] Replace the hard-coded DigitalOcean SSH key ID with lookup or verification against the 1Password-rendered administrator public key.

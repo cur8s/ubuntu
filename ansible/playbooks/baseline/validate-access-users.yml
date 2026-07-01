@@ -1,0 +1,107 @@
+---
+- name: Validate baseline access users
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    baseline_access_users:
+      - name: ansible
+        public_key_file: "{{ baseline_ansible_public_key_file | default(lookup('ansible.builtin.env', 'ANSIBLE_SSH_PUBLIC_KEY_RENDERED'), true) }}"
+      - name: admin
+        public_key_file: "{{ baseline_admin_public_key_file | default(lookup('ansible.builtin.env', 'ADMIN_USER_SSH_PUBLIC_KEY_RENDERED'), true) }}"
+    baseline_access_identity_agent_from_env: "{{ lookup('ansible.builtin.env', 'BASELINE_ACCESS_IDENTITY_AGENT') }}"
+
+  tasks:
+    - name: Wait for SSH to become reachable after initialization
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: Read baseline access user SSH public keys
+      ansible.builtin.set_fact:
+        baseline_access_user_public_keys: >-
+          {{
+            baseline_access_user_public_keys | default({}) |
+            combine({item.name: lookup('ansible.builtin.file', item.public_key_file) | trim})
+          }}
+      loop: "{{ baseline_access_users }}"
+
+    - name: Validate baseline access user accounts exist
+      ansible.builtin.command:
+        argv:
+          - getent
+          - passwd
+          - "{{ item.name }}"
+      changed_when: false
+      loop: "{{ baseline_access_users }}"
+
+    - name: Read baseline access user authorized keys
+      ansible.builtin.slurp:
+        src: "/home/{{ item.name }}/.ssh/authorized_keys"
+      register: baseline_access_authorized_keys
+      loop: "{{ baseline_access_users }}"
+
+    - name: Assert baseline access user SSH keys remain authorized
+      ansible.builtin.assert:
+        that:
+          - baseline_access_user_public_keys[item.item.name] in (item.content | b64decode)
+      loop: "{{ baseline_access_authorized_keys.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Validate passwordless sudo for baseline access users
+      ansible.builtin.command:
+        argv:
+          - sudo
+          - -n
+          - -u
+          - "{{ item.name }}"
+          - sudo
+          - -n
+          - /usr/bin/true
+      changed_when: false
+      loop: "{{ baseline_access_users }}"
+
+    - name: Determine controller SSH target
+      ansible.builtin.set_fact:
+        baseline_access_controller_ssh_host: "{{ baseline_access_ssh_host | default(inventory_hostname, true) }}"
+
+    - name: Determine controller SSH identity agent
+      ansible.builtin.set_fact:
+        baseline_access_controller_identity_agent: "{{ baseline_access_identity_agent | default(baseline_access_identity_agent_from_env, true) }}"
+
+    - name: Prove SSH access and passwordless sudo from the controller
+      ansible.builtin.command:
+        argv: >-
+          {{
+            [
+              'ssh',
+              '-o',
+              'BatchMode=yes',
+              '-o',
+              'StrictHostKeyChecking=accept-new',
+              '-o',
+              'IdentitiesOnly=yes'
+            ]
+            + (
+              ['-o', 'IdentityAgent=' + baseline_access_controller_identity_agent]
+              if baseline_access_controller_identity_agent | length > 0
+              else []
+            )
+            + [
+              '-i',
+              item.public_key_file,
+              '-o',
+              'ConnectionAttempts=5',
+              '-o',
+              'ConnectTimeout=10',
+              item.name + '@' + baseline_access_controller_ssh_host,
+              'sudo',
+              '-n',
+              '/usr/bin/true'
+            ]
+          }}
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      loop: "{{ baseline_access_users }}"
