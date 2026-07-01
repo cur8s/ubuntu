@@ -1,5 +1,5 @@
 # Workstation CLIs are intentionally managed outside mise for now.
-# Expected commands: op.
+# Expected commands: op, doctl, jq, ssh, ssh-keygen.
 
 [tasks.keys]
 description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
@@ -9,7 +9,56 @@ echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"
 mkdir -p .generated/ssh
 
 op read --force --out-file .generated/ssh/ubuntu-bootstrap.pub "op://devops/ubuntu-bootstrap/public key"
-op read --force --out-file .generated/ssh/ubuntu-bootstrap.fingerprint "op://devops/ubuntu-bootstrap/fingerprint"
 op read --force --out-file .generated/ssh/ubuntu-ansible.pub "op://devops/ubuntu-ansible/public key"
 op read --force --out-file .generated/ssh/ubuntu-admin.pub "op://devops/ubuntu-admin/public key"
+
+ssh-keygen -E md5 -l -f .generated/ssh/ubuntu-bootstrap.pub |
+  awk '{ print $2 }' |
+  sed 's/^MD5://' > .generated/ssh/ubuntu-bootstrap.fingerprint
+'''
+
+[tasks.create]
+description = "Create the DigitalOcean Ubuntu test VM"
+quiet = true
+run = '''
+echo "Creating the DigitalOcean Ubuntu test VM"
+droplet_count="$(doctl compute droplet list cur8s-ubuntu-test --output json | jq length)"
+
+if [ "$droplet_count" -ne 0 ]; then
+  echo "A DigitalOcean Droplet named cur8s-ubuntu-test already exists." >&2
+  exit 1
+fi
+
+doctl compute droplet create cur8s-ubuntu-test \
+  --image ubuntu-24-04-x64 \
+  --size s-1vcpu-1gb \
+  --region tor1 \
+  --ssh-keys "$(cat .generated/ssh/ubuntu-bootstrap.fingerprint)" \
+  --format ID,Name,PublicIPv4,Status,Image \
+  --wait
+'''
+
+[tasks.status]
+description = "List matching DigitalOcean Ubuntu test VMs"
+quiet = true
+run = '''
+doctl compute droplet list cur8s-ubuntu-test \
+  --format ID,Name,PublicIPv4,Status,Image
+'''
+
+[tasks.ssh]
+description = "SSH to the DigitalOcean Ubuntu test VM with the bootstrap key"
+run = '''
+ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o IdentitiesOnly=yes \
+  -i .generated/ssh/ubuntu-bootstrap.pub \
+  "root@$(doctl compute droplet list cur8s-ubuntu-test --format PublicIPv4 --no-header)"
+'''
+
+[tasks.delete]
+description = "Delete the DigitalOcean Ubuntu test VM"
+confirm = "Delete the DigitalOcean Ubuntu test VM? This cannot be undone."
+run = '''
+doctl compute droplet delete cur8s-ubuntu-test --force
 '''
