@@ -6,5 +6,3 @@
 - import_playbook: update-ubuntu-packages.yml
 - import_playbook: install-tailscale.yml
 - import_playbook: join-tailscale.yml
-- import_playbook: install-osquery.yml
-- import_playbook: install-lynis.yml

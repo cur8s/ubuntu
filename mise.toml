@@ -216,6 +216,26 @@ ansible-playbook \
   ansible/playbooks/examples/install-zot.yml
 '''
 
+[tasks.test-vm-install-osquery]
+description = "Install osquery on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-osquery.yml
+'''
+
+[tasks.test-vm-install-lynis]
+description = "Install Lynis on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-lynis.yml
+'''
+
 [tasks.test-vm-reboot-if-needed]
 description = "Reboot the DigitalOcean test VM if Ubuntu requires it"
 run = '''

@@ -19,8 +19,6 @@ A host conforms to the Host Baseline when it satisfies the following requirement
 * Tailscale-managed automatic updates
 * the administrator SSH key for bootstrap and recovery access
 * OpenSSH configured for key-based access with password authentication disabled
-* osquery for interactive inspection
-* Lynis for manual audit
 
 **Ubuntu Release and Package Maintenance**
 
@@ -43,14 +41,6 @@ The host trusts the administrator SSH public key defined by RFC-003. This key es
 OpenSSH is configured for key-based access. Password-based SSH authentication is not part of the baseline.
 
 Day-to-day administration uses the Management Network. The administrator SSH key exists to preserve access when the Management Network is unavailable or when a host has not yet completed convergence.
-
-**Inspection and Audit Tools**
-
-The baseline includes local tools for inspection and manual audit.
-
-The baseline includes osquery for interactive use. The baseline does not require osquery daemon mode, fleet enrollment, or continuous query scheduling.
-
-The baseline includes Lynis for local manual auditing. The baseline does not require scheduled Lynis audits or centralized audit reporting.
 
 **Scope**
 

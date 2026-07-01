@@ -1,5 +1,5 @@
 ---
-- name: Install Lynis for baseline manual audit
+- name: Install Lynis for manual audit
   hosts: all
   become: true
   gather_facts: false

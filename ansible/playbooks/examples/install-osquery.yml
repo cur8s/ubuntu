@@ -1,5 +1,5 @@
 ---
-- name: Install osquery for baseline interactive inspection
+- name: Install osquery for interactive inspection
   hosts: all
   become: true
   gather_facts: false

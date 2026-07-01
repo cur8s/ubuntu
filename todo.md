@@ -52,10 +52,6 @@ Add a dedicated verification path once the baseline convergence behavior has set
 - [ ] Verify unattended package maintenance.
 - [ ] Verify Tailscale join state and Tailscale SSH state.
 - [ ] Verify `tailscaled.service` is enabled.
-- [ ] Verify osquery is installed for interactive use and not running as a daemon.
-- [ ] Verify the osquery apt source exists and `osqueryi` is available.
-- [ ] Verify Lynis is installed.
-- [ ] Verify the CISOfy Lynis apt source exists and `lynis` is available.
 - [ ] Produce a clear pass/fail baseline report.
 - [ ] Add an operational guide for converging a provisioned host.
 - [ ] Add an operational guide for reboot handling.
@@ -75,7 +71,7 @@ Keep these outside the baseline while showing how to build on it.
 - [ ] Validate that UFW is active in the UFW example.
 - [ ] Verify UFW only in the optional UFW example, not in the baseline.
 - [ ] Add mise tasks for the Fail2ban and UFW example playbooks.
-- [ ] Add an operational guide for installing optional examples such as Docker, PostgreSQL, and zot.
+- [ ] Add an operational guide for installing optional examples such as Docker, PostgreSQL, zot, osquery, and Lynis.
 
 ## Operational Shape And Documentation
 
