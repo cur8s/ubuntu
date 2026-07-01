@@ -1,49 +1,41 @@
 # Provision A Cloud VM
 
-The DigitalOcean test VM is provisioned with DigitalOcean SSH key metadata.
+The DigitalOcean test VM is provisioned with provider SSH key metadata.
 
-The provider bootstrap SSH private key stays in 1Password. The matching public key is registered with DigitalOcean and is used only to make the first root connection possible.
+The provider bootstrap SSH private key stays in 1Password. The matching public key is rendered locally, registered with DigitalOcean, and used only to make the first root connection possible.
 
-The `ansible` and `admin` SSH private keys also stay in 1Password. Their public keys are rendered from 1Password and installed during host initialization.
+The `ansible` and `admin` SSH private keys also stay in 1Password. Their public keys are rendered locally and installed during host initialization.
 
 The provider bootstrap, `ansible`, and `admin` SSH public keys must all use the `ssh-ed25519` OpenSSH public key type.
 
 The SSH test commands use the rendered public keys as OpenSSH identity hints. They also create a local symlink at `.generated/ssh/1password-agent.sock` so OpenSSH can address the 1Password SSH agent without the space in the macOS `Group Containers` path.
 
-The create task passes `--ssh-keys "$DO_SSH_KEY_ID"`. This provider-specific metadata prevents DigitalOcean from creating a temporary root password and forcing an interactive password change on first login.
-
-The registered DigitalOcean public key should match the provider bootstrap public key rendered from 1Password. DigitalOcean's metadata gets the first SSH connection working; Ansible then initializes the durable `ansible` and `admin` access paths.
+The create task registers the rendered bootstrap public key with DigitalOcean under `DO_BOOTSTRAP_SSH_KEY_NAME` when needed, resolves that account-local key ID, and passes it to `doctl compute droplet create --ssh-keys`. This provider-specific metadata prevents DigitalOcean from creating a temporary root password and forcing an interactive password change on first login.
 
 The default 1Password lookup is configured in `mise.toml`:
 
 ```toml
-OP_ADMIN_SSH_KEY_VAULT = "Development"
-OP_ADMIN_SSH_KEY_ITEM = "cur8s-ubuntu-lab"
-OP_ADMIN_SSH_PUBLIC_KEY_FIELD = "public key"
+OP_BOOTSTRAP_SSH_KEY_VAULT = "Development"
+OP_BOOTSTRAP_SSH_KEY_ITEM = "cur8s-ubuntu-bootstrap"
+OP_BOOTSTRAP_SSH_PUBLIC_KEY_FIELD = "public key"
 OP_ANSIBLE_SSH_KEY_VAULT = "Development"
 OP_ANSIBLE_SSH_KEY_ITEM = "ansible"
 OP_ANSIBLE_SSH_PUBLIC_KEY_FIELD = "public key"
 OP_ADMIN_USER_SSH_KEY_VAULT = "Development"
 OP_ADMIN_USER_SSH_KEY_ITEM = "admin"
 OP_ADMIN_USER_SSH_PUBLIC_KEY_FIELD = "public key"
-DO_SSH_KEY_ID = "57436897"
+DO_BOOTSTRAP_SSH_KEY_NAME = "cur8s-ubuntu-bootstrap"
 ```
 
-Override these environment values if the 1Password vault, item, or field names differ on your workstation.
-
-Render the SSH public keys used during initialization:
-
-```sh
-mise run render-initialize-ssh-public-keys
-```
-
-The init task also runs this render step automatically.
+Update these values if the 1Password vault, item, field names, or DigitalOcean SSH key name differ on your workstation.
 
 Create the test VM:
 
 ```sh
 mise run test-vm-create
 ```
+
+The create task renders the bootstrap public key and registers it with DigitalOcean automatically.
 
 Initialize the host:
 

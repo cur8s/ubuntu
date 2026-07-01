@@ -16,9 +16,7 @@ Create a fresh-host initialization path that turns a provider-created Ubuntu VM 
 - [ ] Prove `mise run test-vm-ssh-admin` works.
 - [ ] Decide the next initialization step after SSH access is proven.
 - [ ] After initialization is proven, switch `test-vm-converge` to run as `--user ansible --become`.
-- [ ] Document administrator SSH key storage, rendering, rotation, and recovery.
-- [ ] Replace the hard-coded DigitalOcean SSH key ID with lookup or verification against the 1Password-rendered administrator public key.
-- [ ] Decide whether `test-vm-ssh` and Ansible commands should constrain SSH to the rendered administrator public key with `IdentitiesOnly yes`.
+- [ ] Document SSH key rotation and recovery.
 - [ ] Consider adding a network-facing SSH probe.
 - [ ] Decide whether public SSH remains acceptable for bootstrap and recovery.
 - [ ] Decide whether a management network example should become part of a later baseline.
@@ -46,7 +44,7 @@ Add a dedicated verification path once the baseline convergence behavior has set
 - [ ] Add a dedicated baseline verification playbook or mode.
 - [ ] Use the captured `ubuntu-check` behavior as source material for the first verification pass.
 - [ ] Verify Ubuntu release conformance.
-- [ ] Verify the administrator SSH public key is authorized.
+- [ ] Verify the bootstrap SSH public key is authorized.
 - [ ] Verify OpenSSH baseline policy.
 - [ ] Verify the OpenSSH config drop-in exists.
 - [ ] Verify unattended package maintenance.
@@ -89,5 +87,5 @@ Turn the lab workflow into a clearer operating model.
 Add bare-metal provisioning after the cloud VM path is proven.
 
 - [ ] Add bare-metal Autoinstall assets.
-- [ ] Decide whether Autoinstall alone is sufficient for bare-metal administrator key delivery.
-- [ ] Add a NoCloud datasource template only if Autoinstall cannot cover the bare-metal administrator key workflow.
+- [ ] Decide whether Autoinstall alone is sufficient for bare-metal bootstrap key delivery.
+- [ ] Add a NoCloud datasource template only if Autoinstall cannot cover the bare-metal bootstrap key workflow.
