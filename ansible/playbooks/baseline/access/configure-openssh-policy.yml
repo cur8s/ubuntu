@@ -1,5 +1,5 @@
 ---
-- name: Lock down OpenSSH for baseline hosts
+- name: Configure baseline OpenSSH policy
   hosts: all
   become: true
   gather_facts: false

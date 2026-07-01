@@ -1,5 +1,5 @@
 ---
-- name: Validate baseline access users
+- name: Validate baseline SSH sudo access
   hosts: all
   become: true
   gather_facts: false

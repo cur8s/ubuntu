@@ -1,3 +1,3 @@
 ---
-- import_playbook: ensure-admin-ssh-key.yml
-- import_playbook: lockdown-ssh.yml
+- import_playbook: trust-bootstrap-ssh-key.yml
+- import_playbook: configure-openssh-policy.yml

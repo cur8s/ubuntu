@@ -1,5 +1,5 @@
 ---
-- name: Ensure administrator SSH key is trusted
+- name: Trust bootstrap SSH key
   hosts: all
   become: true
   gather_facts: false

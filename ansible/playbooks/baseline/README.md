@@ -15,4 +15,7 @@ Composed access playbooks:
 
 * `access/initialize.yml` creates and validates the baseline `ansible` and `admin` users.
 * `access/converge.yml` applies the steady-state SSH trust and OpenSSH policy.
-* `access/ensure-access-user.yml` is the reusable single-user setup playbook used by initialization.
+* `access/add-ssh-sudo-user.yml` is the reusable single-user setup playbook used by initialization.
+* `access/validate-ssh-sudo-access.yml` proves initialized users can connect over SSH and run passwordless sudo.
+* `access/trust-bootstrap-ssh-key.yml` preserves the bootstrap and recovery SSH key.
+* `access/configure-openssh-policy.yml` applies the baseline OpenSSH server policy.

@@ -1,5 +1,5 @@
 ---
-- name: Ensure baseline access user exists
+- name: Add baseline SSH sudo user
   hosts: all
   become: true
   gather_facts: false
