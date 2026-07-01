@@ -1,7 +1,7 @@
 # Workstation CLIs are intentionally managed outside mise for now.
-# Expected commands: op, doctl, jq, ssh, ssh-keygen.
+# Expected commands: op, doctl, jq, ssh.
 
-[tasks.keys]
+[tasks."key:extract"]
 description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
 quiet = true
 run = '''
@@ -11,18 +11,32 @@ mkdir -p .generated/ssh
 op read --force --out-file .generated/ssh/ubuntu-bootstrap.pub "op://devops/ubuntu-bootstrap/public key"
 op read --force --out-file .generated/ssh/ubuntu-ansible.pub "op://devops/ubuntu-ansible/public key"
 op read --force --out-file .generated/ssh/ubuntu-admin.pub "op://devops/ubuntu-admin/public key"
-
-ssh-keygen -E md5 -l -f .generated/ssh/ubuntu-bootstrap.pub |
-  awk '{ print $2 }' |
-  sed 's/^MD5://' > .generated/ssh/ubuntu-bootstrap.fingerprint
 '''
 
-[tasks.create]
+[tasks."key:upload"]
+description = "Upload the bootstrap SSH public key to DigitalOcean"
+run = '''
+doctl compute ssh-key import ubuntu-bootstrap \
+  --public-key-file .generated/ssh/ubuntu-bootstrap.pub \
+  --format ID,Name
+'''
+
+[tasks."key:delete"]
+description = "Delete the bootstrap SSH public key from DigitalOcean"
+confirm = "Delete the bootstrap SSH public key from DigitalOcean? This cannot be undone."
+run = '''
+bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r '.[] | select(.name == "ubuntu-bootstrap") | .id')"
+
+doctl compute ssh-key delete "$bootstrap_key_id" --force
+'''
+
+[tasks."vm:create"]
 description = "Create the DigitalOcean Ubuntu test VM"
 quiet = true
 run = '''
 echo "Creating the DigitalOcean Ubuntu test VM"
 droplet_count="$(doctl compute droplet list cur8s-ubuntu-test --output json | jq length)"
+bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r '.[] | select(.name == "ubuntu-bootstrap") | .id')"
 
 if [ "$droplet_count" -ne 0 ]; then
   echo "A DigitalOcean Droplet named cur8s-ubuntu-test already exists." >&2
@@ -33,12 +47,12 @@ doctl compute droplet create cur8s-ubuntu-test \
   --image ubuntu-24-04-x64 \
   --size s-1vcpu-1gb \
   --region tor1 \
-  --ssh-keys "$(cat .generated/ssh/ubuntu-bootstrap.fingerprint)" \
+  --ssh-keys "$bootstrap_key_id" \
   --format ID,Name,PublicIPv4,Status,Image \
   --wait
 '''
 
-[tasks.status]
+[tasks."vm:list"]
 description = "List matching DigitalOcean Ubuntu test VMs"
 quiet = true
 run = '''
@@ -46,7 +60,7 @@ doctl compute droplet list cur8s-ubuntu-test \
   --format ID,Name,PublicIPv4,Status,Image
 '''
 
-[tasks.ssh]
+[tasks."vm:ssh"]
 description = "SSH to the DigitalOcean Ubuntu test VM with the bootstrap key"
 run = '''
 ssh \
@@ -56,7 +70,7 @@ ssh \
   "root@$(doctl compute droplet list cur8s-ubuntu-test --format PublicIPv4 --no-header)"
 '''
 
-[tasks.delete]
+[tasks."vm:delete"]
 description = "Delete the DigitalOcean Ubuntu test VM"
 confirm = "Delete the DigitalOcean Ubuntu test VM? This cannot be undone."
 run = '''

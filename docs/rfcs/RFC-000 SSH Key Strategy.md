@@ -38,7 +38,7 @@ The bootstrap account is provider-specific:
 
 | Provider | Creation-time key mechanism | Bootstrap account model |
 | --- | --- | --- |
-| DigitalOcean | Droplet SSH key ID or fingerprint | `root` on the initial Ubuntu Droplet |
+| DigitalOcean | Droplet SSH key ID | `root` on the initial Ubuntu Droplet |
 | AWS EC2 | EC2 key pair referenced by `--key-name` | AMI-defined default user; Ubuntu AMIs use `ubuntu` |
 | Google Compute Engine | Instance metadata `ssh-keys` entry | Username embedded in metadata, such as `bootstrap:ssh-ed25519 ...` |
 | Azure VM | `az vm create --admin-username` with `--ssh-key-values` or `--ssh-key-name` | Caller-defined admin username, such as `bootstrap` |
