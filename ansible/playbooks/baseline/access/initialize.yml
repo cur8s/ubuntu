@@ -1,8 +1,8 @@
 ---
 - import_playbook: add-ssh-sudo-user.yml
   vars:
-    baseline_access_user_name: ansible
-    baseline_access_user_public_key_file: >-
+    user_name: ansible
+    public_key_file: >-
       {{
         baseline_ansible_public_key_file |
         default(lookup('ansible.builtin.env', 'ANSIBLE_SSH_PUBLIC_KEY_RENDERED'), true)
@@ -10,8 +10,8 @@
 
 - import_playbook: add-ssh-sudo-user.yml
   vars:
-    baseline_access_user_name: admin
-    baseline_access_user_public_key_file: >-
+    user_name: admin
+    public_key_file: >-
       {{
         baseline_admin_public_key_file |
         default(lookup('ansible.builtin.env', 'ADMIN_USER_SSH_PUBLIC_KEY_RENDERED'), true)

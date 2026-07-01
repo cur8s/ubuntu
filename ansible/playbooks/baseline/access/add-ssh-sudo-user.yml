@@ -4,96 +4,34 @@
   become: true
   gather_facts: false
 
-  vars:
-    baseline_access_user_public_key_pattern: '^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$'
-
   tasks:
-    - name: Require baseline access user name
+    # ==========================================================================
+    # Inputs
+    # ==========================================================================
+    - name: Check user name
       ansible.builtin.assert:
         that:
-          - baseline_access_user_name | default("") | length > 0
-        fail_msg: "Set baseline_access_user_name."
+          - user_name | default("") | length > 0
+        fail_msg: "Set user_name."
 
-    - name: Require baseline access user public key file path
+    - name: Check public key file path
       ansible.builtin.assert:
         that:
-          - baseline_access_user_public_key_file | default("") | length > 0
-        fail_msg: "Set baseline_access_user_public_key_file for {{ baseline_access_user_name }}."
+          - public_key_file | default("") | length > 0
+        fail_msg: "Set public_key_file for {{ user_name }}."
 
-    - name: Read baseline access user SSH public key
+    - name: Load public key from controller
       ansible.builtin.set_fact:
-        baseline_access_user_public_key: "{{ lookup('ansible.builtin.file', baseline_access_user_public_key_file) | trim }}"
+        public_key: "{{ lookup('ansible.builtin.file', public_key_file) | trim }}"
 
-    - name: Assert baseline access user SSH public key format
-      ansible.builtin.assert:
-        that:
-          - baseline_access_user_public_key is match(baseline_access_user_public_key_pattern)
-        fail_msg: "Rendered SSH public key for {{ baseline_access_user_name }} must be an ssh-ed25519 OpenSSH public key."
+    # ==========================================================================
+    # User Account
+    # ==========================================================================
+    - name: Add passwordless sudo user
+      ansible.builtin.import_tasks: tasks/add-passwordless-sudo-user.yml
 
-    - name: Ensure baseline access user exists
-      ansible.builtin.user:
-        name: "{{ baseline_access_user_name }}"
-        shell: /bin/bash
-        create_home: true
-        groups: sudo
-        append: true
-        password: "!"
-        update_password: on_create
-
-    - name: Ensure baseline access user SSH directory exists
-      ansible.builtin.file:
-        path: "/home/{{ baseline_access_user_name }}/.ssh"
-        state: directory
-        owner: "{{ baseline_access_user_name }}"
-        group: "{{ baseline_access_user_name }}"
-        mode: "0700"
-
-    - name: Ensure baseline access user authorized keys file exists
-      ansible.builtin.copy:
-        dest: "/home/{{ baseline_access_user_name }}/.ssh/authorized_keys"
-        content: ""
-        force: false
-        owner: "{{ baseline_access_user_name }}"
-        group: "{{ baseline_access_user_name }}"
-        mode: "0600"
-
-    - name: Ensure baseline access user SSH key is authorized
-      ansible.builtin.lineinfile:
-        path: "/home/{{ baseline_access_user_name }}/.ssh/authorized_keys"
-        line: "{{ baseline_access_user_public_key }}"
-        state: present
-        owner: "{{ baseline_access_user_name }}"
-        group: "{{ baseline_access_user_name }}"
-        mode: "0600"
-
-    - name: Configure passwordless sudo for baseline access user
-      ansible.builtin.copy:
-        dest: "/etc/sudoers.d/cur8s-{{ baseline_access_user_name }}"
-        owner: root
-        group: root
-        mode: "0440"
-        validate: /usr/sbin/visudo -cf %s
-        content: |
-          {{ baseline_access_user_name }} ALL=(ALL) NOPASSWD:ALL
-
-    - name: Read baseline access user authorized keys
-      ansible.builtin.slurp:
-        src: "/home/{{ baseline_access_user_name }}/.ssh/authorized_keys"
-      register: baseline_access_authorized_keys
-
-    - name: Assert baseline access user SSH key is authorized
-      ansible.builtin.assert:
-        that:
-          - baseline_access_user_public_key in (baseline_access_authorized_keys.content | b64decode)
-
-    - name: Validate passwordless sudo for baseline access user
-      ansible.builtin.command:
-        argv:
-          - sudo
-          - -n
-          - -u
-          - "{{ baseline_access_user_name }}"
-          - sudo
-          - -n
-          - /usr/bin/true
-      changed_when: false
+    # ==========================================================================
+    # SSH Access
+    # ==========================================================================
+    - name: Install Ed25519 authorized key
+      ansible.builtin.import_tasks: tasks/install-ed25519-authorized-key.yml

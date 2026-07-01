@@ -1,0 +1,33 @@
+---
+# ==========================================================================
+# Inputs
+# ==========================================================================
+- name: Check user name
+  ansible.builtin.assert:
+    that:
+      - user_name | default("") | length > 0
+    fail_msg: "Set user_name."
+
+- name: Check public key
+  ansible.builtin.assert:
+    that:
+      - public_key | default("") | length > 0
+    fail_msg: "Set public_key for {{ user_name }}."
+
+- name: Require Ed25519 public key
+  ansible.builtin.assert:
+    that:
+      - public_key is match(ed25519_public_key_pattern)
+    fail_msg: "Rendered SSH public key for {{ user_name }} must be an ssh-ed25519 OpenSSH public key."
+  vars:
+    ed25519_public_key_pattern: '^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$'
+
+# ==========================================================================
+# SSH Access
+# ==========================================================================
+- name: Install SSH public key
+  ansible.posix.authorized_key:
+    user: "{{ user_name }}"
+    key: "{{ public_key }}"
+    state: present
+    manage_dir: true
