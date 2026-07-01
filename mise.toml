@@ -149,7 +149,7 @@ ansible-playbook \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   --extra-vars "baseline_ansible_public_key_file=$(pwd)/$ANSIBLE_SSH_PUBLIC_KEY_RENDERED" \
   --extra-vars "baseline_admin_public_key_file=$(pwd)/$ADMIN_USER_SSH_PUBLIC_KEY_RENDERED" \
-  --extra-vars "baseline_access_identity_agent=$(pwd)/$OP_SSH_AGENT_SOCKET" \
+  --extra-vars "baseline_users_identity_agent=$(pwd)/$OP_SSH_AGENT_SOCKET" \
   ansible/playbooks/baseline/initialize.yml
 '''
 

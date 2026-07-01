@@ -1,2 +1,2 @@
 ---
-- import_playbook: access/initialize.yml
+- import_playbook: users/initialize.yml
