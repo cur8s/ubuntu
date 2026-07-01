@@ -1,6 +1,28 @@
-# Cur8s Ubuntu
+# Ubuntu Ansible Collection
 
-Cur8s Ubuntu is being rebuilt as an Ansible collection.
+This repository is being rebuilt as the `baseline.ubuntu` Ansible collection.
+
+The current steel thread is:
+
+1. Extract SSH public keys from 1Password.
+2. Create a temporary DigitalOcean Ubuntu VM with the provider bootstrap key.
+3. Run Ansible over the bootstrap SSH path.
+4. Converge the host to named `ansible` and `admin` users with locked passwords, `ssh-ed25519` authorized keys, and passwordless sudo.
+
+```sh
+mise run key:extract
+mise run key:upload
+mise run vm:create
+mise run ansible:bootstrap
+```
+
+## Ansible Shape
+
+`roles/users` contains the idempotent host state. It creates users, installs authorized keys, grants passwordless sudo, and verifies sudo with Ansible modules where modules fit the job.
+
+`playbooks/bootstrap.yml` is a thin entry point for the development bootstrap path. It reads extracted public key files from environment variables and passes normal Ansible variables into the role.
+
+`mise.toml` is contributor convenience only. It can call 1Password, DigitalOcean, and Ansible for local development, but provider and secret-manager behavior should not move into reusable collection roles.
 
 The previous playbook-oriented prototype has been moved to:
 

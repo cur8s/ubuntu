@@ -1,12 +1,14 @@
 # Workstation CLIs are intentionally managed outside mise for now.
-# Expected commands: op, doctl, jq, ssh.
+# Expected commands: op, doctl, jq, ssh, ansible-playbook.
 
 [env]
-DROPLET_NAME = "cur8s-ubuntu-test"
+DROPLET_NAME = "ubuntu-ansible-lab"
 DO_BOOTSTRAP_KEY_NAME = "ubuntu-bootstrap"
 BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
 ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
 ADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-admin.pub"
+ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
+ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 
 [tasks."key:extract"]
 description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
@@ -82,6 +84,18 @@ description = "Delete the DigitalOcean Ubuntu test VM"
 confirm = "Delete the DigitalOcean Ubuntu test VM? This cannot be undone."
 run = '''
 doctl compute droplet delete "$DROPLET_NAME" --force
+'''
+
+[tasks."ansible:bootstrap"]
+description = "Run Ansible baseline user bootstrap against the DigitalOcean Ubuntu test VM"
+run = '''
+mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  -u root \
+  --private-key "$BOOTSTRAP_PUB_KEY" \
+  "$MISE_CONFIG_ROOT/playbooks/bootstrap.yml"
 '''
 
 [tasks.clean]

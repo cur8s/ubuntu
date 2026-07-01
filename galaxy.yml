@@ -1,0 +1,20 @@
+---
+namespace: baseline
+name: ubuntu
+version: 0.1.0
+readme: README.md
+authors:
+  - Ubuntu collection contributors
+description: Baseline Ubuntu host configuration.
+license: []
+tags:
+  - ubuntu
+  - linux
+  - ssh
+  - sudo
+  - baseline
+dependencies:
+  ansible.posix: ">=2.0.0"
+build_ignore:
+  - .generated
+  - archive

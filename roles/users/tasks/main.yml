@@ -1,0 +1,44 @@
+---
+# Account names are fixed baseline policy. Only the public keys are caller inputs.
+# ==========================================================================
+# Inputs
+# ==========================================================================
+- name: Validate ansible user SSH key
+  ansible.builtin.include_tasks: validate-user.yml
+  vars:
+    ubuntu_user_name: ansible
+    ubuntu_user_public_key: "{{ ubuntu_users_ansible_public_key | default('') }}"
+
+- name: Validate admin user SSH key
+  ansible.builtin.include_tasks: validate-user.yml
+  vars:
+    ubuntu_user_name: admin
+    ubuntu_user_public_key: "{{ ubuntu_users_admin_public_key | default('') }}"
+
+# ==========================================================================
+# Ansible User
+# ==========================================================================
+- name: Create ansible user
+  ansible.builtin.include_tasks: create-passwordless-sudo-user.yml
+  vars:
+    ubuntu_user_name: ansible
+
+- name: Install ansible user SSH key
+  ansible.builtin.include_tasks: install-ssh-authorized-key.yml
+  vars:
+    ubuntu_user_name: ansible
+    ubuntu_user_public_key: "{{ ubuntu_users_ansible_public_key }}"
+
+# ==========================================================================
+# Admin User
+# ==========================================================================
+- name: Create admin user
+  ansible.builtin.include_tasks: create-passwordless-sudo-user.yml
+  vars:
+    ubuntu_user_name: admin
+
+- name: Install admin user SSH key
+  ansible.builtin.include_tasks: install-ssh-authorized-key.yml
+  vars:
+    ubuntu_user_name: admin
+    ubuntu_user_public_key: "{{ ubuntu_users_admin_public_key }}"
