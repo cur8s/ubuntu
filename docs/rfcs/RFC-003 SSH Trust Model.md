@@ -6,7 +6,9 @@ Password-based SSH authentication is not part of the Host Baseline. Every manage
 
 This administrator key is the bootstrap trust anchor. It exists to provision new hosts, recover inaccessible systems, and provide emergency administrative access.
 
-Day-to-day administration should use stronger identity-aware mechanisms where available. For the Host Baseline, this is Tailscale SSH, which issues short-lived SSH credentials based on the authenticated user’s identity. The administrator SSH key remains a recovery mechanism rather than the primary means of administration.
+Day-to-day administration uses named non-root administrative users with key-based SSH access. The administrator SSH key remains the bootstrap and recovery mechanism rather than the primary means of routine administration.
+
+Identity-aware management networks may be layered on top of the Host Baseline, but they are not part of the SSH trust model required by this RFC.
 
 The mechanism used to deliver the administrator public key is defined by RFC-004: Baseline Provisioning.
 

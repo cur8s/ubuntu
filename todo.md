@@ -21,7 +21,7 @@ Create a fresh-host initialization path that turns a provider-created Ubuntu VM 
 - [ ] Decide whether `test-vm-ssh` and Ansible commands should constrain SSH to the rendered administrator public key with `IdentitiesOnly yes`.
 - [ ] Consider adding a network-facing SSH probe.
 - [ ] Decide whether public SSH remains acceptable for bootstrap and recovery.
-- [ ] Decide how to enforce the Management Network as the exclusive administration path.
+- [ ] Decide whether a management network example should become part of a later baseline.
 
 ## SSH Hardening Policy
 
@@ -35,7 +35,7 @@ AllowTcpForwarding yes
 Port ${SSH_PORT}
 ```
 
-- [ ] Defer `PermitRootLogin no` until Tailscale SSH and/or a non-root administrator account is implemented; otherwise bootstrap and recovery access may break.
+- [ ] Defer `PermitRootLogin no` until non-root administrator access is proven; otherwise bootstrap and recovery access may break.
 - [ ] Do not add `Port ${SSH_PORT}` unless the baseline explicitly chooses non-standard SSH ports; it complicates Ansible, recovery, and network rules without much security value.
 - [ ] Do not add `AllowTcpForwarding yes` as hardening; it is an explicit allowance and should wait for a forwarding policy decision.
 
@@ -50,8 +50,6 @@ Add a dedicated verification path once the baseline convergence behavior has set
 - [ ] Verify OpenSSH baseline policy.
 - [ ] Verify the OpenSSH config drop-in exists.
 - [ ] Verify unattended package maintenance.
-- [ ] Verify Tailscale join state and Tailscale SSH state.
-- [ ] Verify `tailscaled.service` is enabled.
 - [ ] Produce a clear pass/fail baseline report.
 - [ ] Add an operational guide for converging a provisioned host.
 - [ ] Add an operational guide for reboot handling.
@@ -71,7 +69,7 @@ Keep these outside the baseline while showing how to build on it.
 - [ ] Validate that UFW is active in the UFW example.
 - [ ] Verify UFW only in the optional UFW example, not in the baseline.
 - [ ] Add mise tasks for the Fail2ban and UFW example playbooks.
-- [ ] Add an operational guide for installing optional examples such as Docker, PostgreSQL, zot, osquery, and Lynis.
+- [ ] Add an operational guide for installing optional examples such as Docker, PostgreSQL, zot, osquery, Lynis, and Tailscale.
 
 ## Operational Shape And Documentation
 

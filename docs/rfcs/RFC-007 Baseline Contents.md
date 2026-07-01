@@ -14,9 +14,6 @@ A host conforms to the Host Baseline when it satisfies the following requirement
 
 * the supported Ubuntu LTS release
 * unattended-upgrades for Ubuntu security and stable bug-fix maintenance
-* Tailscale for the Management Network
-* Tailscale SSH for day-to-day administration
-* Tailscale-managed automatic updates
 * the administrator SSH key for bootstrap and recovery access
 * OpenSSH configured for key-based access with password authentication disabled
 
@@ -26,12 +23,6 @@ The host runs the supported Ubuntu release defined by RFC-002: Baseline Ubuntu R
 
 The host keeps Ubuntu packages current using Ubuntu's normal unattended package maintenance mechanisms. Automatic package maintenance may apply security updates and stable bug fixes for the supported Ubuntu release. It must not perform major Ubuntu release upgrades or intentionally move the host away from the baseline release defined by RFC-002.
 
-**Management Network**
-
-The host joins the Management Network defined by RFC-006: Management Network.
-
-The Host Baseline currently implements the Management Network with Tailscale. Convergence installs Tailscale, joins the host to the tailnet, enables Tailscale SSH, and enables Tailscale-managed automatic updates.
-
 **Administrator SSH Key**
 
 The host satisfies the SSH Trust Model defined by RFC-003: SSH Trust Model.
@@ -40,7 +31,7 @@ The host trusts the administrator SSH public key defined by RFC-003. This key es
 
 OpenSSH is configured for key-based access. Password-based SSH authentication is not part of the baseline.
 
-Day-to-day administration uses the Management Network. The administrator SSH key exists to preserve access when the Management Network is unavailable or when a host has not yet completed convergence.
+Day-to-day administration uses named non-root administrative users with key-based SSH access. The administrator SSH key exists to preserve bootstrap and recovery access when a host has not yet completed initialization or when normal administrative access is unavailable.
 
 **Scope**
 

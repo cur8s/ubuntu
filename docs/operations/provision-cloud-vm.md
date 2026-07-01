@@ -8,8 +8,6 @@ The `ansible` and `admin` SSH private keys also stay in 1Password. Their public 
 
 The SSH test commands use the rendered public keys as OpenSSH identity hints. They also create a local symlink at `.generated/ssh/1password-agent.sock` so OpenSSH can address the 1Password SSH agent without the space in the macOS `Group Containers` path.
 
-The Tailscale auth key also stays in 1Password. The converge task reads it into the process-local `TAILSCALE_AUTHKEY` environment variable before Ansible starts. It is not written to a generated file.
-
 The create task passes `--ssh-keys "$DO_SSH_KEY_ID"`. This provider-specific metadata prevents DigitalOcean from creating a temporary root password and forcing an interactive password change on first login.
 
 The registered DigitalOcean public key should match the provider bootstrap public key rendered from 1Password. DigitalOcean's metadata gets the first SSH connection working; Ansible then initializes the durable `ansible` and `admin` access paths.
@@ -27,10 +25,6 @@ OP_ADMIN_USER_SSH_KEY_VAULT = "Development"
 OP_ADMIN_USER_SSH_KEY_ITEM = "admin"
 OP_ADMIN_USER_SSH_PUBLIC_KEY_FIELD = "public key"
 DO_SSH_KEY_ID = "57436897"
-TAILSCALE_TEST_VM_HOST = "cur8s-ubuntu-test.puma-mora.ts.net"
-OP_TAILSCALE_AUTHKEY_VAULT = "Development"
-OP_TAILSCALE_AUTHKEY_ITEM = "ubuntu-tailscale-auth-key"
-OP_TAILSCALE_AUTHKEY_FIELD = "password"
 ```
 
 Override these environment values if the 1Password vault, item, or field names differ on your workstation.
@@ -75,9 +69,11 @@ The converge task is the steady-state path and does not reboot the host. It stil
 Test Tailscale SSH:
 
 ```sh
+mise run test-vm-install-tailscale
+mise run test-vm-join-tailscale
 mise run test-vm-tailscale-ssh
 ```
 
-This task uses OpenSSH against the Tailscale MagicDNS name and disables public key, password, and keyboard-interactive authentication so the check proves Tailscale SSH is handling access.
+These optional example tasks install Tailscale, join the host to the tailnet, and then use OpenSSH against the Tailscale MagicDNS name with public key, password, and keyboard-interactive authentication disabled so the check proves Tailscale SSH is handling access. The join task reads the Tailscale auth key from the `OP_TAILSCALE_AUTHKEY_*` values in `mise.toml`.
 
 Rendered files are written under `.generated/` and are not committed.

@@ -1,5 +1,5 @@
 ---
-- name: Install Tailscale for the baseline management network
+- name: Install Tailscale for an example management network
   hosts: all
   become: true
   gather_facts: false

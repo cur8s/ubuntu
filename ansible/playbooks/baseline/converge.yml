@@ -4,5 +4,3 @@
 - import_playbook: lockdown-ssh.yml
 - import_playbook: enable-unattended-upgrades.yml
 - import_playbook: update-ubuntu-packages.yml
-- import_playbook: install-tailscale.yml
-- import_playbook: join-tailscale.yml

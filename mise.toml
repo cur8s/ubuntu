@@ -131,11 +131,6 @@ doctl compute droplet get "$DO_TEST_VM_NAME" \
 description = "Converge the baseline on the DigitalOcean test VM"
 depends = ["render-admin-ssh-public-key"]
 run = '''
-TAILSCALE_AUTHKEY="$(
-  op read "op://$OP_TAILSCALE_AUTHKEY_VAULT/$OP_TAILSCALE_AUTHKEY_ITEM/$OP_TAILSCALE_AUTHKEY_FIELD"
-)"
-export TAILSCALE_AUTHKEY
-
 ansible-playbook \
   -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
   --user root \
@@ -214,6 +209,31 @@ ansible-playbook \
   --user root \
   --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
   ansible/playbooks/examples/install-zot.yml
+'''
+
+[tasks.test-vm-install-tailscale]
+description = "Install Tailscale on the DigitalOcean test VM"
+run = '''
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/install-tailscale.yml
+'''
+
+[tasks.test-vm-join-tailscale]
+description = "Join the DigitalOcean test VM to Tailscale"
+run = '''
+TAILSCALE_AUTHKEY="$(
+  op read "op://$OP_TAILSCALE_AUTHKEY_VAULT/$OP_TAILSCALE_AUTHKEY_ITEM/$OP_TAILSCALE_AUTHKEY_FIELD"
+)"
+export TAILSCALE_AUTHKEY
+
+ansible-playbook \
+  -i "$(doctl compute droplet get "$DO_TEST_VM_NAME" --format PublicIPv4 --no-header)," \
+  --user root \
+  --ssh-common-args "-o StrictHostKeyChecking=accept-new" \
+  ansible/playbooks/examples/join-tailscale.yml
 '''
 
 [tasks.test-vm-install-osquery]

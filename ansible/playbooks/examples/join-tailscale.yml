@@ -1,5 +1,5 @@
 ---
-- name: Join Tailscale management network
+- name: Join Tailscale example management network
   hosts: all
   become: true
   gather_facts: false

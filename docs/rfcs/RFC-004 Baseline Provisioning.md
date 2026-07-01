@@ -19,7 +19,7 @@ Its responsibilities are limited to:
 * delivering an initial SSH trust path for the administrator SSH public key defined by RFC-003
 * producing a host that is reachable over SSH
 
-Provisioning does not apply the Host Baseline. Package installation, operating system configuration, security hardening, networking, firewall configuration, Tailscale, software updates, and every other aspect of the Host Baseline belong to baseline convergence.
+Provisioning does not apply the Host Baseline. Package installation, operating system configuration, security hardening, networking, firewall configuration, software updates, and every other aspect of the Host Baseline belong to baseline convergence.
 
 Baseline convergence enforces the final administrator SSH public key state after the first SSH connection is available.
 
