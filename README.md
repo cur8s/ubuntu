@@ -16,6 +16,14 @@ mise run vm:create
 mise run vm:init
 ```
 
+SSH shortcuts:
+
+```sh
+mise run ssh:root
+mise run ssh:ansible
+mise run ssh:admin
+```
+
 ## Ansible Shape
 
 `roles/users` contains the idempotent host state. It creates users, installs authorized keys, grants passwordless sudo, and verifies sudo with Ansible modules where modules fit the job.

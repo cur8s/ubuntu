@@ -69,14 +69,34 @@ doctl compute droplet list "$DROPLET_NAME" \
   --format ID,Name,PublicIPv4,Status,Image
 '''
 
-[tasks."vm:ssh"]
-description = "SSH to the DigitalOcean Ubuntu test VM with the bootstrap key"
+[tasks."ssh:root"]
+description = "SSH to the DigitalOcean Ubuntu test VM as root with the bootstrap key"
 run = '''
 ssh \
   -o StrictHostKeyChecking=accept-new \
   -o IdentitiesOnly=yes \
   -i "$BOOTSTRAP_PUB_KEY" \
   "root@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
+'''
+
+[tasks."ssh:ansible"]
+description = "SSH to the DigitalOcean Ubuntu test VM as ansible"
+run = '''
+ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o IdentitiesOnly=yes \
+  -i "$ANSIBLE_PUB_KEY" \
+  "ansible@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
+'''
+
+[tasks."ssh:admin"]
+description = "SSH to the DigitalOcean Ubuntu test VM as admin"
+run = '''
+ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o IdentitiesOnly=yes \
+  -i "$ADMIN_PUB_KEY" \
+  "admin@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
 '''
 
 [tasks."vm:delete"]

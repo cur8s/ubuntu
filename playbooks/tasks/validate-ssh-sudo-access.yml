@@ -1,0 +1,44 @@
+---
+# ==========================================================================
+# Inputs
+# ==========================================================================
+- name: Check SSH validation user name
+  ansible.builtin.assert:
+    that:
+      - user_name | default('') | length > 0
+    fail_msg: Set user_name.
+
+- name: Check SSH validation public key file
+  ansible.builtin.assert:
+    that:
+      - public_key_file | default('') | length > 0
+    fail_msg: "Set public_key_file for {{ user_name }}."
+
+- name: Check SSH validation target host
+  ansible.builtin.assert:
+    that:
+      - target_host | default('') | length > 0
+    fail_msg: "Set target_host for {{ user_name }}."
+
+# ==========================================================================
+# SSH and Sudo Access
+# ==========================================================================
+- name: Validate SSH and passwordless sudo for {{ user_name }} on {{ target_host }}
+  ansible.builtin.command:
+    argv:
+      - ssh
+      - -o
+      - BatchMode=yes
+      - -o
+      - StrictHostKeyChecking=accept-new
+      - -o
+      - IdentitiesOnly=yes
+      - -i
+      - "{{ public_key_file }}"
+      - "{{ user_name }}@{{ target_host }}"
+      - sudo
+      - -n
+      - /usr/bin/true
+  delegate_to: localhost
+  become: false
+  changed_when: false
