@@ -46,6 +46,8 @@
 
     - role: ssh
 
+    - role: unattended_upgrades
+
   post_tasks:
     # ==========================================================================
     # Validate Baseline Access

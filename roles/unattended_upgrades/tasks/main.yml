@@ -1,0 +1,52 @@
+---
+# Automatic security updates (a floor control). unattended-upgrades ships and is
+# enabled on Ubuntu cloud images; this role guarantees the baseline posture:
+# security updates apply automatically, and reboots are NEVER automatic (a reboot
+# is a deliberate operator/converge action, not a surprise from a background
+# daemon). Written check-mode-clean so `converge --check` reports real drift.
+- name: Ensure unattended-upgrades is installed
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+
+# ==========================================================================
+# Enable the periodic update + unattended-upgrade timers
+# ==========================================================================
+- name: Enable automatic package-list refresh and unattended upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+# ==========================================================================
+# Baseline policy: never auto-reboot
+# ==========================================================================
+# Higher-numbered drop-in wins over /etc/apt/apt.conf.d/50unattended-upgrades.
+# Security-only origins are already the distro default; we only pin the reboot
+# behavior so it can never surprise a running host.
+- name: Disable unattended-upgrades automatic reboot
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      // Managed by baseline.ubuntu. Reboots are a deliberate operator/converge
+      // action; the unattended-upgrades daemon must never reboot on its own.
+      Unattended-Upgrade::Automatic-Reboot "false";
+
+# ==========================================================================
+# Ensure the apt timers are enabled and running
+# ==========================================================================
+- name: Ensure apt periodic timers are enabled and active
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
