@@ -9,6 +9,7 @@ ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
 ADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-admin.pub"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
+CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline.yaml"
 
 [tasks."key:extract"]
 description = "Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
@@ -39,9 +40,15 @@ bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r --arg name 
 doctl compute ssh-key delete "$bootstrap_key_id" --force
 '''
 
+[tasks."cloud-init:render"]
+description = "Render cloud-init user-data from extracted public keys into .generated"
+quiet = true
+run = 'sh "$MISE_CONFIG_ROOT/playbooks/cloud-init/render.sh"'
+
 [tasks."vm:create"]
 description = "Create the DigitalOcean Ubuntu test VM"
 quiet = true
+depends = ["cloud-init:render"]
 run = '''
 echo "Creating the DigitalOcean Ubuntu test VM"
 droplet_count="$(doctl compute droplet list "$DROPLET_NAME" --output json | jq length)"
@@ -57,6 +64,7 @@ doctl compute droplet create "$DROPLET_NAME" \
   --size s-1vcpu-1gb \
   --region tor1 \
   --ssh-keys "$bootstrap_key_id" \
+  --user-data-file "$CLOUD_INIT_FILE" \
   --format ID,Name,PublicIPv4,Status,Image \
   --wait
 '''
