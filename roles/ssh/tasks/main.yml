@@ -13,21 +13,16 @@
 # ==========================================================================
 # Baseline OpenSSH Policy
 # ==========================================================================
+# Source of truth for the sshd baseline drop-in. cloud-init embeds this same
+# file at first boot, so the first converge is a no-op for it (see RFC-001 §5).
 - name: Install baseline OpenSSH policy
   ansible.builtin.copy:
+    src: 10-ubuntu-baseline.conf
     dest: /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
     owner: root
     group: root
     mode: "0644"
     validate: /usr/sbin/sshd -t -f %s
-    content: |
-      PasswordAuthentication no
-      KbdInteractiveAuthentication no
-      PubkeyAuthentication yes
-      PermitRootLogin prohibit-password
-      X11Forwarding no
-      ClientAliveInterval 300
-      ClientAliveCountMax 2
   notify: Reload OpenSSH
 
 # ==========================================================================

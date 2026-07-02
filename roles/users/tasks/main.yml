@@ -9,11 +9,11 @@
       - (ubuntu_users_ansible_public_key | default('')) is match('^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$')
     fail_msg: SSH public key for ansible must be an ssh-ed25519 OpenSSH public key.
 
-- name: Validate admin user SSH key
+- name: Validate sysadmin user SSH key
   ansible.builtin.assert:
     that:
-      - (ubuntu_users_admin_public_key | default('')) is match('^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$')
-    fail_msg: SSH public key for admin must be an ssh-ed25519 OpenSSH public key.
+      - (ubuntu_users_sysadmin_public_key | default('')) is match('^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( .*)?$')
+    fail_msg: SSH public key for sysadmin must be an ssh-ed25519 OpenSSH public key.
 
 # ==========================================================================
 # Ansible User
@@ -25,10 +25,10 @@
     ubuntu_user_public_key: "{{ ubuntu_users_ansible_public_key }}"
 
 # ==========================================================================
-# Admin User
+# Sysadmin User
 # ==========================================================================
-- name: Configure admin user
+- name: Configure sysadmin user
   ansible.builtin.include_tasks: configure-user.yml
   vars:
-    ubuntu_user_name: admin
-    ubuntu_user_public_key: "{{ ubuntu_users_admin_public_key }}"
+    ubuntu_user_name: sysadmin
+    ubuntu_user_public_key: "{{ ubuntu_users_sysadmin_public_key }}"

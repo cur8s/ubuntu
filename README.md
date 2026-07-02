@@ -7,9 +7,9 @@ The current steel thread is:
 1. Extract SSH public keys from 1Password.
 2. Create a temporary DigitalOcean Ubuntu VM with the provider bootstrap key.
 3. Initialize replacement access with Ansible over the provider bootstrap SSH path.
-4. Validate that the fixed `ansible` and `admin` users can SSH and use passwordless sudo.
+4. Validate that the fixed `ansible` and `sysadmin` users can SSH and use passwordless sudo.
 5. Switch Ansible to the new `ansible` SSH path and lock down OpenSSH.
-6. Validate `ansible` and `admin` access again after lockdown.
+6. Validate `ansible` and `sysadmin` access again after lockdown.
 
 ```sh
 mise run key:extract
@@ -33,7 +33,7 @@ Reboot validation:
 ```sh
 mise run vm:reboot
 mise run ssh:ansible
-mise run ssh:admin
+mise run ssh:sysadmin
 ```
 
 SSH shortcuts:
@@ -41,7 +41,7 @@ SSH shortcuts:
 ```sh
 mise run ssh:root
 mise run ssh:ansible
-mise run ssh:admin
+mise run ssh:sysadmin
 ```
 
 ## Ansible Shape

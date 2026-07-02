@@ -6,7 +6,7 @@ DROPLET_NAME = "ubuntu-ansible-lab"
 DO_BOOTSTRAP_KEY_NAME = "ubuntu-bootstrap"
 BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
 ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
-ADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-admin.pub"
+SYSADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-sysadmin.pub"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline.yaml"
@@ -20,7 +20,7 @@ mkdir -p "$(dirname "$BOOTSTRAP_PUB_KEY")"
 
 op read --force --out-file "$BOOTSTRAP_PUB_KEY" "op://devops/ubuntu-bootstrap/public key"
 op read --force --out-file "$ANSIBLE_PUB_KEY" "op://devops/ubuntu-ansible/public key"
-op read --force --out-file "$ADMIN_PUB_KEY" "op://devops/ubuntu-admin/public key"
+op read --force --out-file "$SYSADMIN_PUB_KEY" "op://devops/ubuntu-sysadmin/public key"
 '''
 
 [tasks."key:upload"]
@@ -97,14 +97,14 @@ ssh \
   "ansible@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
 '''
 
-[tasks."ssh:admin"]
-description = "SSH to the DigitalOcean Ubuntu test VM as admin"
+[tasks."ssh:sysadmin"]
+description = "SSH to the DigitalOcean Ubuntu test VM as sysadmin"
 run = '''
 ssh \
   -o StrictHostKeyChecking=accept-new \
   -o IdentitiesOnly=yes \
-  -i "$ADMIN_PUB_KEY" \
-  "admin@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
+  -i "$SYSADMIN_PUB_KEY" \
+  "sysadmin@$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)"
 '''
 
 [tasks."vm:delete"]

@@ -36,14 +36,14 @@ Provide a **known, hardened, reproducible starting state for Ubuntu hosts** — 
 
 **cloud-init, at first boot:**
 - creates **both access accounts** — `ansible` (automation door) and `sysadmin` (human break-glass) — with their authorized keys and sudo, so the host is reachable by its intended identities immediately;
-- performs an **`apt` full-upgrade** to pull the latest packages *and kernel* (first boot is the ideal moment — the box is empty), then **reboots** to activate the new kernel;
+- runs cloud-init's native **`package_upgrade`** (an `apt-get dist-upgrade` — a full upgrade including a new kernel; first boot is the ideal moment, the box is empty) and then **reboots unconditionally** — activating the new kernel and doubling as a smoke test, since converge can only connect afterward if the host returned with working SSH;
 - lays down the **sshd hardening drop-in** from the role-owned source file.
 
 **converge (the roles) is the single source of truth:**
 - **re-asserts** the accounts and sshd policy (correcting drift — a deleted key, a changed sudoer), and
 - applies the **behavioral/stateful controls it alone owns**: unattended-upgrades, time sync, audit, and bootstrap retirement (§8).
 
-**Lifecycle:** *boot → cloud-init (both accounts + full-upgrade + reboot + sshd file) → first converge (adds the behavioral controls) → every subsequent converge is a no-op* (the GitOps steady state).
+**Lifecycle:** *boot → cloud-init (both accounts + dist-upgrade + reboot + sshd file) → first converge (adds the behavioral controls) → every subsequent converge is a no-op* (the GitOps steady state).
 
 **First converge is a no-op for users and SSH hardening**, because cloud-init already applied them from the same sources — only the behavioral controls do new work on the first converge. What "the same" requires depends on how Ansible detects change, which is **per-module**:
 
@@ -52,7 +52,7 @@ Provide a **known, hardened, reproducible starting state for Ubuntu hosts** — 
 
 So the **"one source, two moments"** shared-file discipline applies to exactly **two files** (the sshd drop-in and the sudoers file); accounts and keys just need matching **state**. Behavioral controls stay converge-only.
 
-**First-boot patching complements the floor, it doesn't replace it.** First-boot upgrade catches the stale provider image up to current; **unattended-upgrades** (a floor item) keeps it patched over time. Converge *ensures* unattended-upgrades is configured but **does not** blanket-`apt upgrade` on every run. Known hazard to handle: the first-boot package step can race the `apt-daily`/`unattended-upgrades` timers for the dpkg lock.
+**First-boot patching complements the floor, it doesn't replace it.** First-boot upgrade catches the stale provider image up to current; **unattended-upgrades** (a floor item) keeps it patched over time. Converge *ensures* unattended-upgrades is configured but **does not** blanket-upgrade on every run. Using cloud-init's native package handling (which runs early in the config stage, before the `apt-daily` timers) avoids the dpkg-lock race a late `runcmd` upgrade would risk.
 
 ## 6. Management & drift model
 

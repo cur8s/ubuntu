@@ -4,7 +4,7 @@
   gather_facts: false
   vars:
     converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
-    converge_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    converge_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
 
   tasks:
     # ==========================================================================
@@ -15,7 +15,7 @@
       vars:
         extracted_public_key_files:
           - "{{ converge_ansible_public_key_file }}"
-          - "{{ converge_admin_public_key_file }}"
+          - "{{ converge_sysadmin_public_key_file }}"
 
 - name: Converge baseline Ubuntu host over ansible SSH
   hosts: all
@@ -24,7 +24,7 @@
   become: true
   vars:
     converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
-    converge_admin_public_key_file: "{{ lookup('ansible.builtin.env', 'ADMIN_PUB_KEY') }}"
+    converge_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
     ansible_ssh_private_key_file: "{{ converge_ansible_public_key_file }}"
 
   pre_tasks:
@@ -42,7 +42,7 @@
     - role: users
       vars:
         ubuntu_users_ansible_public_key: "{{ lookup('ansible.builtin.file', converge_ansible_public_key_file) | trim }}"
-        ubuntu_users_admin_public_key: "{{ lookup('ansible.builtin.file', converge_admin_public_key_file) | trim }}"
+        ubuntu_users_sysadmin_public_key: "{{ lookup('ansible.builtin.file', converge_sysadmin_public_key_file) | trim }}"
 
     - role: ssh
 
@@ -57,9 +57,9 @@
         public_key_file: "{{ converge_ansible_public_key_file }}"
         target_host: "{{ inventory_hostname }}"
 
-    - name: Validate admin SSH and sudo access
+    - name: Validate sysadmin SSH and sudo access
       ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
       vars:
-        user_name: admin
-        public_key_file: "{{ converge_admin_public_key_file }}"
+        user_name: sysadmin
+        public_key_file: "{{ converge_sysadmin_public_key_file }}"
         target_host: "{{ inventory_hostname }}"
