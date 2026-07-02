@@ -1,0 +1,47 @@
+---
+# Time synchronization (a floor control). Ubuntu 24.04 ships systemd-timesyncd
+# installed and enabled by default; this role guarantees the baseline posture:
+# the package is present, the service is enabled and running, and the clock is
+# actually NTP-synchronized. timesyncd (an SNTP client) is deliberate — the
+# baseline needs a correct clock (TLS, logs, apt), not a stratum server;
+# chrony stays a use-case decision. Written check-mode-clean so
+# `converge --check` reports real drift.
+- name: Ensure systemd-timesyncd is installed
+  ansible.builtin.apt:
+    name: systemd-timesyncd
+    state: present
+
+# ==========================================================================
+# Ensure the time sync service is enabled and running
+# ==========================================================================
+- name: Ensure systemd-timesyncd is enabled and active
+  ansible.builtin.systemd_service:
+    name: systemd-timesyncd.service
+    enabled: true
+    state: started
+
+# ==========================================================================
+# Assert the clock is NTP-synchronized
+# ==========================================================================
+# Read-only probe; check_mode false so the assert below stays trustworthy
+# under --check. Retries cover the window right after the service (re)starts,
+# before the first successful sync lands.
+- name: Read time synchronization status
+  ansible.builtin.command:
+    argv:
+      - timedatectl
+      - show
+      - --property=NTP
+      - --property=NTPSynchronized
+  register: ubuntu_time_sync_status
+  changed_when: false
+  check_mode: false
+  retries: 6
+  delay: 5
+  until: "'NTPSynchronized=yes' in ubuntu_time_sync_status.stdout_lines"
+
+- name: Assert NTP synchronization is enabled and active
+  ansible.builtin.assert:
+    that:
+      - "'NTP=yes' in ubuntu_time_sync_status.stdout_lines"
+      - "'NTPSynchronized=yes' in ubuntu_time_sync_status.stdout_lines"

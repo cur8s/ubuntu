@@ -48,6 +48,8 @@
 
     - role: unattended_upgrades
 
+    - role: time_sync
+
   post_tasks:
     # ==========================================================================
     # Validate Baseline Access

@@ -53,6 +53,8 @@
     enabled: true
     state: started
 
+# Read-only probe; check_mode false so the assert below stays trustworthy
+# under --check.
 - name: Read effective OpenSSH configuration
   ansible.builtin.command:
     argv:
@@ -60,6 +62,7 @@
       - -T
   register: ubuntu_ssh_effective_config
   changed_when: false
+  check_mode: false
 
 - name: Assert baseline OpenSSH policy is active
   ansible.builtin.assert:

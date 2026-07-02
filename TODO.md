@@ -12,14 +12,14 @@ Update as items land. `[x]` done · `[~]` in progress · `[ ]` not started.
 - [x] **Verified:** cloud-init brings up both users; `mise run vm:converge` is a no-op (`changed=0`) — the byte-identity / first-converge-no-op design holds.
 
 ## Behavioral floor roles (converge-only; RFC-001 §5, §7)
-- [~] **unattended_upgrades** — role created (`roles/unattended_upgrades`) + wired into `converge.yml`. Security-only, `Automatic-Reboot false`. **PENDING: verify on a droplet** — converge applies it, a 2nd converge is a no-op, `--check` reports drift correctly.
-- [ ] **time sync** — assert `systemd-timesyncd` enabled/active (24.04 default; timesyncd is fine, no need for chrony). Add role + wire into `converge.yml`.
+- [x] **unattended_upgrades** — role created (`roles/unattended_upgrades`) + wired into `converge.yml`. Security-only, `Automatic-Reboot false`. **Verified 2026-07-02:** converge applies it (`changed=1`, the `52-baseline` drop-in), 2nd converge is a no-op (`changed=0`), full `--check --diff` is clean, and drift-injection passes — deleted the drop-in on the droplet, `--check --diff` flagged exactly that task with the correct file diff (`changed=1 failed=0`), converge restored it (`changed=1`).
+- [x] **time sync** — `roles/time_sync`: asserts the 24.04 default (`systemd-timesyncd` package present, service enabled/active, `timedatectl` reports NTP-synchronized; probe runs under `--check` so the assert stays trustworthy). **Verified 2026-07-02:** all tasks `ok` on first converge, no-op on 2nd, check-mode-clean.
 - [ ] **audit / log capture** — **DESIGN DECISION NEEDED**: full `auditd` + rules (heavier; strong who/what/why) vs. persistent `journald` (light). Pick, then implement.
 - [ ] **bootstrap retirement** (RFC-001 §8) — gated converge role/task. Takes provider-bootstrap-username as input; runs ONLY after the `ansible`+`sysadmin` validations pass; strips its `authorized_keys`, drops its cloud-init sudoers, and `usermod -L` locks it (does NOT delete). Add per-environment on/off toggle (dev skips, prod enables). Design settled; test carefully (lockout risk). Note: decided to keep this at converge, NOT cloud-init (keeps root as a debug/break-glass path during first-boot bring-up).
 
 ## Validation & testing (RFC-001 §11, §12)
 - [ ] **Reboot-validation acceptance test** — opt-in play (NEVER routine converge): reboot → wait → re-verify `ansible`+`sysadmin` SSH+sudo → confirm floor services healthy. In the collection as an acceptance gate + wired into the `mise` test harness.
-- [ ] Confirm every role is **check-mode-clean** (`--check --diff` trustworthy, no false "changed").
+- [x] Confirm every role is **check-mode-clean** (`--check --diff` trustworthy, no false "changed"). **Verified 2026-07-02** for `users`/`ssh`/`unattended_upgrades`/`time_sync`: fixed `ssh` role (its `sshd -T` probe was skipped under `--check`, breaking the assert; now `check_mode: false`), full `--check --diff` runs `changed=0 failed=0`. Discipline for new roles: read-only probes get `changed_when: false` + `check_mode: false`.
 - [ ] Honor §12: run SSH-heavy ops (reboot validation, first converge) from CI/tailnet, not bursted from behind the UCG IPS.
 
 ## Cleanup & structure
