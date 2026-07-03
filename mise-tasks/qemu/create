@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+#MISE description="Create the local QEMU Ubuntu test VM (overlay disk, NoCloud seed, UEFI varstore)"
+#MISE quiet=true
+#MISE depends=["cloud-init:render", "qemu:fetch"]
+set -eu
+echo "Creating the local QEMU Ubuntu test VM"
+if [ -e "$QEMU_VM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:destroy first)." >&2
+  exit 1
+fi
+mkdir -p "$QEMU_VM_DIR"
+
+# Copy-on-write overlay: the cached base image stays pristine, cloud-init's
+# growpart expands the filesystem to the larger virtual size on first boot.
+base_image="$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")"
+qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
+  "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
+
+# NoCloud seed: an ISO labeled "cidata" holding the unchanged rendered
+# user-data plus a minimal meta-data. hdiutil is the macOS-native ISO
+# builder, so no cloud-localds/genisoimage dependency.
+seed_dir="$QEMU_VM_DIR/seed"
+mkdir -p "$seed_dir"
+cp "$CLOUD_INIT_FILE" "$seed_dir/user-data"
+printf 'instance-id: %s\nlocal-hostname: %s\n' "$QEMU_VM_NAME" "$QEMU_VM_NAME" \
+  > "$seed_dir/meta-data"
+hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
+  -o "$QEMU_VM_DIR/seed.iso" "$seed_dir"
+
+# Writable UEFI variable store; edk2-arm-vars.fd is QEMU's empty varstore
+# template for the aarch64 code firmware.
+cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
+
+echo "VM prepared in $QEMU_VM_DIR (start it with: mise run qemu:boot)"

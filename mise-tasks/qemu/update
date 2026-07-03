@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+#MISE description="Operator-invoked full package update on the local QEMU VM (never reboots; reports if one is pending)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new" \
+ansible-playbook \
+  -i "$(qemu_inventory)" \
+  "$MISE_CONFIG_ROOT/collection/playbooks/update.yml"

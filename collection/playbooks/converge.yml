@@ -84,14 +84,20 @@
       vars:
         user_name: ansible
         public_key_file: "{{ converge_ansible_public_key_file }}"
-        target_host: "{{ inventory_hostname }}"
+        # hostvars lookup, not bare ansible_host: the probe task delegates to
+        # localhost, and lazy templating would resolve bare connection vars
+        # against the delegate instead of this host.
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
 
     - name: Validate sysadmin SSH and sudo access
       ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
       vars:
         user_name: sysadmin
         public_key_file: "{{ converge_sysadmin_public_key_file }}"
-        target_host: "{{ inventory_hostname }}"
+        # hostvars lookup, not bare ansible_host: the probe task delegates to
+        # localhost, and lazy templating would resolve bare connection vars
+        # against the delegate instead of this host.
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
 
     # ==========================================================================
     # Bootstrap Retirement (opt-in)

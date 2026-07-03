@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+#MISE description="Boot the local QEMU Ubuntu test VM (daemonized; serial console to console.log)"
+set -eu
+if [ ! -d "$QEMU_VM_DIR" ]; then
+  echo "No local QEMU VM found (run mise run qemu:create first)." >&2
+  exit 1
+fi
+if [ -f "$QEMU_VM_DIR/qemu.pid" ] && kill -0 "$(cat "$QEMU_VM_DIR/qemu.pid")" 2>/dev/null; then
+  echo "The local QEMU VM is already running (pid $(cat "$QEMU_VM_DIR/qemu.pid"))." >&2
+  exit 1
+fi
+
+firmware="$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd"
+qemu-system-aarch64 \
+  -machine virt \
+  -accel hvf \
+  -cpu host \
+  -smp "$QEMU_CPUS" \
+  -m "$QEMU_MEMORY" \
+  -drive if=pflash,format=raw,readonly=on,file="$firmware" \
+  -drive if=pflash,format=raw,file="$QEMU_VM_DIR/efivars.fd" \
+  -drive if=virtio,format=qcow2,file="$QEMU_VM_DIR/disk.qcow2" \
+  -drive if=virtio,format=raw,readonly=on,file="$QEMU_VM_DIR/seed.iso" \
+  -netdev "user,id=net0,hostfwd=tcp:127.0.0.1:${QEMU_SSH_PORT}-:22" \
+  -device virtio-net-pci,netdev=net0 \
+  -display none \
+  -daemonize \
+  -pidfile "$QEMU_VM_DIR/qemu.pid" \
+  -serial "file:$QEMU_VM_DIR/console.log"
+
+echo "VM booting: SSH forwarded to 127.0.0.1:$QEMU_SSH_PORT (console: mise run qemu:console)"
+echo "First boot dist-upgrades and reboots; mise run qemu:wait blocks until it is ready."

@@ -23,6 +23,10 @@
 # ==========================================================================
 # SSH and Sudo Access
 # ==========================================================================
+# This probe validates authentication and sudo, not host identity — that
+# assurance belongs to the converge connection that just configured the
+# host. Pinning host keys here would hard-fail whenever an address is
+# reused (a local QEMU port forward, a recycled cloud IP).
 - name: Validate SSH and passwordless sudo for {{ user_name }} on {{ target_host }}
   ansible.builtin.command:
     argv:
@@ -32,11 +36,15 @@
       - -o
       - ConnectTimeout=10
       - -o
-      - StrictHostKeyChecking=accept-new
+      - UserKnownHostsFile=/dev/null
+      - -o
+      - StrictHostKeyChecking=no
       - -o
       - IdentitiesOnly=yes
       - -i
       - "{{ public_key_file }}"
+      - -p
+      - "{{ hostvars[inventory_hostname].ansible_port | default(22) }}"
       - "{{ user_name }}@{{ target_host }}"
       - sudo
       - -n

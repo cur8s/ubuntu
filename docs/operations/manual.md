@@ -136,7 +136,40 @@ mise run clean          # vm:delete + remove .generated/
 The droplet is disposable by design: recreating the full verified state is
 `vm:create` + `vm:converge`, about five minutes.
 
-## 8. Examples
+## 8. Local QEMU lab
+
+The provider-free mirror of sections 3–5: the same rendered cloud-init, the
+same playbooks, against a local VM instead of a droplet. Requires `qemu`
+(Homebrew) on Apple Silicon — the guest is the Ubuntu 24.04 **arm64** cloud
+image running at native speed under Hypervisor.framework, so the droplet
+(amd64) and the local lab (arm64) together exercise the baseline on both
+architectures.
+
+```sh
+mise run qemu:create     # renders cloud-init, fetches the cloud image (once),
+                         # builds the NoCloud seed ISO and overlay disk
+mise run qemu:boot       # daemonized; SSH forwarded to 127.0.0.1:2222
+mise run qemu:wait       # blocks until first-boot cloud-init (incl. the
+                         # dist-upgrade reboot) is done
+mise run qemu:converge   # then: validate-reboot, update, ssh:*, as with vm:*
+```
+
+Differences from the droplet flow:
+
+- **No bootstrap door.** NoCloud has no provider-injected account; the
+  rendered user-data defines the only users that ever exist. There is no
+  `qemu` counterpart to `ssh:root` or `vm:retire-bootstrap` — nothing to
+  retire.
+- **Serial console.** `mise run qemu:console` follows the boot console —
+  the debugging window when SSH isn't up.
+- **Teardown is local.** `mise run qemu:destroy` kills the VM and deletes
+  its state; the cached cloud image survives, so destroy → create → boot →
+  wait → converge is a fully offline few-minute loop. `clean` destroys the
+  QEMU VM too (and drops the image cache with the rest of `.generated/`).
+
+VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
+
+## 9. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
 them by theme and technique). Run one against the lab VM:
@@ -151,7 +184,7 @@ collection into `.generated/collections/` so each example's
 no commit or reinstall between iterations. Every example is idempotent by
 contract: run it twice and the second pass reports `changed=0`.
 
-## 9. Releasing
+## 10. Releasing
 
 Versioning and distribution policy: RFC-008 (`24.4.x`, git-only, main is
 prod).
@@ -167,7 +200,7 @@ git tag -a v24.4.1 -m "cur8s.ubuntu 24.4.1"
 git push origin main --tags
 ```
 
-## 10. Consuming the collection
+## 11. Consuming the collection
 
 Install directly from git (no registry — RFC-008):
 

@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+#MISE description="SSH to the local QEMU Ubuntu test VM as ansible"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_ssh ansible "$ANSIBLE_PUB_KEY"

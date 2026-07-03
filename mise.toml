@@ -19,3 +19,16 @@ SYSADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-sysadmin.pub"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline.yaml"
+
+# Local QEMU lab (mise-tasks/qemu/): Ubuntu arm64 cloud image booted with
+# hvf acceleration, first-boot config via a NoCloud seed ISO built from the
+# same rendered cloud-init the droplet uses.
+QEMU_VM_NAME = "ubuntu-qemu-lab"
+QEMU_SSH_PORT = "2222"
+QEMU_CPUS = "4"
+QEMU_MEMORY = "4G"
+QEMU_DISK_SIZE = "20G"
+QEMU_IMAGE_URL = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img"
+QEMU_SHA256SUMS_URL = "https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
+QEMU_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
+QEMU_VM_DIR = "{{config_root}}/.generated/qemu/vm"

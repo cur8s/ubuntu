@@ -94,6 +94,11 @@ Acceptance test (opt-in; never part of routine converge):
 mise run vm:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
+The same thread runs provider-free on a local QEMU VM — the arm64 cloud
+image under native virtualization, first-boot config via a NoCloud seed
+built from the identical rendered cloud-init (`mise run qemu:create`,
+`qemu:boot`, `qemu:wait`, `qemu:converge`; see the operations manual).
+
 SSH shortcuts:
 
 ```sh
