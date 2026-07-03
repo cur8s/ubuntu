@@ -2,13 +2,14 @@
 # Expected commands: op, doctl, jq, ssh, ansible-playbook.
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
-# mise-tasks/do/vm/create -> do:vm:create). Grammar: <lab>:<action> when the
-# lab is the object of a workflow (prep, up, examples); <lab>:<object>:<action>
-# when the verb acts on a component (vm lifecycle, collection plays, ssh
-# access, provider keys).
-# Future providers get their own family (aws:, azure:, ...). A namespace must
-# have multiple real members. Task scripts must be executable or mise silently
-# ignores them; shared helpers live in mise-tasks/lib.sh.
+# mise-tasks/do/vm/create -> do:vm:create). Grammar:
+# <provider>:<object>:<action> — providers are do and qemu (future ones get
+# their own family: aws:, azure:, ...); objects are vm (machine lifecycle),
+# play (collection playbooks), ssh (shell access, by user), test (examples),
+# key (provider keys). Workflows where the provider itself is the object
+# (prep, up) take no object segment. A namespace must have multiple real
+# members. Task scripts must be executable or mise silently ignores them;
+# shared helpers live in mise-tasks/lib.sh.
 
 [env]
 # Seconds to pause before SSH-heavy tasks (the do:play:* family and the

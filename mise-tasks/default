@@ -5,23 +5,40 @@ set -eu
 cat <<'EOF'
 cur8s.ubuntu labs — full details: docs/operations/manual.md
 
-  stage                     local QEMU (free, arm64)      droplet (amd64)
-  ------------------------  ----------------------------  ---------------------
-  1. prep (once)            qemu:prep                     do:prep
-  2. provision a VM         qemu:vm:create                do:vm:create
-                              -> qemu:vm:boot               -> do:vm:wait
-                              -> qemu:vm:wait
-  3. inspect by hand        qemu:ssh:ansible              do:ssh:ansible
-       where am I?          qemu:vm:status                do:vm:status
-       debug console        qemu:vm:console               —
-  4. converge (daily)       qemu:play:converge            do:play:converge
-  5. test the examples      qemu:test:all                 do:test:all
-  6. acceptance gate        qemu:play:validate-reboot     do:play:validate-reboot
-  7. tear down              qemu:vm:destroy               do:vm:destroy
+GRAMMAR: every task is   mise run <provider>:<object>:<action>
 
-  Stages 2+4 in one shot:   qemu:up                       do:up
-  One example:              qemu:test:<name>              do:test:<name>
-  Start over completely:    clean          Every task:    mise tasks
+  providers
+    qemu    local QEMU VM (free, arm64)
+    do      DigitalOcean droplet (amd64)
 
-Run any of these as: mise run <task>
+  objects
+    vm      the machine itself       create, boot, wait, status, destroy, ...
+    play    a collection playbook    converge, update, validate-reboot, ...
+    ssh     a shell, as this user    ansible, sysadmin, root
+    test    an example, or all       docker, k3s, zot, ..., all
+
+  workflows (no object — the provider itself is the object)
+    prep    one-time groundwork
+    up      provision + converge
+
+  Same grammar on every provider: swap qemu: for do: and it just works.
+
+A SESSION, START TO FINISH (local provider shown)
+
+  mise run qemu:prep             once: 1Password keys + cloud image cache (~600MB)
+  mise run qemu:up               stand up the lab, unattended
+                                 (= vm:create -> vm:boot -> vm:wait -> play:converge)
+  mise run qemu:vm:status        where am I? stages done, and the next command
+  mise run qemu:ssh:ansible      inspect by hand (boot problems: qemu:vm:console)
+  mise run qemu:play:converge    daily re-assert; changed=0 means conformant
+  mise run qemu:test:docker      test one example: runs it twice,
+                                 second pass must report changed=0
+  mise run qemu:test:all         every example, same contract
+  mise run qemu:play:validate-reboot   acceptance gate: reboot, re-verify access
+  mise run qemu:vm:destroy       tear down; the cached image survives
+
+  Droplet extras: do:ssh:root is the provider bootstrap door — until
+  do:play:retire-bootstrap locks it (run the acceptance gate first).
+
+  clean  destroy both labs + wipe .generated        mise tasks  the full list
 EOF

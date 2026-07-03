@@ -190,7 +190,7 @@ VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
 ## 9. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
-them by theme and technique). Each example has a test task per lab —
+them by theme and technique). Each example has a test task per provider —
 tab-complete `do:test:` or `qemu:test:` to see the catalog:
 
 ```sh
@@ -212,7 +212,7 @@ The test tasks depend on a hidden `example:link` task that symlinks the
 working-tree collection into `.generated/collections/` so each example's
 `import_playbook: cur8s.ubuntu.converge` resolves against your live edits —
 no commit or reinstall between iterations. Adding an example means adding
-its two `mise-tasks/<lab>/test/<name>` wrappers alongside the directory.
+its two `mise-tasks/<provider>/test/<name>` wrappers alongside the directory.
 
 ## 10. Releasing
 
