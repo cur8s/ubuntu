@@ -130,6 +130,16 @@ ansible-playbook \
   "$MISE_CONFIG_ROOT/playbooks/converge.yml"
 '''
 
+[tasks."vm:validate-reboot"]
+description = "Acceptance test: reboot the VM, re-verify baseline access and floor services"
+run = '''
+mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  "$MISE_CONFIG_ROOT/playbooks/validate-reboot.yml"
+'''
+
 [tasks.clean]
 description = "Delete the DigitalOcean Ubuntu test VM and generated local files"
 depends = ["vm:delete"]

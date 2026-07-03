@@ -23,6 +23,12 @@ mise run vm:create   # renders cloud-init, creates the VM
 mise run vm:converge
 ```
 
+Acceptance test (opt-in; never part of routine converge):
+
+```sh
+mise run vm:validate-reboot   # reboot → re-verify access + floor services
+```
+
 SSH shortcuts:
 
 ```sh

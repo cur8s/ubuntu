@@ -18,7 +18,7 @@ Update as items land. `[x]` done · `[~]` in progress · `[ ]` not started.
 - [ ] **bootstrap retirement** (RFC-001 §8) — gated converge role/task. Takes provider-bootstrap-username as input; runs ONLY after the `ansible`+`sysadmin` validations pass; strips its `authorized_keys`, drops its cloud-init sudoers, and `usermod -L` locks it (does NOT delete). Add per-environment on/off toggle (dev skips, prod enables). Design settled; test carefully (lockout risk). Note: decided to keep this at converge, NOT cloud-init (keeps root as a debug/break-glass path during first-boot bring-up).
 
 ## Validation & testing (RFC-001 §11, §12)
-- [ ] **Reboot-validation acceptance test** — opt-in play (NEVER routine converge): reboot → wait → re-verify `ansible`+`sysadmin` SSH+sudo → confirm floor services healthy. In the collection as an acceptance gate + wired into the `mise` test harness.
+- [x] **Reboot-validation acceptance test** — `playbooks/validate-reboot.yml` + `mise run vm:validate-reboot`: reboot (IPS-aware `post_reboot_delay`) → re-verify `ansible`+`sysadmin` SSH+sudo → floor units active → previous-boot journal readable (proves the journald pin across reboots). **Verified 2026-07-02** on the droplet.
 - [x] Confirm every role is **check-mode-clean** (`--check --diff` trustworthy, no false "changed"). **Verified 2026-07-02** for `users`/`ssh`/`unattended_upgrades`/`journald`: fixed `ssh` role (its `sshd -T` probe was skipped under `--check`, breaking the assert; now `check_mode: false`), full `--check --diff` runs `changed=0 failed=0`. Discipline for new roles: read-only probes get `changed_when: false` + `check_mode: false`.
 - [ ] Honor §12: run SSH-heavy ops (reboot validation, first converge) from CI/tailnet, not bursted from behind the UCG IPS.
 

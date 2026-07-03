@@ -1,0 +1,92 @@
+---
+# Reboot-validation acceptance test (RFC-001 §11). Opt-in gate — NEVER part
+# of routine converge: proves the baseline access contract and floor services
+# survive a reboot (kernel updates from unattended-upgrades included). Run it
+# before lockout-sensitive changes such as bootstrap retirement.
+#
+# §12 caveat: the reconnect involves SSH polling; run from a network that
+# tolerates it (the UCG IPS classifies tight SSH bursts as scanning — see
+# docs/notes/ucg-fibre-ips-ssh-blocking.md). post_reboot_delay keeps the
+# polling out of the boot window so the first attempt usually succeeds.
+- name: Validate local reboot-validation inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    converge_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ converge_ansible_public_key_file }}"
+          - "{{ converge_sysadmin_public_key_file }}"
+
+- name: Reboot baseline Ubuntu host and re-verify the floor
+  hosts: all
+  gather_facts: false
+  remote_user: ansible
+  become: true
+  vars:
+    converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    converge_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ converge_ansible_public_key_file }}"
+
+  pre_tasks:
+    - name: Wait for ansible SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+  tasks:
+    # ==========================================================================
+    # Reboot
+    # ==========================================================================
+    - name: Reboot host and wait for it to return
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+        post_reboot_delay: 45
+        connect_timeout: 10
+
+    # ==========================================================================
+    # Re-validate baseline access
+    # ==========================================================================
+    - name: Validate ansible SSH and sudo access after reboot
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: ansible
+        public_key_file: "{{ converge_ansible_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"
+
+    - name: Validate sysadmin SSH and sudo access after reboot
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: sysadmin
+        public_key_file: "{{ converge_sysadmin_public_key_file }}"
+        target_host: "{{ inventory_hostname }}"
+
+    # ==========================================================================
+    # Floor services healthy
+    # ==========================================================================
+    # is-active exits non-zero unless every unit is active, failing the play.
+    - name: Verify floor services are active after reboot
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - is-active
+          - ssh.socket
+          - systemd-journald.service
+          - apt-daily.timer
+          - apt-daily-upgrade.timer
+      changed_when: false
+
+    # The journald floor pin promises history survives reboots; the previous
+    # boot must be readable from the persistent journal.
+    - name: Verify journal history survived the reboot
+      ansible.builtin.command:
+        argv:
+          - journalctl
+          - --quiet
+          - --boot=-1
+          - --lines=1
+      changed_when: false
