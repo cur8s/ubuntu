@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="List matching DigitalOcean Ubuntu test VMs"
+#MISE quiet=true
+set -eu
+doctl compute droplet list "$DROPLET_NAME" \
+  --format ID,Name,PublicIPv4,Status,Image

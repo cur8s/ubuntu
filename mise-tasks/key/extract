@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+#MISE description="Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
+#MISE quiet=true
+set -eu
+echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"
+mkdir -p "$(dirname "$BOOTSTRAP_PUB_KEY")"
+
+op read --force --out-file "$BOOTSTRAP_PUB_KEY" "op://devops/ubuntu-bootstrap/public key"
+op read --force --out-file "$ANSIBLE_PUB_KEY" "op://devops/ubuntu-ansible/public key"
+op read --force --out-file "$SYSADMIN_PUB_KEY" "op://devops/ubuntu-sysadmin/public key"

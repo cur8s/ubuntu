@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+#MISE description="Run an example against the test VM: mise run example:run <name>"
+#MISE depends=["example:link"]
+#USAGE arg "<example>" help="Example directory name under examples/"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections" ansible-playbook \
+  -i "$(droplet_ip)," \
+  "$MISE_CONFIG_ROOT/examples/$usage_example/site.yml"

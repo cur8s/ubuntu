@@ -145,7 +145,7 @@ them by theme and technique). Run one against the lab VM:
 mise run example:run docker
 ```
 
-`example:run` depends on `examples:link`, which symlinks the working-tree
+`example:run` depends on `example:link`, which symlinks the working-tree
 collection into `.generated/collections/` so each example's
 `import_playbook: cur8s.ubuntu.converge` resolves against your live edits —
 no commit or reinstall between iterations. Every example is idempotent by

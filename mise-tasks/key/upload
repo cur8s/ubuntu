@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Upload the bootstrap SSH public key to DigitalOcean"
+set -eu
+doctl compute ssh-key import "$DO_BOOTSTRAP_KEY_NAME" \
+  --public-key-file "$BOOTSTRAP_PUB_KEY" \
+  --format ID,Name

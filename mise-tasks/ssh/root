@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+#MISE description="SSH to the DigitalOcean Ubuntu test VM as root before SSH lockdown"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+droplet_ssh root "$BOOTSTRAP_PUB_KEY"

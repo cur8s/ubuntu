@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+#MISE description="Converge with bootstrap retirement: lock the provider bootstrap user (root on DigitalOcean)"
+#MISE confirm="Retire the provider bootstrap user? Root SSH to the VM will stop working; recovery is the provider console."
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
+  -i "$(droplet_ip)," \
+  "$MISE_CONFIG_ROOT/collection/playbooks/converge.yml"

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+#MISE description="Converge the DigitalOcean Ubuntu test VM over ansible SSH"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+ansible-playbook \
+  -i "$(droplet_ip)," \
+  "$MISE_CONFIG_ROOT/collection/playbooks/converge.yml"

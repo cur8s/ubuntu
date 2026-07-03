@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+#MISE description="Delete the DigitalOcean Ubuntu test VM"
+#MISE confirm="Delete the DigitalOcean Ubuntu test VM? This cannot be undone."
+set -eu
+doctl compute droplet delete "$DROPLET_NAME" --force
