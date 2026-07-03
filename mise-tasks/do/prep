@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="One-time prep for the droplet lab: 1Password keys + DigitalOcean bootstrap key (next: do:up)"
+#MISE depends=["do:key-upload"]
+#MISE quiet=true
+set -eu
+echo "Droplet lab prepared: keys extracted, bootstrap key registered. Next: mise run do:up"

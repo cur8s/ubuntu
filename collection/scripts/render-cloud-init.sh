@@ -8,7 +8,7 @@
 # is a no-op for users and SSH hardening (RFC-005: Provisioning).
 #
 # Reads the extracted public keys under .generated/ssh (produced by
-# `mise run key:extract`) and the role-owned sshd drop-in; writes the
+# `mise run key:prep`) and the role-owned sshd drop-in; writes the
 # cloud-config to CLOUD_INIT_FILE. Depends only on files in the repo and under
 # .generated, never on 1Password.
 #
@@ -17,7 +17,7 @@
 set -eu
 
 if [ ! -s "$ANSIBLE_PUB_KEY" ] || [ ! -s "$SYSADMIN_PUB_KEY" ]; then
-  echo "Missing extracted public keys. Run 'mise run key:extract' first." >&2
+  echo "Missing extracted public keys. Run 'mise run do:prep' or 'mise run qemu:prep' first." >&2
   exit 1
 fi
 

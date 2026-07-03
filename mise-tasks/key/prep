@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Extract Ubuntu SSH public keys from 1Password into .generated/ssh"
+#MISE description="Extract Ubuntu SSH public keys from 1Password into .generated/ssh (needs 1Password approval)"
 #MISE quiet=true
 set -eu
 echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"

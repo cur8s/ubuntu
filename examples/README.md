@@ -39,9 +39,9 @@ mise run example:run docker qemu    # the local QEMU VM
 ```
 
 Run an example twice: the second run should report `changed=0` end to end
-(baseline no-op + idempotent layer). `mise run example:run-all [target]`
-enforces exactly that across every example (skipping `tailscale` unless
-`TAILSCALE_AUTHKEY` is set).
+(baseline no-op + idempotent layer). `mise run do:examples` and
+`mise run qemu:examples` enforce exactly that across every example
+(skipping `tailscale` unless `TAILSCALE_AUTHKEY` is set).
 
 ## Using from your own repository (consumers)
 

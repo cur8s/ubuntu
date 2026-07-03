@@ -82,10 +82,8 @@ The steel thread:
    do new work. Every subsequent converge is a no-op.
 
 ```sh
-mise run key:extract
-mise run do:key-upload
-mise run do:create   # renders cloud-init, creates the VM
-mise run do:converge
+mise run do:prep   # once: 1Password keys + DigitalOcean bootstrap key
+mise run do:up     # create → wait out first boot → converge
 ```
 
 Acceptance test (opt-in; never part of routine converge):
@@ -96,8 +94,8 @@ mise run do:validate-reboot   # reboot → re-verify access + baseline services
 
 The same thread runs provider-free on a local QEMU VM — the arm64 cloud
 image under native virtualization, first-boot config via a NoCloud seed
-built from the identical rendered cloud-init (`mise run qemu:create`,
-`qemu:boot`, `qemu:wait`, `qemu:converge`; see the operations manual).
+built from the identical rendered cloud-init (`mise run qemu:prep` once,
+then `mise run qemu:up`; see the operations manual).
 
 SSH shortcuts:
 

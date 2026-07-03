@@ -1,30 +1,10 @@
 #!/usr/bin/env sh
-#MISE description="Block until first-boot cloud-init is done (across the first-boot reboot)"
+#MISE description="Block until first-boot cloud-init is done on the QEMU VM (next: qemu:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 
-deadline=$(( $(date +%s) + ${QEMU_WAIT_TIMEOUT_SECONDS:-1200} ))
-
-cloud_init_done() {
-  qemu_ssh ansible "$ANSIBLE_PUB_KEY" cloud-init status --wait >/dev/null 2>&1
+qemu_probe() {
+  qemu_ssh ansible "$ANSIBLE_PUB_KEY" "$@"
 }
 
-wait_until_done() {
-  until cloud_init_done; do
-    if [ "$(date +%s)" -ge "$deadline" ]; then
-      echo "Timed out waiting for cloud-init to finish (console: mise run qemu:console)." >&2
-      exit 1
-    fi
-    sleep 10
-  done
-}
-
-echo "Waiting for cloud-init to finish (first boot dist-upgrades; this takes minutes)..."
-wait_until_done
-# The first-boot power_state reboot fires the moment cloud-init reports
-# done, so a success here may be the pre-reboot instance. Let the reboot
-# land, then require done again on the far side; on an already-settled VM
-# the second pass returns immediately.
-sleep 15
-wait_until_done
-echo "cloud-init is done; the VM is ready."
+wait_for_cloud_init qemu_probe

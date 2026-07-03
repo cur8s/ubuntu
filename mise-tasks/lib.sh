@@ -54,6 +54,76 @@ example_run() {
   )
 }
 
+# Block until cloud-init reports done, riding across the first-boot reboot.
+# $1 names a probe function that runs a remote command on the lab VM (the
+# remote command is appended as arguments). Timeout is
+# CLOUD_INIT_WAIT_TIMEOUT_SECONDS (default 1200).
+wait_for_cloud_init() {
+  _wait_probe="$1"
+  _wait_deadline=$(( $(date +%s) + ${CLOUD_INIT_WAIT_TIMEOUT_SECONDS:-1200} ))
+
+  _wait_until_done() {
+    until "$_wait_probe" cloud-init status --wait >/dev/null 2>&1; do
+      if [ "$(date +%s)" -ge "$_wait_deadline" ]; then
+        echo "Timed out waiting for cloud-init to finish." >&2
+        exit 1
+      fi
+      sleep 10
+    done
+  }
+
+  echo "Waiting for cloud-init to finish (first boot dist-upgrades; this takes minutes)..."
+  _wait_until_done
+  # The first-boot power_state reboot fires the moment cloud-init reports
+  # done, so a success here may be the pre-reboot instance. Let the reboot
+  # land, then require done again on the far side; on a settled VM the
+  # second pass returns immediately.
+  sleep 15
+  _wait_until_done
+  echo "cloud-init is done; the VM is ready."
+}
+
+# Run every example twice against a lab: example_run_all <do|qemu>.
+# The examples' contract: the second run is a full no-op. Second-run output
+# goes to a log so a clean pass stays quiet; recap lines are the only place
+# ansible prints "changed=N", so grepping the log for a non-zero count is
+# exact.
+example_run_all() {
+  _run_all_target="$1"
+  _run_all_skipped=""
+
+  for _example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
+    _example_name="$(basename "$_example_dir")"
+    [ -f "$_example_dir/site.yml" ] || continue
+
+    if [ "$_example_name" = "tailscale" ] && [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
+      echo "SKIP tailscale: TAILSCALE_AUTHKEY is not set. (Joining also leaves a node"
+      echo "in the tailnet admin console unless the auth key is ephemeral.)"
+      _run_all_skipped="$_run_all_skipped tailscale"
+      continue
+    fi
+
+    echo "==> $_example_name ($_run_all_target): first run"
+    example_run "$_example_name" "$_run_all_target"
+
+    echo "==> $_example_name ($_run_all_target): second run (idempotency contract: changed=0)"
+    _second_log="$ANSIBLE_LOCAL_TEMP/example-run-all-$_example_name.log"
+    if ! example_run "$_example_name" "$_run_all_target" > "$_second_log" 2>&1; then
+      cat "$_second_log"
+      echo "FAIL $_example_name: second run failed." >&2
+      exit 1
+    fi
+    if grep -qE 'changed=[1-9]' "$_second_log"; then
+      grep -A9 "PLAY RECAP" "$_second_log" || cat "$_second_log"
+      echo "FAIL $_example_name: second run reported changes." >&2
+      exit 1
+    fi
+    grep -hA3 "PLAY RECAP" "$_second_log" | sed "s/^/    /"
+  done
+
+  echo "All examples passed twice on $_run_all_target.${_run_all_skipped:+ Skipped:$_run_all_skipped.}"
+}
+
 # SSH to the local QEMU VM: qemu_ssh <user> <identity-file> [command...]
 # Each fresh VM presents new host keys on the same forwarded port, so the
 # known_hosts file lives in the VM state dir and dies with it.

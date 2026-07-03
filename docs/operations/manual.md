@@ -27,27 +27,37 @@ Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
 | `ubuntu-ansible` | `ansible` | converge automation |
 | `ubuntu-sysadmin` | `sysadmin` | human break-glass |
 
+Each lab has a one-time prep task that handles everything slow or
+attention-requiring up front:
+
 ```sh
-mise run key:extract   # pull the three public keys into .generated/ssh/
-mise run do:key-upload    # register the bootstrap public key with DigitalOcean (once per account)
+mise run do:prep     # 1Password keys + DigitalOcean bootstrap key (once per account)
+mise run qemu:prep   # 1Password keys + cloud image download (local lab)
 ```
 
-`do:key-delete` removes the bootstrap key from DigitalOcean if it must be
-rotated or retired provider-side.
+Both are safe to rerun (the key extraction refreshes, everything else
+no-ops) — after `mise run clean`, rerunning the prep of whichever lab you
+use restores the groundwork. Under the hood they share `key:prep` (the
+1Password extraction — expect one agent approval). `do:key-delete` removes
+the bootstrap key from DigitalOcean if it must be rotated or retired
+provider-side.
 
 ## 3. Provision the test VM
 
 ```sh
-mise run do:create     # renders cloud-init, then creates the droplet
+mise run do:up         # create → wait out first boot → converge
 mise run do:list       # ID, IP, status
 ```
 
-`do:create` renders `.generated/cloud-init/ubuntu-baseline.yaml` from the same
-sources the roles own (RFC-005) and creates droplet `ubuntu-ansible-lab`
-(Ubuntu 24.04, `s-1vcpu-1gb`, `tor1`). At first boot, cloud-init creates the
-`ansible` and `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades,
-and reboots unconditionally. Allow a few minutes before the first converge —
-the droplet reaching `active` predates the first-boot reboot finishing.
+`do:up` is the whole sequence: `do:create` renders
+`.generated/cloud-init/ubuntu-baseline.yaml` from the same sources the roles
+own (RFC-005) and creates droplet `ubuntu-ansible-lab` (Ubuntu 24.04,
+`s-1vcpu-1gb`, `tor1`); at first boot, cloud-init creates the `ansible` and
+`sysadmin` accounts, lays down the sshd drop-in, dist-upgrades, and reboots
+unconditionally; `do:wait` blocks until that first-boot cycle is done (the
+droplet reaching `active` predates it by minutes); `do:converge` runs the
+first converge. The steps remain runnable individually for debugging — each
+one's description names what normally follows it.
 
 ## 4. Converge
 
@@ -146,13 +156,15 @@ image running at native speed under Hypervisor.framework, so the droplet
 architectures.
 
 ```sh
-mise run qemu:create     # renders cloud-init, fetches the cloud image (once),
-                         # builds the NoCloud seed ISO and overlay disk
-mise run qemu:boot       # daemonized; SSH forwarded to 127.0.0.1:2222
-mise run qemu:wait       # blocks until first-boot cloud-init (incl. the
-                         # dist-upgrade reboot) is done
-mise run qemu:converge   # then: validate-reboot, update, ssh-*, as with do:*
+mise run qemu:prep   # once: 1Password keys + cloud image download
+mise run qemu:up     # create → boot (SSH on 127.0.0.1:2222) → wait → converge
 ```
+
+`qemu:up` runs `qemu:create` (NoCloud seed ISO + overlay disk from the
+rendered cloud-init), `qemu:boot` (daemonized), `qemu:wait` (blocks through
+the first-boot dist-upgrade and reboot), then `qemu:converge` — each step
+runnable individually for debugging. From there: `validate-reboot`,
+`update`, `ssh-*`, as with `do:*`.
 
 Differences from the droplet flow:
 
@@ -180,11 +192,11 @@ mise run example:run docker          # against the droplet (target do, the defau
 mise run example:run docker qemu     # against the local QEMU VM
 ```
 
-`example:run-all [target]` runs every example twice and fails unless each
-second pass reports `changed=0` — the examples' idempotency contract,
-enforced. It skips `tailscale` unless `TAILSCALE_AUTHKEY` is set (a join
-from a disposable VM leaves a node in the tailnet admin console unless the
-key is ephemeral). Examples must work on both supported architectures
+`do:examples` and `qemu:examples` run every example twice against their lab
+and fail unless each second pass reports `changed=0` — the examples'
+idempotency contract, enforced. They skip `tailscale` unless
+`TAILSCALE_AUTHKEY` is set (a join from a disposable VM leaves a node in
+the tailnet admin console unless the key is ephemeral). Examples must work on both supported architectures
 (RFC-008), and the two labs cover them: droplet amd64, QEMU arm64.
 
 `example:run` depends on `example:link`, which symlinks the working-tree

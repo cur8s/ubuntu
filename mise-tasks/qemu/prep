@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="One-time prep for the local QEMU lab: 1Password keys + cloud image cache (next: qemu:up)"
+#MISE depends=["key:prep", "qemu:fetch"]
+#MISE quiet=true
+set -eu
+echo "QEMU lab prepared: keys extracted, cloud image cached. Next: mise run qemu:up"
