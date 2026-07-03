@@ -34,8 +34,8 @@ working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run example:run docker          # droplet (default)
-mise run example:run docker qemu    # local QEMU VM
+mise run example:run docker          # the droplet (target do, the default)
+mise run example:run docker qemu    # the local QEMU VM
 ```
 
 Run an example twice: the second run should report `changed=0` end to end

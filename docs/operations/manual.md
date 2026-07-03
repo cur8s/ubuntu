@@ -29,20 +29,20 @@ Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
 
 ```sh
 mise run key:extract   # pull the three public keys into .generated/ssh/
-mise run key:upload    # register the bootstrap public key with DigitalOcean (once per account)
+mise run do:key-upload    # register the bootstrap public key with DigitalOcean (once per account)
 ```
 
-`key:delete` removes the bootstrap key from DigitalOcean if it must be
+`do:key-delete` removes the bootstrap key from DigitalOcean if it must be
 rotated or retired provider-side.
 
 ## 3. Provision the test VM
 
 ```sh
-mise run vm:create     # renders cloud-init, then creates the droplet
-mise run vm:list       # ID, IP, status
+mise run do:create     # renders cloud-init, then creates the droplet
+mise run do:list       # ID, IP, status
 ```
 
-`vm:create` renders `.generated/cloud-init/ubuntu-baseline.yaml` from the same
+`do:create` renders `.generated/cloud-init/ubuntu-baseline.yaml` from the same
 sources the roles own (RFC-005) and creates droplet `ubuntu-ansible-lab`
 (Ubuntu 24.04, `s-1vcpu-1gb`, `tor1`). At first boot, cloud-init creates the
 `ansible` and `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades,
@@ -52,7 +52,7 @@ the droplet reaching `active` predates the first-boot reboot finishing.
 ## 4. Converge
 
 ```sh
-mise run vm:converge
+mise run do:converge
 ```
 
 What healthy runs look like:
@@ -74,7 +74,7 @@ mise x -- sh -c 'ansible-playbook \
 
 If the workstation sits behind a rate-limiter or IPS that drops SSH bursts,
 set `SSH_SPACING_SECONDS` (default `0`) to pause before SSH-heavy tasks:
-`SSH_SPACING_SECONDS=120 mise run vm:converge`. Background: see
+`SSH_SPACING_SECONDS=120 mise run do:converge`. Background: see
 `docs/notes/ucg-fibre-ips-ssh-blocking.md`.
 
 Converge refuses hosts that don't run the targeted Ubuntu release (the
@@ -85,17 +85,17 @@ release guard — RFC-002, RFC-008): applying the 24.4.x series to a 22.04 or
 deliberate full update:
 
 ```sh
-mise run vm:update
+mise run do:update
 ```
 
 It never reboots; if updates leave a reboot pending it says so — run
-`mise run vm:validate-reboot`, the collection's only (and validating)
+`mise run do:validate-reboot`, the collection's only (and validating)
 reboot path.
 
 ## 5. Acceptance validation
 
 ```sh
-mise run vm:validate-reboot
+mise run do:validate-reboot
 ```
 
 The reboot-validation gate (RFC-007): reboots the host, waits for it to
@@ -108,33 +108,33 @@ environment.
 ## 6. Bootstrap retirement
 
 Point of no return for the provider SSH path (RFC-004). Preconditions: the
-target has passed `vm:validate-reboot`, and both named accounts validated in
+target has passed `do:validate-reboot`, and both named accounts validated in
 converge.
 
 ```sh
-mise run vm:retire-bootstrap   # asks for confirmation
+mise run do:retire-bootstrap   # asks for confirmation
 ```
 
 This converges with `BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root`: after the
 account validations pass, it strips root's `authorized_keys`, removes the
-cloud-init sudoers file, and locks the account. Afterward `mise run ssh:root`
+cloud-init sudoers file, and locks the account. Afterward `mise run do:ssh-root`
 stops working — by design — and recovery is the provider console. Routine
-`vm:converge` never retires anything (the toggle defaults off).
+`do:converge` never retires anything (the toggle defaults off).
 
 ## 7. SSH shortcuts and teardown
 
 ```sh
-mise run ssh:root       # provider bootstrap path (dead after retirement)
-mise run ssh:ansible
-mise run ssh:sysadmin
+mise run do:ssh-root       # provider bootstrap path (dead after retirement)
+mise run do:ssh-ansible
+mise run do:ssh-sysadmin
 
-mise run vm:reboot      # provider-level reboot (no validation; prefer vm:validate-reboot)
-mise run vm:delete      # destroy the droplet (asks for confirmation)
-mise run clean          # vm:delete + remove .generated/
+mise run do:reboot      # provider-level reboot (no validation; prefer do:validate-reboot)
+mise run do:delete      # destroy the droplet (asks for confirmation)
+mise run clean          # do:delete + qemu:destroy + remove .generated/
 ```
 
 The droplet is disposable by design: recreating the full verified state is
-`vm:create` + `vm:converge`, about five minutes.
+`do:create` + `do:converge`, about five minutes.
 
 ## 8. Local QEMU lab
 
@@ -151,14 +151,14 @@ mise run qemu:create     # renders cloud-init, fetches the cloud image (once),
 mise run qemu:boot       # daemonized; SSH forwarded to 127.0.0.1:2222
 mise run qemu:wait       # blocks until first-boot cloud-init (incl. the
                          # dist-upgrade reboot) is done
-mise run qemu:converge   # then: validate-reboot, update, ssh:*, as with vm:*
+mise run qemu:converge   # then: validate-reboot, update, ssh-*, as with do:*
 ```
 
 Differences from the droplet flow:
 
 - **No bootstrap door.** NoCloud has no provider-injected account; the
   rendered user-data defines the only users that ever exist. There is no
-  `qemu` counterpart to `ssh:root` or `vm:retire-bootstrap` — nothing to
+  `qemu` counterpart to `do:ssh-root` or `do:retire-bootstrap` — nothing to
   retire.
 - **Serial console.** `mise run qemu:console` follows the boot console —
   the debugging window when SSH isn't up.
@@ -176,7 +176,7 @@ them by theme and technique). Run one against a lab VM — the droplet by
 default, or the local QEMU VM:
 
 ```sh
-mise run example:run docker          # against the droplet
+mise run example:run docker          # against the droplet (target do, the default)
 mise run example:run docker qemu     # against the local QEMU VM
 ```
 

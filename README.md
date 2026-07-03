@@ -83,15 +83,15 @@ The steel thread:
 
 ```sh
 mise run key:extract
-mise run key:upload
-mise run vm:create   # renders cloud-init, creates the VM
-mise run vm:converge
+mise run do:key-upload
+mise run do:create   # renders cloud-init, creates the VM
+mise run do:converge
 ```
 
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run vm:validate-reboot   # reboot → re-verify access + baseline services
+mise run do:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
 The same thread runs provider-free on a local QEMU VM — the arm64 cloud
@@ -102,9 +102,9 @@ built from the identical rendered cloud-init (`mise run qemu:create`,
 SSH shortcuts:
 
 ```sh
-mise run ssh:root      # provider bootstrap path (until retirement)
-mise run ssh:ansible
-mise run ssh:sysadmin
+mise run do:ssh-root      # provider bootstrap path (until retirement)
+mise run do:ssh-ansible
+mise run do:ssh-sysadmin
 ```
 
 ## Ansible Shape
@@ -121,8 +121,8 @@ The baseline roles, applied by `collection/playbooks/converge.yml`:
 - `collection/roles/journald` — pins `Storage=persistent` so logs survive reboots.
 - `collection/roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
   `BOOTSTRAP_USER=<name>`): locks the provider bootstrap user once the
-  baseline accounts are validated; `mise run vm:retire-bootstrap` for the
-  lab VM. Run `vm:validate-reboot` first.
+  baseline accounts are validated; `mise run do:retire-bootstrap` for the
+  lab VM. Run `do:validate-reboot` first.
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not

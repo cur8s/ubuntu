@@ -2,12 +2,15 @@
 # Expected commands: op, doctl, jq, ssh, ansible-playbook.
 #
 # Tasks are file tasks under mise-tasks/ (subdirectories namespace the task
-# names: mise-tasks/vm/create -> vm:create). Task scripts must be executable
-# or mise silently ignores them; shared helpers live in mise-tasks/lib.sh.
+# names: mise-tasks/do/create -> do:create). Namespaces name the thing
+# operated on — a lab (do:, qemu:; future providers get aws:, azure:, ...)
+# or a workstation artifact — and stay exactly one level deep. Task scripts
+# must be executable or mise silently ignores them; shared helpers live in
+# mise-tasks/lib.sh.
 
 [env]
-# Seconds to pause before SSH-heavy tasks (vm:converge, vm:update,
-# vm:validate-reboot, vm:retire-bootstrap, example:run). 0 = no pause.
+# Seconds to pause before SSH-heavy tasks (do:converge, do:update,
+# do:validate-reboot, do:retire-bootstrap, example:run). 0 = no pause.
 # Set >0 (e.g. 120) when running from behind an IPS/rate-limiter that drops
 # SSH bursts — see docs/notes/ucg-fibre-ips-ssh-blocking.md.
 SSH_SPACING_SECONDS = "0"

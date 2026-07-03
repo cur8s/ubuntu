@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 #MISE description="Delete the DigitalOcean Ubuntu test VM, the local QEMU VM, and generated local files"
-#MISE depends=["vm:delete", "qemu:destroy"]
+#MISE depends=["do:delete", "qemu:destroy"]
 set -eu
 rm -rf "$MISE_CONFIG_ROOT/.generated"

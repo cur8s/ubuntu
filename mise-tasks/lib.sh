@@ -38,16 +38,16 @@ qemu_ansible_playbook() {
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 
-# Run one example against a target lab: example_run <example> <droplet|qemu>
+# Run one example against a target lab: example_run <example> <do|qemu>
 example_run() {
   _example_playbook="$MISE_CONFIG_ROOT/examples/$1/site.yml"
   (
     export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
     case "$2" in
-      droplet) ansible-playbook -i "$(droplet_ip)," "$_example_playbook" ;;
+      do) ansible-playbook -i "$(droplet_ip)," "$_example_playbook" ;;
       qemu) qemu_ansible_playbook "$_example_playbook" ;;
       *)
-        echo "Unknown example target '$2' (expected droplet or qemu)." >&2
+        echo "Unknown example target '$2' (expected do or qemu)." >&2
         exit 1
         ;;
     esac

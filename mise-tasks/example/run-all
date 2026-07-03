@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 #MISE description="Run every example twice against a lab VM; the second pass must report changed=0"
 #MISE depends=["example:link"]
-#USAGE arg "[target]" help="Lab to run against: droplet (default) or qemu" default="droplet"
+#USAGE arg "[target]" help="Lab to run against: do (default) or qemu" default="do"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
 
-target="${usage_target:-droplet}"
+target="${usage_target:-do}"
 skipped=""
 
 for example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
