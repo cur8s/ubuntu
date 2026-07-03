@@ -14,7 +14,7 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 | `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays | ported |
 | `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation | ported |
 | `postgres/` | database | versioned vendor package from PGDG, deb822 repo | planned |
-| `zot/` | containers | GitHub release binary → system user/dirs → config from vars → templated systemd unit + handlers | planned |
+| `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers | ported |
 | `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service | planned |
 | `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) | planned |
 | `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | planned |

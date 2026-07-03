@@ -1,0 +1,201 @@
+---
+# zot OCI registry from a GitHub release binary, run as a systemd service.
+#
+# Techniques demonstrated:
+#   - install a release binary (no package): arch mapping + get_url
+#   - dedicated system user/group and directory layout for a service
+#   - config file rendered from a structured var (to_nice_json)
+#   - hand-written systemd unit with resource limits + daemon_reload
+#   - handler-driven restarts, config verify before enable, API smoke test
+#
+# Layer example (RFC-001): the baseline is re-asserted first, then the layer
+# is applied. Run against the lab VM: mise run example:run zot
+- name: Re-assert the baseline
+  ansible.builtin.import_playbook: cur8s.ubuntu.converge
+
+- name: Install zot registry as a systemd service
+  hosts: all
+  remote_user: ansible
+  become: true
+  gather_facts: false
+
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    zot_version: "2.1.18"
+    zot_user: zot
+    zot_group: zot
+    zot_binary_path: /usr/bin/zot
+    zot_config_path: /etc/zot/config.json
+    zot_data_dir: /data/zot
+    zot_log_dir: /var/log/zot
+    zot_http_port: "5000"
+    zot_registry_url: "http://127.0.0.1:{{ zot_http_port }}"
+    zot_architecture_map:
+      amd64: amd64
+      arm64: arm64
+    zot_config:
+      distSpecVersion: "1.0.1"
+      storage:
+        dedupe: true
+        gc: true
+        gcDelay: "1h"
+        gcInterval: "6h"
+        rootDirectory: "{{ zot_data_dir }}/"
+      http:
+        address: "0.0.0.0"
+        port: "{{ zot_http_port }}"
+        realm: "zot"
+      log:
+        level: "info"
+        output: "{{ zot_log_dir }}/zot.log"
+
+  tasks:
+    - name: Read dpkg architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: dpkg_architecture
+      changed_when: false
+
+    - name: Select zot release architecture
+      ansible.builtin.set_fact:
+        zot_architecture: "{{ zot_architecture_map[dpkg_architecture.stdout] | default(dpkg_architecture.stdout) }}"
+
+    - name: Ensure download dependencies are present
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Ensure zot group exists
+      ansible.builtin.group:
+        name: "{{ zot_group }}"
+        system: true
+        state: present
+
+    - name: Ensure zot service user exists
+      ansible.builtin.user:
+        name: "{{ zot_user }}"
+        group: "{{ zot_group }}"
+        home: /nonexistent
+        shell: /usr/sbin/nologin
+        create_home: false
+        system: true
+        state: present
+
+    - name: Ensure zot directories exist
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - path: /etc/zot
+          owner: root
+          group: root
+          mode: "0755"
+        - path: "{{ zot_data_dir }}"
+          owner: "{{ zot_user }}"
+          group: "{{ zot_group }}"
+          mode: "0755"
+        - path: "{{ zot_log_dir }}"
+          owner: "{{ zot_user }}"
+          group: "{{ zot_group }}"
+          mode: "0755"
+
+    - name: Install zot release binary
+      ansible.builtin.get_url:
+        url: "https://github.com/project-zot/zot/releases/download/v{{ zot_version }}/zot-linux-{{ zot_architecture }}"
+        dest: "{{ zot_binary_path }}"
+        owner: root
+        group: root
+        mode: "0755"
+      notify: Restart zot
+
+    - name: Write zot configuration
+      ansible.builtin.copy:
+        dest: "{{ zot_config_path }}"
+        owner: root
+        group: root
+        mode: "0644"
+        content: "{{ zot_config | to_nice_json }}\n"
+      notify: Restart zot
+
+    - name: Install zot systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/zot.service
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=OCI Distribution Registry
+          Documentation=https://zotregistry.dev/
+          After=network.target local-fs.target
+
+          [Service]
+          Type=simple
+          ExecStart={{ zot_binary_path }} serve {{ zot_config_path }}
+          Restart=on-failure
+          User={{ zot_user }}
+          Group={{ zot_group }}
+          LimitNOFILE=500000
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Restart zot
+
+    # zot initializes its log file on ANY invocation, verify included. Without
+    # this, running verify as root creates a root-owned log the zot service
+    # user cannot open, and the service crash-loops. Pre-create it with
+    # service ownership (preserve times = idempotent touch).
+    - name: Ensure zot log file is owned by the service user
+      ansible.builtin.file:
+        path: "{{ zot_log_dir }}/zot.log"
+        state: touch
+        owner: "{{ zot_user }}"
+        group: "{{ zot_group }}"
+        mode: "0644"
+        access_time: preserve
+        modification_time: preserve
+
+    - name: Validate zot configuration
+      ansible.builtin.command: "{{ zot_binary_path }} verify {{ zot_config_path }}"
+      changed_when: false
+
+    - name: Enable and start zot
+      ansible.builtin.systemd_service:
+        name: zot.service
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    - name: Apply pending zot service changes before validation
+      ansible.builtin.meta: flush_handlers
+
+    # Right after a handler restart the unit is momentarily "activating";
+    # a bare is-active check races it. Retry until it settles.
+    - name: Validate zot service is active
+      ansible.builtin.command: systemctl is-active zot.service
+      register: zot_service_state
+      changed_when: false
+      failed_when: false
+      retries: 10
+      delay: 2
+      until: zot_service_state.stdout == "active"
+
+    - name: Assert zot service is active
+      ansible.builtin.assert:
+        that:
+          - zot_service_state.stdout == "active"
+
+    - name: Validate zot OCI registry API is reachable
+      ansible.builtin.command: "curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 1 --max-time 5 {{ zot_registry_url }}/v2/"
+      changed_when: false
+
+  handlers:
+    - name: Restart zot
+      ansible.builtin.systemd_service:
+        name: zot.service
+        state: restarted
+        daemon_reload: true
