@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+#MISE description="Show this workflow cheat sheet (runs on bare 'mise run')"
+#MISE quiet=true
+set -eu
+cat <<'EOF'
+cur8s.ubuntu labs — full details: docs/operations/manual.md
+
+  Local QEMU lab (free, arm64)         DigitalOcean droplet (amd64)
+  ----------------------------         ----------------------------
+  qemu:prep       once                 do:prep       once per account
+  qemu:up         stand up the lab     do:up         stand up the lab
+  qemu:status     is it running?       do:status     is it running?
+  qemu:converge   re-assert (daily)    do:converge   re-assert (daily)
+  qemu:examples   test all examples    do:examples   test all examples
+  qemu:validate-reboot  acceptance     do:validate-reboot  acceptance
+  qemu:destroy    tear down            do:destroy    tear down
+
+  One example:   mise run qemu:example <name>   (or do:example <name>)
+  SSH in:        mise run qemu:ssh-ansible      (or do:ssh-ansible, ...)
+  Start over:    mise run clean
+  Every task:    mise tasks
+
+Run any of these as: mise run <task>
+EOF

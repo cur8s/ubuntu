@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 #MISE description="Render cloud-init user-data from extracted public keys into .generated"
 #MISE quiet=true
+#MISE hide=true
 set -eu
 exec sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"

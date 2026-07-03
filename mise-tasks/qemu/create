@@ -2,6 +2,7 @@
 #MISE description="Create the local QEMU Ubuntu test VM (next: qemu:boot — or just qemu:up)"
 #MISE quiet=true
 #MISE depends=["cloud-init:render", "qemu:fetch"]
+#MISE hide=true
 set -eu
 echo "Creating the local QEMU Ubuntu test VM"
 if [ -e "$QEMU_VM_DIR" ]; then

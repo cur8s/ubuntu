@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 #MISE description="Extract Ubuntu SSH public keys from 1Password into .generated/ssh (needs 1Password approval)"
 #MISE quiet=true
+#MISE hide=true
 set -eu
 echo "Extracting Ubuntu SSH public keys from 1Password into .generated/ssh"
 mkdir -p "$(dirname "$BOOTSTRAP_PUB_KEY")"

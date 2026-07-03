@@ -19,6 +19,12 @@ Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
 - Generated files land under `.generated/` (git-ignored). Only public keys
   and rendered user-data are ever written there — no secrets.
 
+Bare `mise run` prints the workflow cheat sheet — the golden path through
+both labs. `mise tasks` lists the operator-level tasks; the step tasks the
+workflow tasks run internally (`do:create`, `qemu:boot`, …) are hidden from
+the listing but remain runnable by name for debugging — this manual and the
+task breadcrumbs name them where relevant.
+
 ## 2. Keys
 
 | 1Password item | Host account | Purpose |

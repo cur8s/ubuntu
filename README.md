@@ -86,6 +86,8 @@ mise run do:prep   # once: 1Password keys + DigitalOcean bootstrap key
 mise run do:up     # create → wait out first boot → converge
 ```
 
+(Bare `mise run` prints the workflow cheat sheet for both labs.)
+
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
