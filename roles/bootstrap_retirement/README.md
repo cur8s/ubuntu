@@ -7,7 +7,7 @@ file (`90-cloud-init-users`; the baseline accounts use their own per-user
 files), and locks the account's password. The account is locked, never
 deleted — provider tooling may assume it exists.
 
-Safety model (RFC-001 §8):
+Safety model (RFC-004: Identity and Trust; RFC-007: Validation and Acceptance):
 
 - **Off by default.** `converge.yml` runs this role only when
   `BOOTSTRAP_RETIRE=true` (with `BOOTSTRAP_USER` naming the account). Dev

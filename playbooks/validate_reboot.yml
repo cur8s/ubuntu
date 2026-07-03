@@ -1,10 +1,10 @@
 ---
-# Reboot-validation acceptance test (RFC-001 §11). Opt-in gate — NEVER part
+# Reboot-validation acceptance test (RFC-007: Validation and Acceptance). Opt-in gate — NEVER part
 # of routine converge: proves the baseline access contract and floor services
 # survive a reboot (kernel updates from unattended-upgrades included). Run it
 # before lockout-sensitive changes such as bootstrap retirement.
 #
-# §12 caveat: the reconnect involves SSH polling; run from a network that
+# Network caveat: the reconnect involves SSH polling; run from a network that
 # tolerates it (the UCG IPS classifies tight SSH bursts as scanning — see
 # docs/notes/ucg-fibre-ips-ssh-blocking.md). post_reboot_delay keeps the
 # polling out of the boot window so the first attempt usually succeeds.

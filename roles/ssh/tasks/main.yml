@@ -14,7 +14,7 @@
 # Baseline OpenSSH Policy
 # ==========================================================================
 # Source of truth for the sshd baseline drop-in. cloud-init embeds this same
-# file at first boot, so the first converge is a no-op for it (see RFC-001 §5).
+# file at first boot, so the first converge is a no-op for it (see RFC-005: Provisioning).
 - name: Install baseline OpenSSH policy
   ansible.builtin.copy:
     src: 10-ubuntu-baseline.conf

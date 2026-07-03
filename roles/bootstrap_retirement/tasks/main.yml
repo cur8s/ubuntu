@@ -1,5 +1,5 @@
 ---
-# Retires the provider bootstrap identity (RFC-001 §8). Converge-gated and
+# Retires the provider bootstrap identity (RFC-004: Identity and Trust). Converge-gated and
 # OFF by default: dev environments keep the provider door as a debug path,
 # prod retires it. Callers must invoke this ONLY after the ansible+sysadmin
 # access validations have passed (converge.yml does so in post_tasks) —

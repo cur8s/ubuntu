@@ -76,7 +76,7 @@
     # Gated per environment: dev keeps the provider bootstrap door as a debug
     # path, prod retires it. Deliberately AFTER the validations above — the
     # provider path is only removed once replacement access is proven
-    # (RFC-001 §8).
+    # (RFC-004: Identity and Trust).
     - name: Retire provider bootstrap user
       ansible.builtin.include_role:
         name: bootstrap_retirement

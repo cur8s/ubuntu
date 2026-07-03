@@ -1,0 +1,8 @@
+---
+# Install baseline.ubuntu from its git repository at a pinned release tag
+# (RFC-008: Release and Versioning). Track a branch instead by setting
+# version to a branch name (e.g. main).
+collections:
+  - name: https://github.com/cur8s/ubuntu.git
+    type: git
+    version: v24.4.0

@@ -1,9 +1,10 @@
 # Ubuntu Ansible Collection
 
 This repository is the `baseline.ubuntu` Ansible collection: the floor every
-Ubuntu host gets, regardless of what runs on top. Goals, architecture, and the
-floor-inclusion test live in
-`docs/rfcs/RFC-001 Baseline Goals and Architecture.md`.
+Ubuntu host gets, regardless of what runs on top. The architecture and its
+rationale live in `docs/rfcs/` (start with RFC-000 and read in order); the
+how-to lives in `docs/operations/manual.md`; runnable consumption examples
+live in `examples/`.
 
 The steel thread:
 
@@ -11,7 +12,7 @@ The steel thread:
 2. Render cloud-init user-data from the same sources the roles use.
 3. Create a DigitalOcean Ubuntu VM; cloud-init creates the `ansible` and
    `sysadmin` users, applies the sshd hardening drop-in, dist-upgrades, and
-   reboots (RFC-001 Model B).
+   reboots (RFC-005: Provisioning).
 4. Converge over the `ansible` SSH path. The first converge is a no-op for
    everything cloud-init already applied; only the behavioral floor controls
    do new work. Every subsequent converge is a no-op.
@@ -79,8 +80,9 @@ The version is `24.4.x`: major.minor mirror the Ubuntu LTS the floor targets
 (24.04), and `x` counts collection releases. The floor is **forever
 backward-compatible within its LTS era** — that policy, not version
 arithmetic, is the compatibility contract — so `x` only ever increments.
-When the next LTS lands, a new series starts (`26.4.0`) and the previous
-series moves to N-1 support (fixes, no new controls).
+When the baseline advances to the next LTS (RFC-008: Release and
+Versioning), a new series starts (`26.4.0`) and the previous series moves to
+maintenance (fixes, no new controls).
 
 `main` is the prod release. Each `galaxy.yml` version bump is tagged
 `v<version>`, so environments that want reproducible pins or rollback

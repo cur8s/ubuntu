@@ -23,7 +23,7 @@ setgid+ACL, degrading journal access for non-root `adm`/`systemd-journal`
 members until the next boot reapplies tmpfiles rules. Immediate manual
 remediation: `sudo systemd-tmpfiles --create --prefix=/var/log/journal`.
 
-Design decisions (RFC-001 §7, §9):
+Design decisions (RFC-002: Floor Doctrine, RFC-003: Floor Contents, RFC-004: Identity and Trust):
 
 - **journald, not auditd.** The floor's attribution contract is role-level
   (automation vs. human) with *what/when/why* coming from git + converge

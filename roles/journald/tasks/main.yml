@@ -1,6 +1,6 @@
 ---
-# Baseline audit/log capture (a floor control). RFC-001 §9 scopes the floor to
-# role-level attribution, so the journal must survive reboots — sshd/sudo/
+# Baseline audit/log capture (a floor control). RFC-004 scopes baseline
+# attribution to role level, so the journal must survive reboots — sshd/sudo/
 # service history has to still be there after an incident. Per-person "who"
 # belongs to the access layer, and forensic syscall auditing (auditd) is a
 # use-case/compliance layer; neither is owned or fought here. This role only

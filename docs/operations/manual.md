@@ -1,0 +1,160 @@
+# Operations Manual
+
+How to develop, verify, release, and consume `baseline.ubuntu`. The RFCs in
+`docs/rfcs/` own the what and the why; this manual owns the how. All commands
+run from the repository root.
+
+## 1. Prerequisites
+
+Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
+`doctl` (DigitalOcean), `jq`, `ansible-playbook` (ansible-core ≥ 2.16), `ssh`.
+
+- `doctl` authenticated against the target DigitalOcean account
+  (`doctl auth init`).
+- 1Password: a `devops` vault containing SSH key items `ubuntu-bootstrap`,
+  `ubuntu-ansible`, and `ubuntu-sysadmin`, each exposing a `public key` field.
+  All keys are `ssh-ed25519` (RFC-004). Private keys never leave 1Password;
+  SSH authenticates through the 1Password SSH agent, so expect an agent
+  authorization prompt on first use per session.
+- Generated files land under `.generated/` (git-ignored). Only public keys
+  and rendered user-data are ever written there — no secrets.
+
+## 2. Keys
+
+| 1Password item | Host account | Purpose |
+| --- | --- | --- |
+| `ubuntu-bootstrap` | provider bootstrap user (`root` on DigitalOcean) | first SSH path to a brand-new VM |
+| `ubuntu-ansible` | `ansible` | converge automation |
+| `ubuntu-sysadmin` | `sysadmin` | human break-glass |
+
+```sh
+mise run key:extract   # pull the three public keys into .generated/ssh/
+mise run key:upload    # register the bootstrap public key with DigitalOcean (once per account)
+```
+
+`key:delete` removes the bootstrap key from DigitalOcean if it must be
+rotated or retired provider-side.
+
+## 3. Provision the test VM
+
+```sh
+mise run vm:create     # renders cloud-init, then creates the droplet
+mise run vm:list       # ID, IP, status
+```
+
+`vm:create` renders `.generated/cloud-init/ubuntu-baseline.yaml` from the same
+sources the roles own (RFC-005) and creates droplet `ubuntu-ansible-lab`
+(Ubuntu 24.04, `s-1vcpu-1gb`, `tor1`). At first boot, cloud-init creates the
+`ansible` and `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades,
+and reboots unconditionally. Allow a few minutes before the first converge —
+the droplet reaching `active` predates the first-boot reboot finishing.
+
+## 4. Converge
+
+```sh
+mise run vm:converge
+```
+
+What healthy runs look like:
+
+- **First converge on a fresh VM:** only the converge-only floor controls
+  report `changed` (the unattended-upgrades and journald pins). Accounts and
+  SSH policy are already no-ops — cloud-init applied them from the same
+  sources (RFC-005).
+- **Every converge after that:** `changed=0`. A non-zero count on a
+  steady-state host is a drift report — read it, don't rerun past it.
+
+Drift detection without enforcement (RFC-006):
+
+```sh
+mise x -- sh -c 'ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  playbooks/converge.yml --check --diff'
+```
+
+If the workstation sits behind a rate-limiter or IPS that drops SSH bursts,
+set `SSH_SPACING_SECONDS` (default `0`) to pause before SSH-heavy tasks:
+`SSH_SPACING_SECONDS=120 mise run vm:converge`. Background: see
+`docs/notes/ucg-fibre-ips-ssh-blocking.md`.
+
+## 5. Acceptance validation
+
+```sh
+mise run vm:validate-reboot
+```
+
+The reboot-validation gate (RFC-007): reboots the host, waits for it to
+return, re-verifies `ansible` and `sysadmin` SSH + passwordless sudo,
+confirms the floor units are active, and reads the previous boot from the
+journal (proving the persistence pin across reboots). Opt-in only — never
+part of routine converge. Run it before enabling bootstrap retirement in any
+environment.
+
+## 6. Bootstrap retirement
+
+Point of no return for the provider SSH path (RFC-004). Preconditions: the
+target has passed `vm:validate-reboot`, and both named accounts validated in
+converge.
+
+```sh
+mise run vm:retire-bootstrap   # asks for confirmation
+```
+
+This converges with `BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root`: after the
+account validations pass, it strips root's `authorized_keys`, removes the
+cloud-init sudoers file, and locks the account. Afterward `mise run ssh:root`
+stops working — by design — and recovery is the provider console. Routine
+`vm:converge` never retires anything (the toggle defaults off).
+
+## 7. SSH shortcuts and teardown
+
+```sh
+mise run ssh:root       # provider bootstrap path (dead after retirement)
+mise run ssh:ansible
+mise run ssh:sysadmin
+
+mise run vm:delete      # destroy the droplet (asks for confirmation)
+mise run clean          # vm:delete + remove .generated/
+```
+
+The droplet is disposable by design: recreating the full verified state is
+`vm:create` + `vm:converge`, about five minutes.
+
+## 8. Releasing
+
+Versioning and distribution policy: RFC-008 (`24.4.x`, git-only, main is
+prod).
+
+1. Bump `version:` in `galaxy.yml` (next `24.4.x`).
+2. Verify the artifact builds clean:
+   `mise x -- ansible-galaxy collection build --output-path /tmp` and inspect
+   the tarball contents if `build_ignore` changed.
+3. Commit, then tag and push:
+
+```sh
+git tag -a v24.4.1 -m "baseline.ubuntu 24.4.1"
+git push origin main --tags
+```
+
+## 9. Consuming the collection
+
+Install directly from git (no registry — RFC-008):
+
+```sh
+ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git,v24.4.0
+```
+
+or in a consumer's `requirements.yml`, pin a tag (see `examples/`):
+
+```yaml
+collections:
+  - name: https://github.com/cur8s/ubuntu.git
+    type: git
+    version: v24.4.0
+```
+
+The stable consumer surface — playbook FQCNs (`baseline.ubuntu.converge`,
+`baseline.ubuntu.validate_reboot`), account names, paths, and environment
+variable inputs — is enumerated in RFC-009: Conventions Contract. The
+`examples/` directory holds a runnable environment-repo-shaped skeleton
+demonstrating the composition pattern.
