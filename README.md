@@ -3,10 +3,11 @@
 This repository is the `cur8s.ubuntu` Ansible collection: the baseline every
 Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
-the architecture and its rationale live in `docs/rfcs/` (start with RFC-000
-and read in order); the how-to lives in `docs/operations/manual.md`; runnable
-consumption examples live in `examples/`. The `mise` test harness may call
-cloud providers and a secrets manager; the collection itself never does.
+the installable collection lives in `collection/`; the architecture and its
+rationale live in `docs/rfcs/` (start with RFC-000 and read in order); the
+how-to lives in `docs/operations/manual.md`; runnable consumption examples
+live in `examples/`. The `mise` test harness may call cloud providers and a
+secrets manager; the collection itself never does.
 
 The steel thread:
 
@@ -42,17 +43,17 @@ mise run ssh:sysadmin
 
 ## Ansible Shape
 
-The baseline roles, applied by `playbooks/converge.yml`:
+The baseline roles, applied by `collection/playbooks/converge.yml`:
 
-- `roles/users` — the fixed `ansible` (automation) and `sysadmin`
+- `collection/roles/users` — the fixed `ansible` (automation) and `sysadmin`
   (break-glass) accounts: creation, authorized keys, passwordless sudo.
-- `roles/ssh` — the OpenSSH daemon policy drop-in (also embedded by
+- `collection/roles/ssh` — the OpenSSH daemon policy drop-in (also embedded by
   cloud-init at first boot), validated with `sshd -t` and asserted with
   `sshd -T`.
-- `roles/unattended_upgrades` — automatic security updates; reboots are never
+- `collection/roles/unattended_upgrades` — automatic security updates; reboots are never
   automatic.
-- `roles/journald` — pins `Storage=persistent` so logs survive reboots.
-- `roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
+- `collection/roles/journald` — pins `Storage=persistent` so logs survive reboots.
+- `collection/roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
   `BOOTSTRAP_USER=<name>`): locks the provider bootstrap user once the
   baseline accounts are validated; `mise run vm:retire-bootstrap` for the
   lab VM. Run `vm:validate-reboot` first.
@@ -61,7 +62,7 @@ The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
 asserted (see each role's README for what was deliberately left out).
 
-`playbooks/cloud-init/render.sh` generates the first-boot user-data from the
+`collection/playbooks/cloud-init/render.sh` generates the first-boot user-data from the
 same key files and sshd drop-in the roles own, which is what makes the first
 converge a no-op.
 

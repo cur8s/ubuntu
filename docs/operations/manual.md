@@ -127,7 +127,7 @@ prod).
 
 1. Bump `version:` in `galaxy.yml` (next `24.4.x`).
 2. Verify the artifact builds clean:
-   `mise x -- ansible-galaxy collection build --output-path /tmp` and inspect
+   `mise x -- ansible-galaxy collection build collection/ --output-path /tmp` and inspect
    the tarball contents if `build_ignore` changed.
 3. Commit, then tag and push:
 
@@ -141,14 +141,14 @@ git push origin main --tags
 Install directly from git (no registry — RFC-008):
 
 ```sh
-ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git
+ansible-galaxy collection install 'git+https://github.com/cur8s/ubuntu.git#/collection/'
 ```
 
 or in a consumer's `requirements.yml` (see `examples/`):
 
 ```yaml
 collections:
-  - name: https://github.com/cur8s/ubuntu.git
+  - name: https://github.com/cur8s/ubuntu.git#/collection/
     type: git
     version: main
 ```

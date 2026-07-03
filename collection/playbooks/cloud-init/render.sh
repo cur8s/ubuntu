@@ -21,8 +21,8 @@ if [ ! -s "$ANSIBLE_PUB_KEY" ] || [ ! -s "$SYSADMIN_PUB_KEY" ]; then
   exit 1
 fi
 
-repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-sshd_dropin="$repo_root/roles/ssh/files/10-ubuntu-baseline.conf"
+collection_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+sshd_dropin="$collection_root/roles/ssh/files/10-ubuntu-baseline.conf"
 
 if [ ! -s "$sshd_dropin" ]; then
   echo "Missing sshd drop-in source: $sshd_dropin" >&2

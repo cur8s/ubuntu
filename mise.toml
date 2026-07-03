@@ -48,7 +48,7 @@ doctl compute ssh-key delete "$bootstrap_key_id" --force
 [tasks."cloud-init:render"]
 description = "Render cloud-init user-data from extracted public keys into .generated"
 quiet = true
-run = 'sh "$MISE_CONFIG_ROOT/playbooks/cloud-init/render.sh"'
+run = 'sh "$MISE_CONFIG_ROOT/collection/playbooks/cloud-init/render.sh"'
 
 [tasks."vm:create"]
 description = "Create the DigitalOcean Ubuntu test VM"
@@ -133,7 +133,7 @@ mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 ansible-playbook \
   -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  "$MISE_CONFIG_ROOT/playbooks/converge.yml"
+  "$MISE_CONFIG_ROOT/collection/playbooks/converge.yml"
 '''
 
 [tasks."vm:retire-bootstrap"]
@@ -145,7 +145,7 @@ mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
   -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  "$MISE_CONFIG_ROOT/playbooks/converge.yml"
+  "$MISE_CONFIG_ROOT/collection/playbooks/converge.yml"
 '''
 
 [tasks."vm:validate-reboot"]
@@ -156,7 +156,7 @@ mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 ansible-playbook \
   -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  "$MISE_CONFIG_ROOT/playbooks/validate_reboot.yml"
+  "$MISE_CONFIG_ROOT/collection/playbooks/validate_reboot.yml"
 '''
 
 [tasks.clean]

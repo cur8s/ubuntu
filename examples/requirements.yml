@@ -3,6 +3,6 @@
 # Versioning). main is the prod release; once release tags exist, pin one
 # (e.g. version: v24.4.0) for reproducible installs and rollback.
 collections:
-  - name: https://github.com/cur8s/ubuntu.git
+  - name: https://github.com/cur8s/ubuntu.git#/collection/
     type: git
     version: main
