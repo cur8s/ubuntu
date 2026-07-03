@@ -1,7 +1,7 @@
 # Consuming baseline.ubuntu
 
 Consumer-side files, shaped like the smallest possible environment repo
-(tier three in RFC-001: The Baseline Collection). Copy them into your own
+(tier three in RFC-001: The Host Baseline). Copy them into your own
 repository as a starting point — they are not part of the collection's
 installable content.
 

@@ -1,10 +1,12 @@
 # Ubuntu Ansible Collection
 
 This repository is the `baseline.ubuntu` Ansible collection: the floor every
-Ubuntu host gets, regardless of what runs on top. The architecture and its
-rationale live in `docs/rfcs/` (start with RFC-000 and read in order); the
-how-to lives in `docs/operations/manual.md`; runnable consumption examples
-live in `examples/`.
+Ubuntu host gets, regardless of what runs on top. Everything needed to
+develop, verify, release, and consume the collection is self-contained here:
+the architecture and its rationale live in `docs/rfcs/` (start with RFC-000
+and read in order); the how-to lives in `docs/operations/manual.md`; runnable
+consumption examples live in `examples/`. The `mise` test harness may call
+cloud providers and a secrets manager; the collection itself never does.
 
 The steel thread:
 

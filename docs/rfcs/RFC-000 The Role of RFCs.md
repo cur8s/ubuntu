@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-This repository defines an opinionated baseline for Ubuntu Server systems, packaged as the `baseline.ubuntu` Ansible collection.
+This repository defines an opinionated baseline for Ubuntu Server systems.
 
 The purpose of these RFCs is to capture the architectural reasoning that constrains how the repository evolves. They define the models, boundaries, and constraints that preserve the identity of the system over time.
 
@@ -14,9 +14,9 @@ RFCs are authoritative but not immutable. Improvements that clarify intent, make
 
 RFCs deliberately describe what the system is and why it exists, not how it is operated or implemented. The operations manual (`docs/operations/manual.md`) owns the how. Engineering notes (`docs/notes/`) preserve the incidents and experiments that RFCs cite as evidence. Examples (`docs/examples/`, `examples/`) illustrate possibilities and prescribe nothing.
 
-The audience for these RFCs is anyone evolving or consuming this repository: contributors, users deciding whether to adopt the collection, and AI coding agents working in the tree. They provide a stable architectural contract that allows implementation details to change without changing the identity of the system.
+The audience for these RFCs is anyone evolving or consuming this repository: contributors, users deciding whether to adopt the baseline, and AI coding agents working in the tree. They provide a stable architectural contract that allows implementation details to change without changing the identity of the system.
 
-RFC numbers are stable identifiers. They are never renumbered or reused. In this series the numbers happen to follow the recommended reading order, but the identifiers, not the order, are what stay stable. An earlier RFC series from the playbook prototype that preceded this collection used its own numbering; that series is retired and its numbers carry no meaning here.
+RFC numbers are stable identifiers. They are never renumbered or reused. In this series the numbers happen to follow the recommended reading order, but the identifiers, not the order, are what stay stable. An earlier RFC series from the playbook prototype that preceded this repository used its own numbering; that series is retired and its numbers carry no meaning here.
 
 Each RFC declares a status. `Accepted` RFCs are in force. `Draft` RFCs record direction not yet proven by implementation. `Example` documents illustrate possibilities without prescribing anything.
 

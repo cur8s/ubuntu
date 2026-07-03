@@ -16,7 +16,7 @@ Detection and enforcement are one playbook and one flag: check mode reports what
 
 ## Composition
 
-A use-case collection's converge imports the baseline converge first, then applies its own purpose. Every tier re-asserts the floor (RFC-001: The Baseline Collection).
+A purpose layer's converge imports the baseline converge first, then applies its own purpose. Every tier re-asserts the floor (RFC-001: The Host Baseline).
 
 ## Ansible Is an Implementation Choice
 

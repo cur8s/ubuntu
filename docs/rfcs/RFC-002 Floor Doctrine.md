@@ -2,9 +2,7 @@
 
 Status: Accepted
 
-The baseline is a two-tier model.
-
-The immovable floor is a fixed set of invariants: always enforced, never turned off, re-asserted on every converge on every host. Layers are everything optional or overridable. Being disable-able is what makes something a layer. Layers add posture; the floor is minimal.
+RFC-001: The Host Baseline establishes the two-tier model: an immovable floor of invariants beneath optional layers. This RFC defines what qualifies a control for the floor, and the doctrine floor roles are written under.
 
 ## The Floor Inclusion Test
 
