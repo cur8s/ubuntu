@@ -1,70 +1,57 @@
 # Ubuntu Ansible Collection
 
-This repository is being rebuilt as the `baseline.ubuntu` Ansible collection.
+This repository is the `baseline.ubuntu` Ansible collection: the floor every
+Ubuntu host gets, regardless of what runs on top. Goals, architecture, and the
+floor-inclusion test live in
+`docs/rfcs/RFC-001 Baseline Goals and Architecture.md`.
 
-The current steel thread is:
+The steel thread:
 
 1. Extract SSH public keys from 1Password.
-2. Create a temporary DigitalOcean Ubuntu VM with the provider bootstrap key.
-3. Initialize replacement access with Ansible over the provider bootstrap SSH path.
-4. Validate that the fixed `ansible` and `sysadmin` users can SSH and use passwordless sudo.
-5. Switch Ansible to the new `ansible` SSH path and lock down OpenSSH.
-6. Validate `ansible` and `sysadmin` access again after lockdown.
+2. Render cloud-init user-data from the same sources the roles use.
+3. Create a DigitalOcean Ubuntu VM; cloud-init creates the `ansible` and
+   `sysadmin` users, applies the sshd hardening drop-in, dist-upgrades, and
+   reboots (RFC-001 Model B).
+4. Converge over the `ansible` SSH path. The first converge is a no-op for
+   everything cloud-init already applied; only the behavioral floor controls
+   do new work. Every subsequent converge is a no-op.
 
 ```sh
 mise run key:extract
 mise run key:upload
-mise run vm:create
-mise run vm:init
-```
-
-After `vm:init`, normal reruns should use the `ansible` account:
-
-```sh
+mise run vm:create   # renders cloud-init, creates the VM
 mise run vm:converge
-```
-
-The current SSH policy keeps root public key login available as a bootstrap
-recovery path while disabling password-based SSH. Removing bootstrap root access
-is a later milestone after the replacement access path passes reboot validation.
-
-Reboot validation:
-
-```sh
-mise run vm:reboot
-mise run ssh:ansible
-mise run ssh:sysadmin
 ```
 
 SSH shortcuts:
 
 ```sh
-mise run ssh:root
+mise run ssh:root      # provider bootstrap path (until retirement)
 mise run ssh:ansible
 mise run ssh:sysadmin
 ```
 
 ## Ansible Shape
 
-`roles/users` contains the idempotent user state. It creates users, installs authorized keys, grants passwordless sudo, and verifies sudo with Ansible modules where modules fit the job.
+The floor roles, applied by `playbooks/converge.yml`:
 
-`roles/ssh` contains the idempotent OpenSSH daemon policy. It writes a fixed
-`sshd_config.d` drop-in, validates it with `sshd -t`, reloads `ssh`, and asserts
-the effective policy with `sshd -T`.
+- `roles/users` — the fixed `ansible` (automation) and `sysadmin`
+  (break-glass) accounts: creation, authorized keys, passwordless sudo.
+- `roles/ssh` — the OpenSSH daemon policy drop-in (also embedded by
+  cloud-init at first boot), validated with `sshd -t` and asserted with
+  `sshd -T`.
+- `roles/unattended_upgrades` — automatic security updates; reboots are never
+  automatic.
+- `roles/journald` — pins `Storage=persistent` so logs survive reboots.
 
-`playbooks/initialize.yml` is the first-time VM initialization path. It starts
-over root bootstrap SSH only long enough to create and validate replacement
-users, then switches to the `ansible` account before applying SSH lockdown.
+The floor stays as close to distro defaults as possible: roles pin only
+off-default invariants; anything a default already guarantees is trusted, not
+asserted (see each role's README for what was deliberately left out).
 
-`playbooks/converge.yml` is the normal rerun path after initialization. It
-connects as `ansible`, applies the baseline roles, and validates access.
+`playbooks/cloud-init/render.sh` generates the first-boot user-data from the
+same key files and sshd drop-in the roles own, which is what makes the first
+converge a no-op.
 
-`mise.toml` is contributor convenience only. It can call 1Password, DigitalOcean, and Ansible for local development, but provider and secret-manager behavior should not move into reusable collection roles.
-
-The previous playbook-oriented prototype has been moved to:
-
-```text
-archive/playbook-prototype/
-```
-
-That archive remains useful reference material while the collection shape is rebuilt one piece at a time.
+`mise.toml` is contributor convenience only. It can call 1Password,
+DigitalOcean, and Ansible for local development, but provider and
+secret-manager behavior does not move into reusable collection roles.

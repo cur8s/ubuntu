@@ -17,4 +17,3 @@ dependencies:
   ansible.posix: ">=2.0.0"
 build_ignore:
   - .generated
-  - archive

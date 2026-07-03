@@ -120,16 +120,6 @@ run = '''
 doctl compute droplet-action reboot "$(doctl compute droplet list "$DROPLET_NAME" --format ID --no-header)" --wait
 '''
 
-[tasks."vm:init"]
-description = "Initialize the DigitalOcean Ubuntu test VM with baseline users and SSH lockdown"
-run = '''
-mkdir -p "$ANSIBLE_LOCAL_TEMP"
-
-ansible-playbook \
-  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  "$MISE_CONFIG_ROOT/playbooks/initialize.yml"
-'''
-
 [tasks."vm:converge"]
 description = "Converge the DigitalOcean Ubuntu test VM over ansible SSH"
 run = '''

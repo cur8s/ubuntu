@@ -1,5 +1,0 @@
----
-- import_playbook: preflight/require-ubuntu-release.yml
-- import_playbook: ssh/converge.yml
-- import_playbook: packages/enable-unattended-upgrades.yml
-- import_playbook: packages/update-ubuntu-packages.yml

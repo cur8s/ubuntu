@@ -23,8 +23,8 @@ Update as items land. `[x]` done · `[~]` in progress · `[ ]` not started.
 - [ ] Honor §12: run SSH-heavy ops (reboot validation, first converge) from CI/tailnet, not bursted from behind the UCG IPS.
 
 ## Cleanup & structure
-- [ ] Retire/remove legacy **`playbooks/initialize.yml`** (superseded by cloud-init Model B). Decide: delete vs. keep as a non-cloud-init fallback.
-- [ ] **Delete `archive/`** once the rebuild is done (historical; nothing in the active tree references it).
+- [x] Retire/remove legacy **`playbooks/initialize.yml`** — deleted 2026-07-02 along with the `vm:init` mise task (Model B settled; git history is the fallback). README rewritten to the cloud-init flow.
+- [x] **Delete `archive/`** — deleted 2026-07-02 (git history preserves it; `galaxy.yml` build_ignore entry dropped).
 - [ ] RFC-001 §14 open item: enumerate the full **conventions contract** (stable paths, Ansible facts/vars layers may rely on) as roles solidify.
 
 ## Collection / packaging (RFC-001 §3, §10)
