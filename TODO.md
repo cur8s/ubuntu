@@ -12,9 +12,6 @@ Completed work lives in git history and the RFC Revisions blocks.
 ## 3. First release (RFC-008)
 - [ ] Cut `v24.4.0` when the composition proof lands: bump nothing (version already `24.4.0`), tag, `git push origin main --tags`, then pin the tag in `examples/requirements.yml` and the manual's install snippets.
 
-## 4. Cleanup
-- [ ] Remove the local `archive/` reference copy (untracked + gitignored) once done mining it — `rm -rf archive/`. Git history preserves it (deleted in `685bf88`, restored locally 2026-07-03 for the RFC rewrite).
-
 ## Separate work (other repos)
 - `cur8s.tailscale` collection (opt-in access layer; the canonical dogfood consumer).
 - Optional Multipass local-dev loop for gateway-free iteration on the same cloud-init render.
