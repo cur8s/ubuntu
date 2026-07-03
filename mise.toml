@@ -156,7 +156,7 @@ mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 ansible-playbook \
   -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  "$MISE_CONFIG_ROOT/playbooks/validate-reboot.yml"
+  "$MISE_CONFIG_ROOT/playbooks/validate_reboot.yml"
 '''
 
 [tasks.clean]
