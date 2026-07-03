@@ -188,22 +188,24 @@ them by theme and technique). Run one against a lab VM — the droplet by
 default, or the local QEMU VM:
 
 ```sh
-mise run example:run docker          # against the droplet (target do, the default)
-mise run example:run docker qemu     # against the local QEMU VM
+mise run do:example docker     # against the droplet
+mise run qemu:example docker   # against the local QEMU VM
 ```
 
 `do:examples` and `qemu:examples` run every example twice against their lab
 and fail unless each second pass reports `changed=0` — the examples'
 idempotency contract, enforced. They skip `tailscale` unless
 `TAILSCALE_AUTHKEY` is set (a join from a disposable VM leaves a node in
-the tailnet admin console unless the key is ephemeral). Examples must work on both supported architectures
-(RFC-008), and the two labs cover them: droplet amd64, QEMU arm64.
+the tailnet admin console unless the key is ephemeral). Examples must work
+on both supported architectures (RFC-008), and the two labs cover them:
+droplet amd64, QEMU arm64.
 
-`example:run` depends on `example:link`, which symlinks the working-tree
-collection into `.generated/collections/` so each example's
-`import_playbook: cur8s.ubuntu.converge` resolves against your live edits —
-no commit or reinstall between iterations. Every example is idempotent by
-contract: run it twice and the second pass reports `changed=0`.
+The example runners depend on a hidden `example:link` task that symlinks
+the working-tree collection into `.generated/collections/` so each
+example's `import_playbook: cur8s.ubuntu.converge` resolves against your
+live edits — no commit or reinstall between iterations. Every example is
+idempotent by contract: run it twice and the second pass reports
+`changed=0`.
 
 ## 10. Releasing
 

@@ -10,7 +10,7 @@
 
 [env]
 # Seconds to pause before SSH-heavy tasks (do:converge, do:update,
-# do:validate-reboot, do:retire-bootstrap, example:run). 0 = no pause.
+# do:validate-reboot, do:retire-bootstrap, the example runners). 0 = no pause.
 # Set >0 (e.g. 120) when running from behind an IPS/rate-limiter that drops
 # SSH bursts — see docs/notes/ucg-fibre-ips-ssh-blocking.md.
 SSH_SPACING_SECONDS = "0"

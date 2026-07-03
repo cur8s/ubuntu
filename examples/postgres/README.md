@@ -16,7 +16,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run example:run postgres
+mise run do:example postgres
 ```
 
 The first play re-asserts the baseline (RFC-001); the second installs

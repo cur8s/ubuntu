@@ -16,7 +16,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run example:run docker
+mise run do:example docker
 ```
 
 The first play re-asserts the baseline (the composition pattern every layer

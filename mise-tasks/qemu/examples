@@ -2,6 +2,10 @@
 #MISE description="Run every example twice against the local QEMU VM; the second pass must report changed=0"
 #MISE depends=["example:link"]
 set -eu
+if [ "$#" -gt 0 ]; then
+  echo "qemu:examples runs the whole suite and takes no arguments. Did you mean: mise run qemu:example $1" >&2
+  exit 1
+fi
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
 

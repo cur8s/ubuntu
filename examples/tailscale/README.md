@@ -23,10 +23,10 @@ Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
 TAILSCALE_AUTHKEY="$(op read 'op://devops/ubuntu-tailscale-auth-key/password')" \
-  mise run example:run tailscale
+  mise run do:example tailscale
 ```
 
-Re-runs need no auth key once the host is joined (`mise run example:run
+Re-runs need no auth key once the host is joined (`mise run do:example
 tailscale` alone reports `changed=0`).
 
 Cleanup note: deleting the droplet does not remove its node from the

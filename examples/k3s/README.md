@@ -27,7 +27,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run example:run k3s
+mise run do:example k3s
 ```
 
 The first play re-asserts the baseline (RFC-001); the second installs k3s.

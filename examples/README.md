@@ -34,13 +34,13 @@ working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run example:run docker          # the droplet (target do, the default)
-mise run example:run docker qemu    # the local QEMU VM
+mise run do:example docker     # against the droplet
+mise run qemu:example docker   # against the local QEMU VM
 ```
 
 Run an example twice: the second run should report `changed=0` end to end
 (baseline no-op + idempotent layer). `mise run do:examples` and
-`mise run qemu:examples` enforce exactly that across every example
+`mise run qemu:examples` (plural) enforce exactly that across every example
 (skipping `tailscale` unless `TAILSCALE_AUTHKEY` is set).
 
 ## Using from your own repository (consumers)
