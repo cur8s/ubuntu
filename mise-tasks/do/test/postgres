@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Test the postgres example against the droplet (run twice; second pass must report changed=0)"
+#MISE description="Runs it twice; second pass must report changed=0"
 #MISE depends=["example:link"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"

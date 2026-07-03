@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Operator-invoked full package update on the local QEMU VM (never reboots; reports if one is pending)"
+#MISE description="Full package update; never reboots, reports if one is pending"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble

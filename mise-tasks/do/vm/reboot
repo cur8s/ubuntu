@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-#MISE description="Reboot the DigitalOcean Ubuntu test VM"
+#MISE description="Provider-level, no validation (prefer do:play:validate-reboot)"
 set -eu
 doctl compute droplet-action reboot "$(doctl compute droplet list "$DROPLET_NAME" --format ID --no-header)" --wait

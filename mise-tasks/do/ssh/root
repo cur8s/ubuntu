@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="SSH to the DigitalOcean Ubuntu test VM as root (dead after bootstrap retirement)"
+#MISE description="The bootstrap path (dead after retirement)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 droplet_ssh root "$BOOTSTRAP_PUB_KEY"

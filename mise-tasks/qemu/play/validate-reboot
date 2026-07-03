@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Acceptance test: reboot the local QEMU VM, re-verify baseline access and services"
+#MISE description="Acceptance gate: reboot, re-verify access and services"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble

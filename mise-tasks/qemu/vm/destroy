@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Destroy the local QEMU test VM and its state (image cache is kept)"
+#MISE description="Kills the VM and deletes its state; the image cache survives"
 #MISE confirm="Destroy the local QEMU VM and delete its state directory? This cannot be undone."
 set -eu
 if [ ! -e "$QEMU_VM_DIR" ]; then

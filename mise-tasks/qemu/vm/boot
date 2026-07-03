@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Boot the local QEMU Ubuntu test VM, daemonized (next: qemu:vm:wait)"
+#MISE description="Daemonized; serial output to console.log (next: qemu:vm:wait)"
 set -eu
 if [ ! -d "$QEMU_VM_DIR" ]; then
   echo "No local QEMU VM found (run mise run qemu:vm:create first)." >&2

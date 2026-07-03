@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Stand up the droplet lab from zero: create, wait out first boot, converge"
+#MISE description="From zero: vm:create -> vm:wait -> play:converge"
 set -eu
 mise run do:vm:create
 mise run do:vm:wait

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Destroy the DigitalOcean Ubuntu test VM"
+#MISE description="Irreversible; asks for confirmation"
 #MISE confirm="Destroy the DigitalOcean Ubuntu test VM? This cannot be undone."
 set -eu
 doctl compute droplet delete "$DROPLET_NAME" --force

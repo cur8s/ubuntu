@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Show the droplet lab state: stages done so far and the next step"
+#MISE description="Stages done so far, and the next command"
 #MISE quiet=true
 set -eu
 next=""

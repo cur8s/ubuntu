@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-#MISE description="Follow the local QEMU VM serial console log"
+#MISE description="Follow it live — the debug window when SSH is down"
 set -eu
 exec tail -n 100 -F "$QEMU_VM_DIR/console.log"

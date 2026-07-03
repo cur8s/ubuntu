@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Create the DigitalOcean Ubuntu test VM (next: do:vm:wait — or just do:up)"
+#MISE description="Renders cloud-init first (next: do:vm:wait — or just do:up)"
 #MISE quiet=true
 #MISE depends=["cloud-init:render"]
 set -eu

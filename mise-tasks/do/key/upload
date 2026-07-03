@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Register the bootstrap SSH public key with DigitalOcean (no-op if already registered)"
+#MISE description="Register the bootstrap key (no-op if already registered)"
 #MISE depends=["key:prep"]
 #MISE hide=true
 set -eu

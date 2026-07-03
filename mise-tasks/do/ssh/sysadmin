@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="SSH to the DigitalOcean Ubuntu test VM as sysadmin"
+#MISE description="The break-glass account"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 droplet_ssh sysadmin "$SYSADMIN_PUB_KEY"

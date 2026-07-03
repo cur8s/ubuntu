@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Render cloud-init user-data from extracted public keys into .generated"
+#MISE description="Render user-data from the extracted keys and role sources"
 #MISE quiet=true
 #MISE hide=true
 set -eu
