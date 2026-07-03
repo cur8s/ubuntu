@@ -3,11 +3,12 @@
 # role-level attribution, so the journal must survive reboots — sshd/sudo/
 # service history has to still be there after an incident. Per-person "who"
 # belongs to the access layer, and forensic syscall auditing (auditd) is a
-# use-case/compliance layer; neither is owned or fought here. Ubuntu 24.04
-# cloud images already persist the journal (Storage=auto + /var/log/journal);
-# this role pins that posture and repairs a drifted host. Journal size stays
-# on systemd defaults (10% of the filesystem, 4G cap), so it can never fill
-# the disk. Written check-mode-clean so `converge --check` reports real drift.
+# use-case/compliance layer; neither is owned or fought here. This role only
+# pins Storage=persistent: the stock Storage=auto persists solely when
+# /var/log/journal happens to exist, and quietly reverts to RAM-only when it
+# doesn't. Everything else (size caps, forwarding, rsyslog) stays distro
+# default. No verification tasks on purpose (keep the floor close to default;
+# see README for the drift experiment that informed this).
 - name: Ensure journald drop-in directory exists
   ansible.builtin.file:
     path: /etc/systemd/journald.conf.d
@@ -36,33 +37,3 @@
   ansible.builtin.systemd_service:
     name: systemd-journald.service
     state: started
-
-# ==========================================================================
-# Assert the on-disk journal
-# ==========================================================================
-# No repair branch on purpose — verified on a droplet (2026-07-02): journald
-# self-heals a deleted /var/log/journal within seconds of the next log write
-# ("Journal file has been deleted, rotating"), and a stopped journald is
-# started above, which also recreates the tree. If this assert ever fails the
-# host needs a human, not a converge.
-# Read-only probe; check_mode false so the assert stays trustworthy under
-# --check. failed_when false: a missing /var/log/journal is drift for the
-# assert to report, not a task error.
-- name: Read on-disk journal state
-  ansible.builtin.command:
-    argv:
-      - find
-      - /var/log/journal
-      - -maxdepth
-      - "2"
-      - -name
-      - system.journal
-  register: ubuntu_journald_disk_state
-  changed_when: false
-  failed_when: false
-  check_mode: false
-
-- name: Assert journal is persisted on disk
-  ansible.builtin.assert:
-    that:
-      - ubuntu_journald_disk_state.stdout_lines | length > 0

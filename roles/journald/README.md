@@ -3,21 +3,24 @@
 This role owns the baseline audit/log-capture posture for Ubuntu hosts:
 **the systemd journal persists across reboots**.
 
-It asserts the Ubuntu 24.04 default rather than replacing it. The cloud image
-already keeps the journal on disk (`Storage=auto` with `/var/log/journal`
-present); this role pins that posture explicitly
-(`/etc/systemd/journald.conf.d/10-ubuntu-baseline.conf` with
-`Storage=persistent`), ensures journald is running, and asserts journal files
-actually exist on disk. On a healthy default image every task is a no-op.
+It pins one setting off the stock config: `Storage=persistent`
+(`/etc/systemd/journald.conf.d/10-ubuntu-baseline.conf`). Stock `Storage=auto`
+persists only when `/var/log/journal` happens to exist — true on the
+DigitalOcean 24.04 image, not guaranteed on minimal or other-provider images,
+where logs silently live in RAM and vanish at reboot. `persistent` makes the
+guarantee unconditional. Everything else (size caps — 10% of the filesystem,
+4G max — forwarding, rsyslog) stays distro default: nothing declared, nothing
+to maintain.
 
-There is deliberately no repair branch for a deleted `/var/log/journal`.
-Tested on a droplet (2026-07-02): journald notices the deletion on its next
-write ("Journal file has been deleted, rotating") and recreates the tree
-within seconds, so converge can never observe the missing-dir state on a live
-host. One caveat from that test: the self-recreated directory comes back as
-`root:root 0755` instead of `root:systemd-journal` setgid+ACL, which degrades
-journal access for non-root members of `adm`/`systemd-journal` until the next
-boot (`systemd-tmpfiles-setup` reapplies the attributes). Immediate manual
+There are deliberately no verification or repair tasks. A drift experiment on
+a droplet (2026-07-02, `rm -rf /var/log/journal`) showed journald self-heals:
+it notices on its next log write ("Journal file has been deleted, rotating")
+and recreates the tree within seconds, so a converge-time existence check can
+never observe the broken state — every converge generates journal writes
+before any probe could run. One caveat from that test: the self-recreated
+directory comes back `root:root 0755` instead of `root:systemd-journal`
+setgid+ACL, degrading journal access for non-root `adm`/`systemd-journal`
+members until the next boot reapplies tmpfiles rules. Immediate manual
 remediation: `sudo systemd-tmpfiles --create --prefix=/var/log/journal`.
 
 Design decisions (RFC-001 §7, §9):

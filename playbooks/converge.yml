@@ -48,8 +48,6 @@
 
     - role: unattended_upgrades
 
-    - role: time_sync
-
     - role: journald
 
   post_tasks:

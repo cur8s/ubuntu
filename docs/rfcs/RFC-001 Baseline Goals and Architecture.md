@@ -41,7 +41,7 @@ Provide a **known, hardened, reproducible starting state for Ubuntu hosts** — 
 
 **converge (the roles) is the single source of truth:**
 - **re-asserts** the accounts and sshd policy (correcting drift — a deleted key, a changed sudoer), and
-- applies the **behavioral/stateful controls it alone owns**: unattended-upgrades, time sync, audit, and bootstrap retirement (§8).
+- applies the **behavioral/stateful controls it alone owns**: unattended-upgrades, persistent journald log capture, and bootstrap retirement (§8).
 
 **Lifecycle:** *boot → cloud-init (both accounts + dist-upgrade + reboot + sshd file) → first converge (adds the behavioral controls) → every subsequent converge is a no-op* (the GitOps steady state).
 
@@ -75,10 +75,10 @@ A **two-tier** model:
 - No blank/default passwords; locked default accounts.
 - The **`ansible` automation door** and the **`sysadmin` break-glass account** (see §8).
 - Automatic security updates (unattended-upgrades).
-- Time synchronization.
-- Baseline audit/log capture.
+- Persistent journald log capture (`Storage=persistent` pinned; no auditd — see §9).
 
 **Explicitly *not* in the floor, and why:**
+- **Time synchronization** — trusted to distro/provider defaults. `systemd-timesyncd` ships installed, enabled, and syncing on every Ubuntu cloud image, and providers supply sources; pinning the mechanism would fight a layer that legitimately swaps in chrony. Nothing to declare means nothing to maintain. Revisit (a mechanism-agnostic `timedatectl` assert) on first real clock incident.
 - **Kernel/sysctl tuning** — layered. Some knobs (e.g., `ip_forward`, namespaces, BPF, ptrace) must be settable by layers like k3s; blanket immovable hardening would break them.
 - **Host firewall / ufw** — layered. Firewall policy is role-specific and a wrong rule can lock you out.
 - **fail2ban** — not baseline. Key-only SSH makes brute-force moot, and a self-banning daemon is a self-lockout risk that cuts against "don't lock ourselves out."
