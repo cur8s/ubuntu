@@ -12,6 +12,9 @@ Completed work lives in git history and the RFC Revisions blocks.
 ## 3. First release (RFC-008)
 - [ ] Cut `v24.4.0` when the composition proof lands: bump nothing (version already `24.4.0`), tag, `git push origin main --tags`, then pin the tag in `examples/requirements.yml` and the manual's install snippets.
 
+## 4. Server adoption (design recorded, not committed)
+- [ ] Implement adoption of existing Ubuntu 24.04 servers (bare metal without the baseline accounts): read-only `adoptable` assessment + additive `adopt` playbook, per the design proposal in `docs/notes/adopting-existing-servers.md`. Re-validate the design against the code when picked up; includes the deferred key-drift-reversion and retirement sudo-group questions recorded there.
+
 ## Separate work (other repos)
 - `cur8s.tailscale` collection (opt-in access layer; the canonical dogfood consumer).
 - Optional Multipass local-dev loop for gateway-free iteration on the same cloud-init render.
