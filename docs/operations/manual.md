@@ -1,6 +1,6 @@
 # Operations Manual
 
-How to develop, verify, release, and consume `baseline.ubuntu`. The RFCs in
+How to develop, verify, release, and consume `cur8s.ubuntu`. The RFCs in
 `docs/rfcs/` own the what and the why; this manual owns the how. All commands
 run from the repository root.
 
@@ -57,7 +57,7 @@ mise run vm:converge
 
 What healthy runs look like:
 
-- **First converge on a fresh VM:** only the converge-only floor controls
+- **First converge on a fresh VM:** only the converge-only baseline controls
   report `changed` (the unattended-upgrades and journald pins). Accounts and
   SSH policy are already no-ops — cloud-init applied them from the same
   sources (RFC-005).
@@ -85,7 +85,7 @@ mise run vm:validate-reboot
 
 The reboot-validation gate (RFC-007): reboots the host, waits for it to
 return, re-verifies `ansible` and `sysadmin` SSH + passwordless sudo,
-confirms the floor units are active, and reads the previous boot from the
+confirms the baseline units are active, and reads the previous boot from the
 journal (proving the persistence pin across reboots). Opt-in only — never
 part of routine converge. Run it before enabling bootstrap retirement in any
 environment.
@@ -132,7 +132,7 @@ prod).
 3. Commit, then tag and push:
 
 ```sh
-git tag -a v24.4.1 -m "baseline.ubuntu 24.4.1"
+git tag -a v24.4.1 -m "cur8s.ubuntu 24.4.1"
 git push origin main --tags
 ```
 
@@ -156,8 +156,8 @@ collections:
 Once release tags exist, pin one (`version: v24.4.0`) for reproducible
 installs and rollback targets.
 
-The stable consumer surface — playbook FQCNs (`baseline.ubuntu.converge`,
-`baseline.ubuntu.validate_reboot`), account names, paths, and environment
+The stable consumer surface — playbook FQCNs (`cur8s.ubuntu.converge`,
+`cur8s.ubuntu.validate_reboot`), account names, paths, and environment
 variable inputs — is enumerated in RFC-009: Conventions Contract. The
 `examples/` directory holds a runnable environment-repo-shaped skeleton
 demonstrating the composition pattern.

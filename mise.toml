@@ -149,7 +149,7 @@ BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
 '''
 
 [tasks."vm:validate-reboot"]
-description = "Acceptance test: reboot the VM, re-verify baseline access and floor services"
+description = "Acceptance test: reboot the VM, re-verify baseline access and baseline services"
 run = '''
 sleep "${SSH_SPACING_SECONDS:-0}"
 mkdir -p "$ANSIBLE_LOCAL_TEMP"

@@ -1,5 +1,5 @@
 ---
-# Baseline audit/log capture (a floor control). RFC-004 scopes baseline
+# Baseline audit/log capture (a baseline control). RFC-004 scopes baseline
 # attribution to role level, so the journal must survive reboots — sshd/sudo/
 # service history has to still be there after an incident. Per-person "who"
 # belongs to the access layer, and forensic syscall auditing (auditd) is a
@@ -7,7 +7,7 @@
 # pins Storage=persistent: the stock Storage=auto persists solely when
 # /var/log/journal happens to exist, and quietly reverts to RAM-only when it
 # doesn't. Everything else (size caps, forwarding, rsyslog) stays distro
-# default. No verification tasks on purpose (keep the floor close to default;
+# default. No verification tasks on purpose (keep the baseline close to default;
 # see README for the drift experiment that informed this).
 - name: Ensure journald drop-in directory exists
   ansible.builtin.file:
@@ -24,7 +24,7 @@
     group: root
     mode: "0644"
     content: |
-      # Managed by baseline.ubuntu. The journal must survive reboots;
+      # Managed by cur8s.ubuntu. The journal must survive reboots;
       # runtime-only storage erases login/sudo/service history at every boot.
       [Journal]
       Storage=persistent

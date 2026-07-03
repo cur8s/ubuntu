@@ -18,7 +18,7 @@ The provider bootstrap identity remains usable through first boot as a debug pat
 
 ## One Source, Two Moments
 
-The Ansible roles are the single source of truth for everything cloud-init applies. The user-data is rendered from the same sources the roles own, so the two moments cannot diverge — and the first converge is therefore a no-op for accounts and SSH policy, doing new work only for the converge-only floor controls.
+The Ansible roles are the single source of truth for everything cloud-init applies. The user-data is rendered from the same sources the roles own, so the two moments cannot diverge — and the first converge is therefore a no-op for accounts and SSH policy, doing new work only for the converge-only baseline controls.
 
 What "the same" requires is per-module. State-based modules compare system state, so cloud-init and the roles only need to produce the same end state for accounts and keys. File-shaped controls are checksum-compared, so they must share bytes: exactly two files — the sshd drop-in and the per-account sudoers rules — are rendered into user-data from the role-owned sources. cloud-init's `sudo:` shortcut is deliberately not used: it writes a combined sudoers file the roles do not manage, which would surface as permanent drift.
 
@@ -34,7 +34,7 @@ The architecture that preceded this collection provisioned hosts bare and initia
 
 This RFC defines the provisioning architecture and its division of labor with convergence.
 
-It does not define the floor (RFC-003: Floor Contents), convergence semantics (RFC-006: Convergence), or the rendering implementation (the operations manual and `playbooks/cloud-init/`).
+It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-006: Convergence), or the rendering implementation (the operations manual and `playbooks/cloud-init/`).
 
 ## Revisions
 

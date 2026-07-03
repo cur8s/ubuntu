@@ -1,5 +1,5 @@
 ---
-# Automatic security updates (a floor control). unattended-upgrades ships and is
+# Automatic security updates (a baseline control). unattended-upgrades ships and is
 # enabled on Ubuntu cloud images; this role guarantees the baseline posture:
 # security updates apply automatically, and reboots are NEVER automatic (a reboot
 # is a deliberate operator/converge action, not a surprise from a background
@@ -35,7 +35,7 @@
     group: root
     mode: "0644"
     content: |
-      // Managed by baseline.ubuntu. Reboots are a deliberate operator/converge
+      // Managed by cur8s.ubuntu. Reboots are a deliberate operator/converge
       // action; the unattended-upgrades daemon must never reboot on its own.
       Unattended-Upgrade::Automatic-Reboot "false";
 

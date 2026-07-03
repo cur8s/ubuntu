@@ -1,6 +1,6 @@
 ---
 # Reboot-validation acceptance test (RFC-007: Validation and Acceptance). Opt-in gate — NEVER part
-# of routine converge: proves the baseline access contract and floor services
+# of routine converge: proves the baseline access contract and baseline services
 # survive a reboot (kernel updates from unattended-upgrades included). Run it
 # before lockout-sensitive changes such as bootstrap retirement.
 #
@@ -23,7 +23,7 @@
           - "{{ converge_ansible_public_key_file }}"
           - "{{ converge_sysadmin_public_key_file }}"
 
-- name: Reboot baseline Ubuntu host and re-verify the floor
+- name: Reboot baseline Ubuntu host and re-verify the baseline
   hosts: all
   gather_facts: false
   remote_user: ansible
@@ -66,10 +66,10 @@
         target_host: "{{ inventory_hostname }}"
 
     # ==========================================================================
-    # Floor services healthy
+    # Baseline services healthy
     # ==========================================================================
     # is-active exits non-zero unless every unit is active, failing the play.
-    - name: Verify floor services are active after reboot
+    - name: Verify baseline services are active after reboot
       ansible.builtin.command:
         argv:
           - systemctl
@@ -80,7 +80,7 @@
           - apt-daily-upgrade.timer
       changed_when: false
 
-    # The journald floor pin promises history survives reboots; the previous
+    # The journald baseline pin promises history survives reboots; the previous
     # boot must be readable from the persistent journal.
     - name: Verify journal history survived the reboot
       ansible.builtin.command:

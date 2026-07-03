@@ -23,14 +23,14 @@ setgid+ACL, degrading journal access for non-root `adm`/`systemd-journal`
 members until the next boot reapplies tmpfiles rules. Immediate manual
 remediation: `sudo systemd-tmpfiles --create --prefix=/var/log/journal`.
 
-Design decisions (RFC-002: Floor Doctrine, RFC-003: Floor Contents, RFC-004: Identity and Trust):
+Design decisions (RFC-002: Baseline Doctrine, RFC-003: Baseline Contents, RFC-004: Identity and Trust):
 
-- **journald, not auditd.** The floor's attribution contract is role-level
+- **journald, not auditd.** The baseline's attribution contract is role-level
   (automation vs. human) with *what/when/why* coming from git + converge
   logs; per-person identity is the access layer's job (Tailscale). Syscall
   auditing (`auditd` + rules) duplicates neither cheaply: it needs curated
   rulesets, generates heavy volume on busy/container hosts (k3s), and adds
-  per-syscall overhead — it fails the floor test ("cannot break arbitrary
+  per-syscall overhead — it fails the baseline test ("cannot break arbitrary
   future workloads") and belongs in a use-case/compliance layer, which this
   role does not fight.
 - **Size limits stay on systemd defaults** (10% of the filesystem, capped at

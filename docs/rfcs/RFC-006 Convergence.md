@@ -16,7 +16,7 @@ Detection and enforcement are one playbook and one flag: check mode reports what
 
 ## Composition
 
-A purpose layer's converge imports the baseline converge first, then applies its own purpose. Every tier re-asserts the floor (RFC-001: The Host Baseline).
+A purpose layer's converge imports the baseline converge first, then applies its own purpose. Every tier re-asserts the baseline (RFC-001: The Host Baseline).
 
 ## Ansible Is an Implementation Choice
 
@@ -26,7 +26,7 @@ Ansible was selected because it operates over standard SSH, requires no host-sid
 
 This RFC defines convergence semantics: the source of truth, the drift model, idempotency, and detection.
 
-It does not define what converge asserts (RFC-003: Floor Contents), provisioning (RFC-005: Provisioning), or acceptance testing (RFC-007: Validation and Acceptance).
+It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-005: Provisioning), or acceptance testing (RFC-007: Validation and Acceptance).
 
 ## Revisions
 

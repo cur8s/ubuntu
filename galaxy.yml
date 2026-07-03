@@ -1,16 +1,16 @@
 ---
-namespace: baseline
+namespace: cur8s
 name: ubuntu
-# Version policy: 24.4.x — major.minor mirror the Ubuntu LTS this floor
-# targets (24.04); x is the collection release counter. The floor is forever
-# backward-compatible within its LTS era, so x only ever increments. A new
-# LTS era starts a new series (26.4.0) and demotes this one to N-1 support.
-# main is the prod release; each version bump is tagged v<version>.
+# Version policy: 24.4.x — major.minor mirror the Ubuntu LTS this baseline
+# targets (24.04); x is the collection release counter. The baseline is
+# forever backward-compatible within its LTS era, so x only ever increments.
+# A new LTS era starts a new series (26.4.0) and demotes this one to N-1
+# support. main is the prod release; each version bump is tagged v<version>.
 version: 24.4.0
 readme: README.md
 authors:
   - Adib Saikali
-description: Baseline Ubuntu host configuration — the floor every Ubuntu host gets.
+description: The Ubuntu Host Baseline — the invariant state every managed Ubuntu host gets.
 license: []
 repository: https://github.com/cur8s/ubuntu
 tags:

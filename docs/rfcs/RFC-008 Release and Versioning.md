@@ -10,13 +10,13 @@ An operating system release is one part of a much larger ecosystem. Kernels, pac
 
 ## Version Scheme
 
-Release versions are `MAJOR.MINOR.PATCH`, where major.minor mirror the targeted Ubuntu LTS — `24.4.x` for the 24.04 floor — and the patch number counts collection releases. Semver forbids leading zeros, so `24.4` stands for 24.04; LTS releases are always April releases, so the year alone is unambiguous.
+Release versions are `MAJOR.MINOR.PATCH`, where major.minor mirror the targeted Ubuntu LTS — `24.4.x` for the 24.04 baseline — and the patch number counts collection releases. Semver forbids leading zeros, so `24.4` stands for 24.04; LTS releases are always April releases, so the year alone is unambiguous.
 
-The floor is forever backward-compatible within its LTS era. That policy, not version arithmetic, is the compatibility contract, and it is what makes a single release counter sufficient. When the baseline advances to the next LTS, a new series begins (`26.4.0`) and the previous series enters maintenance: fixes only, no new controls.
+The baseline is forever backward-compatible within its LTS era. That policy, not version arithmetic, is the compatibility contract, and it is what makes a single release counter sufficient. When the baseline advances to the next LTS, a new series begins (`26.4.0`) and the previous series enters maintenance: fixes only, no new controls.
 
 ## Distribution
 
-The baseline is packaged and distributed as an Ansible collection, `baseline.ubuntu`, from its git repository only; it is not published to a galaxy registry. Consumers install it, and use-case collections depend on it, through git sources.
+The baseline is packaged and distributed as an Ansible collection, `cur8s.ubuntu`, from its git repository only; it is not published to a galaxy registry. Consumers install it, and use-case collections depend on it, through git sources.
 
 `main` is the production release. Every version bump in `galaxy.yml` is tagged `v<version>`. Environments that want reproducible pins or rollback targets pin tags; development tracks `main`.
 

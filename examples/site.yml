@@ -1,9 +1,9 @@
 ---
-# Minimal consumer playbook: re-assert the baseline floor, then layer your
-# own plays after it. Every tier re-asserts the floor (RFC-001), so this
+# Minimal consumer playbook: re-assert the baseline, then layer your own
+# plays after it. Every tier re-asserts the baseline (RFC-001), so this
 # import comes first, always.
-- name: Converge the baseline floor
-  ansible.builtin.import_playbook: baseline.ubuntu.converge
+- name: Converge the baseline
+  ansible.builtin.import_playbook: cur8s.ubuntu.converge
 
 # Your workload plays follow. They connect through the baseline's automation
 # account (RFC-009: Conventions Contract).

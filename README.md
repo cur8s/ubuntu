@@ -1,6 +1,6 @@
 # Ubuntu Ansible Collection
 
-This repository is the `baseline.ubuntu` Ansible collection: the floor every
+This repository is the `cur8s.ubuntu` Ansible collection: the baseline every
 Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
 the architecture and its rationale live in `docs/rfcs/` (start with RFC-000
@@ -16,7 +16,7 @@ The steel thread:
    `sysadmin` users, applies the sshd hardening drop-in, dist-upgrades, and
    reboots (RFC-005: Provisioning).
 4. Converge over the `ansible` SSH path. The first converge is a no-op for
-   everything cloud-init already applied; only the behavioral floor controls
+   everything cloud-init already applied; only the behavioral baseline controls
    do new work. Every subsequent converge is a no-op.
 
 ```sh
@@ -29,7 +29,7 @@ mise run vm:converge
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run vm:validate-reboot   # reboot → re-verify access + floor services
+mise run vm:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
 SSH shortcuts:
@@ -42,7 +42,7 @@ mise run ssh:sysadmin
 
 ## Ansible Shape
 
-The floor roles, applied by `playbooks/converge.yml`:
+The baseline roles, applied by `playbooks/converge.yml`:
 
 - `roles/users` — the fixed `ansible` (automation) and `sysadmin`
   (break-glass) accounts: creation, authorized keys, passwordless sudo.
@@ -57,7 +57,7 @@ The floor roles, applied by `playbooks/converge.yml`:
   baseline accounts are validated; `mise run vm:retire-bootstrap` for the
   lab VM. Run `vm:validate-reboot` first.
 
-The floor stays as close to distro defaults as possible: roles pin only
+The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
 asserted (see each role's README for what was deliberately left out).
 
@@ -78,8 +78,8 @@ registry. Install it (or depend on it) via a git source:
 ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git
 ```
 
-The version is `24.4.x`: major.minor mirror the Ubuntu LTS the floor targets
-(24.04), and `x` counts collection releases. The floor is **forever
+The version is `24.4.x`: major.minor mirror the Ubuntu LTS the baseline targets
+(24.04), and `x` counts collection releases. The baseline is **forever
 backward-compatible within its LTS era** — that policy, not version
 arithmetic, is the compatibility contract — so `x` only ever increments.
 When the baseline advances to the next LTS (RFC-008: Release and
