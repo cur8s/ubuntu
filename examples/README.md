@@ -7,6 +7,12 @@ Baseline) and then applies its layer, plus a README naming the techniques it
 demonstrates. Examples are layers, so unlike baseline roles they may verify
 their own outcomes in-play (RFC-002: Baseline Doctrine).
 
+Every example must work on both supported architectures, amd64 and arm64
+(RFC-008: Release and Versioning): repo lines declare both architectures,
+release binaries are selected through an architecture map (see `zot/`), and
+installers that detect the architecture themselves (see `k3s/`) are
+preferred. Nothing may assume an architecture it did not detect.
+
 ## Index
 
 | Example | Theme | Techniques demonstrated | Status |
@@ -20,19 +26,22 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 | `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | ported |
 | `k3s/` | kubernetes | vendor installer piped to `sh` made idempotent (channel resolve + version gate), env-var installer params, declarative `config.yaml`, node-Ready wait | ported |
 
-## Running against the lab VM (contributors)
+## Running against a lab VM (contributors)
 
-The lab droplet must exist (see `docs/operations/manual.md`). Examples
-resolve `cur8s.ubuntu` from the working tree via a symlink under
-`.generated/` — created automatically — so role edits are picked up without
-committing or reinstalling:
+The target lab must exist — the droplet or the local QEMU VM (see
+`docs/operations/manual.md`). Examples resolve `cur8s.ubuntu` from the
+working tree via a symlink under `.generated/` — created automatically — so
+role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run example:run docker
+mise run example:run docker          # droplet (default)
+mise run example:run docker qemu    # local QEMU VM
 ```
 
 Run an example twice: the second run should report `changed=0` end to end
-(baseline no-op + idempotent layer).
+(baseline no-op + idempotent layer). `mise run example:run-all [target]`
+enforces exactly that across every example (skipping `tailscale` unless
+`TAILSCALE_AUTHKEY` is set).
 
 ## Using from your own repository (consumers)
 

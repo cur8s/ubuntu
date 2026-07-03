@@ -12,13 +12,17 @@ The baseline's canonical acceptance gate reboots the host, waits for it to retur
 
 Reboot validation exists because the baseline's promises are boot-cycle promises. unattended-upgrades installs kernels that only a reboot activates; a host that converges cleanly but cannot survive a reboot is not conformant in any sense that matters.
 
+## Architecture Coverage
+
+The gates are architecture-blind, but coverage must not be: the same acceptance gates must pass on every supported architecture (RFC-008: Release and Versioning). In development the two labs split this coverage — an amd64 cloud host and an arm64 local VM run the identical steel thread.
+
 ## Gating Dangerous Changes
 
 Lockout-sensitive operations require a passed acceptance gate first. Bootstrap retirement (RFC-004: Identity and Trust) is the canonical example: it removes the last provider-supplied access path, so it may be enabled only in environments whose hosts have passed reboot validation.
 
 ## Scope
 
-This RFC defines where verification lives and the reboot-validation acceptance gate.
+This RFC defines where verification lives, the reboot-validation acceptance gate, and architecture coverage.
 
 It does not define the doctrine that excludes verification from baseline roles (RFC-002: Baseline Doctrine) or the drift-detection semantics of converge (RFC-006: Convergence).
 

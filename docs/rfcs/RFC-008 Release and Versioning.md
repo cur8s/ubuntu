@@ -8,6 +8,12 @@ Ubuntu publishes a Long Term Support release every two years. The baseline alway
 
 An operating system release is one part of a much larger ecosystem. Kernels, package repositories, drivers, third-party software, and operational knowledge all evolve around it, and a new LTS can be stable in isolation while the ecosystem is still absorbing its changes. During the development of this repository, Linux 7.0 replaced PREEMPT_NONE with PREEMPT_LAZY as the default preemption model; that single kernel change cut PostgreSQL throughput roughly in half under some workloads, with no PostgreSQL change at all. Targeting the previous LTS gives the ecosystem two extra years to discover, document, and adapt to such cross-project interactions. The objective is to spend engineering effort operating software, not early-adopting operating system behavior.
 
+## Supported Architectures
+
+A series supports its Ubuntu release on both amd64 and arm64. The baseline is architecture-neutral by construction — it pins accounts, policy, and configuration, none of which depend on the CPU — and everything this repository ships, examples included, must hold on both architectures: nothing may assume an architecture it did not detect. The motivation is economic as much as technical: arm-based cloud instances are frequently cheaper, commodity home and datacenter hardware is amd64, and the choice between them belongs to the consumer, not the baseline.
+
+This is a contract about managed hosts. The development harness on the workstation may assume its own platform (the operations manual states its requirements).
+
 ## Version Scheme
 
 Release versions are `MAJOR.MINOR.PATCH`, where major.minor mirror the targeted Ubuntu LTS — `24.4.x` for the 24.04 baseline — and the patch number counts collection releases. Semver forbids leading zeros, so `24.4` stands for 24.04; LTS releases are always April releases, so the year alone is unambiguous.
@@ -22,7 +28,7 @@ The baseline is packaged and distributed as an Ansible collection, `cur8s.ubuntu
 
 ## Scope
 
-This RFC defines the supported-release policy, the version scheme, and the distribution model.
+This RFC defines the supported-release and supported-architecture policy, the version scheme, and the distribution model.
 
 It does not define upgrade procedures between LTS eras or the release workflow (the operations manual).
 

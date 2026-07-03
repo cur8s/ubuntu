@@ -1,11 +1,10 @@
 #!/usr/bin/env sh
-#MISE description="Run an example against the test VM: mise run example:run <name>"
+#MISE description="Run an example against a lab VM: mise run example:run <name> [droplet|qemu]"
 #MISE depends=["example:link"]
 #USAGE arg "<example>" help="Example directory name under examples/"
+#USAGE arg "[target]" help="Lab to run against: droplet (default) or qemu" default="droplet"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
 
-ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections" ansible-playbook \
-  -i "$(droplet_ip)," \
-  "$MISE_CONFIG_ROOT/examples/$usage_example/site.yml"
+example_run "$usage_example" "${usage_target:-droplet}"

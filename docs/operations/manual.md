@@ -172,11 +172,20 @@ VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
 ## 9. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
-them by theme and technique). Run one against the lab VM:
+them by theme and technique). Run one against a lab VM — the droplet by
+default, or the local QEMU VM:
 
 ```sh
-mise run example:run docker
+mise run example:run docker          # against the droplet
+mise run example:run docker qemu     # against the local QEMU VM
 ```
+
+`example:run-all [target]` runs every example twice and fails unless each
+second pass reports `changed=0` — the examples' idempotency contract,
+enforced. It skips `tailscale` unless `TAILSCALE_AUTHKEY` is set (a join
+from a disposable VM leaves a node in the tailnet admin console unless the
+key is ephemeral). Examples must work on both supported architectures
+(RFC-008), and the two labs cover them: droplet amd64, QEMU arm64.
 
 `example:run` depends on `example:link`, which symlinks the working-tree
 collection into `.generated/collections/` so each example's

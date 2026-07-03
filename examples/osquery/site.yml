@@ -67,7 +67,7 @@
         group: root
         mode: "0644"
         content: |
-          deb [arch=amd64 signed-by=/usr/share/keyrings/osquery-archive-keyring.gpg] https://pkg.osquery.io/deb deb main
+          deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/osquery-archive-keyring.gpg] https://pkg.osquery.io/deb deb main
 
     - name: Install osquery for interactive inspection
       ansible.builtin.apt:

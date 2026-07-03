@@ -4,7 +4,4 @@ set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
 
-ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new" \
-ansible-playbook \
-  -i "$(qemu_inventory)" \
-  "$MISE_CONFIG_ROOT/collection/playbooks/update.yml"
+qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/update.yml"

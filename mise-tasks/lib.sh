@@ -32,6 +32,28 @@ qemu_inventory() {
   printf '%s' "$QEMU_VM_DIR/inventory"
 }
 
+# Run a playbook against the local QEMU VM: qemu_ansible_playbook <playbook> [args...]
+qemu_ansible_playbook() {
+  ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new" \
+    ansible-playbook -i "$(qemu_inventory)" "$@"
+}
+
+# Run one example against a target lab: example_run <example> <droplet|qemu>
+example_run() {
+  _example_playbook="$MISE_CONFIG_ROOT/examples/$1/site.yml"
+  (
+    export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
+    case "$2" in
+      droplet) ansible-playbook -i "$(droplet_ip)," "$_example_playbook" ;;
+      qemu) qemu_ansible_playbook "$_example_playbook" ;;
+      *)
+        echo "Unknown example target '$2' (expected droplet or qemu)." >&2
+        exit 1
+        ;;
+    esac
+  )
+}
+
 # SSH to the local QEMU VM: qemu_ssh <user> <identity-file> [command...]
 # Each fresh VM presents new host keys on the same forwarded port, so the
 # known_hosts file lives in the VM state dir and dies with it.
