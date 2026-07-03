@@ -18,6 +18,7 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 | `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service | ported |
 | `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) | ported |
 | `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | ported |
+| `k3s/` | kubernetes | vendor installer piped to `sh` made idempotent (channel resolve + version gate), env-var installer params, declarative `config.yaml`, node-Ready wait | ported |
 
 ## Running against the lab VM (contributors)
 
