@@ -49,6 +49,10 @@ The floor roles, applied by `playbooks/converge.yml`:
 - `roles/unattended_upgrades` — automatic security updates; reboots are never
   automatic.
 - `roles/journald` — pins `Storage=persistent` so logs survive reboots.
+- `roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
+  `BOOTSTRAP_USER=<name>`): locks the provider bootstrap user once the
+  baseline accounts are validated; `mise run vm:retire-bootstrap` for the
+  lab VM. Run `vm:validate-reboot` first.
 
 The floor stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not

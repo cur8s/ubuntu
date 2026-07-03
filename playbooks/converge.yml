@@ -26,6 +26,8 @@
     converge_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
     converge_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
     ansible_ssh_private_key_file: "{{ converge_ansible_public_key_file }}"
+    converge_bootstrap_retire: "{{ lookup('ansible.builtin.env', 'BOOTSTRAP_RETIRE') | default('false', true) | bool }}"
+    converge_bootstrap_user: "{{ lookup('ansible.builtin.env', 'BOOTSTRAP_USER') }}"
 
   pre_tasks:
     # ==========================================================================
@@ -67,3 +69,17 @@
         user_name: sysadmin
         public_key_file: "{{ converge_sysadmin_public_key_file }}"
         target_host: "{{ inventory_hostname }}"
+
+    # ==========================================================================
+    # Bootstrap Retirement (opt-in)
+    # ==========================================================================
+    # Gated per environment: dev keeps the provider bootstrap door as a debug
+    # path, prod retires it. Deliberately AFTER the validations above — the
+    # provider path is only removed once replacement access is proven
+    # (RFC-001 §8).
+    - name: Retire provider bootstrap user
+      ansible.builtin.include_role:
+        name: bootstrap_retirement
+      vars:
+        ubuntu_bootstrap_user: "{{ converge_bootstrap_user }}"
+      when: converge_bootstrap_retire

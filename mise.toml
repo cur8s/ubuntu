@@ -130,6 +130,17 @@ ansible-playbook \
   "$MISE_CONFIG_ROOT/playbooks/converge.yml"
 '''
 
+[tasks."vm:retire-bootstrap"]
+description = "Converge with bootstrap retirement: lock the provider bootstrap user (root on DigitalOcean)"
+confirm = "Retire the provider bootstrap user? Root SSH to the VM will stop working; recovery is the provider console."
+run = '''
+mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  "$MISE_CONFIG_ROOT/playbooks/converge.yml"
+'''
+
 [tasks."vm:validate-reboot"]
 description = "Acceptance test: reboot the VM, re-verify baseline access and floor services"
 run = '''
