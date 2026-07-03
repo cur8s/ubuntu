@@ -2,43 +2,55 @@
 #MISE description="Show this workflow cheat sheet (runs on bare 'mise run')"
 #MISE quiet=true
 set -eu
-cat <<'EOF'
-cur8s.ubuntu labs — full details: docs/operations/manual.md
 
-GRAMMAR: every task is   mise run <provider>:<object>:<action>
+# Bold headers, cyan task names, dim annotations — only on a terminal, and
+# honoring the NO_COLOR convention (https://no-color.org).
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  B="$(printf '\033[1m')"
+  D="$(printf '\033[2m')"
+  C="$(printf '\033[36m')"
+  R="$(printf '\033[0m')"
+else
+  B=""; D=""; C=""; R=""
+fi
 
-  providers
-    qemu    local QEMU VM (free, arm64)
-    do      DigitalOcean droplet (amd64)
+cat <<EOF
+${B}cur8s.ubuntu labs${R} ${D}— full details: docs/operations/manual.md${R}
 
-  objects
-    vm      the machine itself       create, boot, wait, status, destroy, ...
-    play    a collection playbook    converge, update, validate-reboot, ...
-    ssh     a shell, as this user    ansible, sysadmin, root
-    test    an example, or all       docker, k3s, zot, ..., all
+${B}GRAMMAR${R}: every task is   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
-  workflows (no object — the provider itself is the object)
-    prep    one-time groundwork
-    up      provision + converge
+  ${B}providers${R}
+    ${C}qemu${R}    local QEMU VM ${D}(free, arm64)${R}
+    ${C}do${R}      DigitalOcean droplet ${D}(amd64)${R}
 
-  Same grammar on every provider: swap qemu: for do: and it just works.
+  ${B}objects${R}
+    ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
+    ${C}play${R}    a collection playbook    ${D}converge, update, validate-reboot, ...${R}
+    ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin, root${R}
+    ${C}test${R}    an example, or all       ${D}docker, k3s, zot, ..., all${R}
 
-A SESSION, START TO FINISH (local provider shown)
+  ${B}workflows${R} ${D}(no object — the provider itself is the object)${R}
+    ${C}prep${R}    one-time groundwork
+    ${C}up${R}      provision + converge
 
-  mise run qemu:prep             once: 1Password keys + cloud image cache (~600MB)
-  mise run qemu:up               stand up the lab, unattended
-                                 (= vm:create -> vm:boot -> vm:wait -> play:converge)
-  mise run qemu:vm:status        where am I? stages done, and the next command
-  mise run qemu:ssh:ansible      inspect by hand (boot problems: qemu:vm:console)
-  mise run qemu:play:converge    daily re-assert; changed=0 means conformant
-  mise run qemu:test:docker      test one example: runs it twice,
+  Same grammar on every provider: swap ${C}qemu:${R} for ${C}do:${R} and it just works.
+
+${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
+
+  ${D}mise run${R} ${C}qemu:prep${R}             once: 1Password keys + cloud image cache ${D}(~600MB)${R}
+  ${D}mise run${R} ${C}qemu:up${R}               stand up the lab, unattended
+                                 ${D}(= vm:create -> vm:boot -> vm:wait -> play:converge)${R}
+  ${D}mise run${R} ${C}qemu:vm:status${R}        where am I? stages done, and the next command
+  ${D}mise run${R} ${C}qemu:ssh:ansible${R}      inspect by hand ${D}(boot problems: qemu:vm:console)${R}
+  ${D}mise run${R} ${C}qemu:play:converge${R}    daily re-assert; changed=0 means conformant
+  ${D}mise run${R} ${C}qemu:test:docker${R}      test one example: runs it twice,
                                  second pass must report changed=0
-  mise run qemu:test:all         every example, same contract
-  mise run qemu:play:validate-reboot   acceptance gate: reboot, re-verify access
-  mise run qemu:vm:destroy       tear down; the cached image survives
+  ${D}mise run${R} ${C}qemu:test:all${R}         every example, same contract
+  ${D}mise run${R} ${C}qemu:play:validate-reboot${R}   acceptance gate: reboot, re-verify access
+  ${D}mise run${R} ${C}qemu:vm:destroy${R}       tear down; the cached image survives
 
-  Droplet extras: do:ssh:root is the provider bootstrap door — until
-  do:play:retire-bootstrap locks it (run the acceptance gate first).
+  ${B}Droplet extras${R}: ${C}do:ssh:root${R} is the provider bootstrap door — until
+  ${C}do:play:retire-bootstrap${R} locks it ${D}(run the acceptance gate first)${R}.
 
-  clean  destroy both labs + wipe .generated        mise tasks  the full list
+  ${C}clean${R}  destroy both labs + wipe .generated        ${C}mise tasks${R}  the full list
 EOF
