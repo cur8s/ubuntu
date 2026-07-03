@@ -17,10 +17,3 @@ Completed work lives in git history and the RFC Revisions blocks.
 
 ## 5. Multi-provider verification (post-release; gated on actual need)
 - [ ] Verify the baseline on AWS, Azure, and GCP — today it is verified on DigitalOcean only, and the QEMU harness (#1) covers the provider-neutral half (the render on pristine Ubuntu). Per provider: a harness task family (key injection + create, provider CLI), the provider's bootstrap user as `BOOTSTRAP_USER`, then the standard steel thread + validate_reboot. Known risk points to watch: provider images' own cloud-init/sshd drop-ins conflicting with ours (the `sshd -T` asserts will catch it), and Azure's provisioning agent vs the first-boot `power_state` reboot. Expected: near-zero collection changes; mostly harness. Do not start until a real workload needs one of these providers.
-
-## Key files
-- `docs/rfcs/` — the RFC series (start at RFC-000; architecture source of truth)
-- `docs/operations/manual.md` — the operations manual
-- `docs/notes/ucg-fibre-ips-ssh-blocking.md` — the IPS incident that drove the cloud-init design
-- `collection/scripts/render-cloud-init.sh` — cloud-init generator (RFC-005)
-- `collection/playbooks/converge.yml` — converge entrypoint
