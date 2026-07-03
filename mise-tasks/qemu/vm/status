@@ -24,4 +24,4 @@ fi
 
 echo "3 converge  ?        converge is the check: changed=0 means conformant"
 echo
-echo "next: mise run ${next:-qemu:converge}"
+echo "next: mise run ${next:-qemu:play:converge}"

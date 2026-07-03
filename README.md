@@ -91,7 +91,7 @@ mise run do:up     # create → wait out first boot → converge
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run do:validate-reboot   # reboot → re-verify access + baseline services
+mise run do:play:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
 The same thread runs provider-free on a local QEMU VM — the arm64 cloud
@@ -121,8 +121,8 @@ The baseline roles, applied by `collection/playbooks/converge.yml`:
 - `collection/roles/journald` — pins `Storage=persistent` so logs survive reboots.
 - `collection/roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
   `BOOTSTRAP_USER=<name>`): locks the provider bootstrap user once the
-  baseline accounts are validated; `mise run do:retire-bootstrap` for the
-  lab VM. Run `do:validate-reboot` first.
+  baseline accounts are validated; `mise run do:play:retire-bootstrap` for
+  the lab VM. Run `do:play:validate-reboot` first.
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not

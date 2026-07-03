@@ -3,5 +3,5 @@
 set -eu
 mise run do:vm:create
 mise run do:vm:wait
-mise run do:converge
+mise run do:play:converge
 echo "Droplet lab is up and converged."

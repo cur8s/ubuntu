@@ -22,4 +22,4 @@ fi
 
 echo "3 converge  ?        converge is the check: changed=0 means conformant"
 echo
-echo "next: mise run ${next:-do:converge}"
+echo "next: mise run ${next:-do:play:converge}"

@@ -61,14 +61,14 @@ own (RFC-005) and creates droplet `ubuntu-ansible-lab` (Ubuntu 24.04,
 `s-1vcpu-1gb`, `tor1`); at first boot, cloud-init creates the `ansible` and
 `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades, and reboots
 unconditionally; `do:vm:wait` blocks until that first-boot cycle is done (the
-droplet reaching `active` predates it by minutes); `do:converge` runs the
+droplet reaching `active` predates it by minutes); `do:play:converge` runs the
 first converge. The steps remain runnable individually for debugging — each
 one's description names what normally follows it.
 
 ## 4. Converge
 
 ```sh
-mise run do:converge
+mise run do:play:converge
 ```
 
 What healthy runs look like:
@@ -90,7 +90,7 @@ mise x -- sh -c 'ansible-playbook \
 
 If the workstation sits behind a rate-limiter or IPS that drops SSH bursts,
 set `SSH_SPACING_SECONDS` (default `0`) to pause before SSH-heavy tasks:
-`SSH_SPACING_SECONDS=120 mise run do:converge`. Background: see
+`SSH_SPACING_SECONDS=120 mise run do:play:converge`. Background: see
 `docs/notes/ucg-fibre-ips-ssh-blocking.md`.
 
 Converge refuses hosts that don't run the targeted Ubuntu release (the
@@ -101,17 +101,17 @@ release guard — RFC-002, RFC-008): applying the 24.4.x series to a 22.04 or
 deliberate full update:
 
 ```sh
-mise run do:update
+mise run do:play:update
 ```
 
 It never reboots; if updates leave a reboot pending it says so — run
-`mise run do:validate-reboot`, the collection's only (and validating)
+`mise run do:play:validate-reboot`, the collection's only (and validating)
 reboot path.
 
 ## 5. Acceptance validation
 
 ```sh
-mise run do:validate-reboot
+mise run do:play:validate-reboot
 ```
 
 The reboot-validation gate (RFC-007): reboots the host, waits for it to
@@ -124,18 +124,18 @@ environment.
 ## 6. Bootstrap retirement
 
 Point of no return for the provider SSH path (RFC-004). Preconditions: the
-target has passed `do:validate-reboot`, and both named accounts validated in
+target has passed `do:play:validate-reboot`, and both named accounts validated in
 converge.
 
 ```sh
-mise run do:retire-bootstrap   # asks for confirmation
+mise run do:play:retire-bootstrap   # asks for confirmation
 ```
 
 This converges with `BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root`: after the
 account validations pass, it strips root's `authorized_keys`, removes the
 cloud-init sudoers file, and locks the account. Afterward `mise run do:ssh:root`
 stops working — by design — and recovery is the provider console. Routine
-`do:converge` never retires anything (the toggle defaults off).
+`do:play:converge` never retires anything (the toggle defaults off).
 
 ## 7. SSH shortcuts and teardown
 
@@ -144,7 +144,7 @@ mise run do:ssh:root       # provider bootstrap path (dead after retirement)
 mise run do:ssh:ansible
 mise run do:ssh:sysadmin
 
-mise run do:vm:reboot   # provider-level reboot (no validation; prefer do:validate-reboot)
+mise run do:vm:reboot   # provider-level reboot (no validation; prefer do:play:validate-reboot)
 mise run do:vm:destroy  # destroy the droplet (asks for confirmation)
 mise run clean          # do:vm:destroy + qemu:vm:destroy + remove .generated/
 ```
@@ -168,7 +168,7 @@ mise run qemu:up     # create → boot (SSH on 127.0.0.1:2222) → wait → conv
 
 `qemu:up` runs `qemu:vm:create` (NoCloud seed ISO + overlay disk from the
 rendered cloud-init), `qemu:vm:boot` (daemonized), `qemu:vm:wait` (blocks through
-the first-boot dist-upgrade and reboot), then `qemu:converge` — each step
+the first-boot dist-upgrade and reboot), then `qemu:play:converge` — each step
 runnable individually for debugging. From there: `validate-reboot`,
 `update`, `ssh:*`, as with `do:*`.
 
@@ -176,7 +176,7 @@ Differences from the droplet flow:
 
 - **No bootstrap door.** NoCloud has no provider-injected account; the
   rendered user-data defines the only users that ever exist. There is no
-  `qemu` counterpart to `do:ssh:root` or `do:retire-bootstrap` — nothing to
+  `qemu` counterpart to `do:ssh:root` or `do:play:retire-bootstrap` — nothing to
   retire.
 - **Serial console.** `mise run qemu:vm:console` follows the boot console —
   the debugging window when SSH isn't up.

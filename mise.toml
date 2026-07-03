@@ -3,15 +3,16 @@
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
 # mise-tasks/do/vm/create -> do:vm:create). Grammar: <lab>:<action> when the
-# lab host itself is the object (converge, up, examples); <lab>:<object>:<action>
-# when the verb acts on a component (vm lifecycle, ssh access, provider keys).
+# lab is the object of a workflow (prep, up, examples); <lab>:<object>:<action>
+# when the verb acts on a component (vm lifecycle, collection plays, ssh
+# access, provider keys).
 # Future providers get their own family (aws:, azure:, ...). A namespace must
 # have multiple real members. Task scripts must be executable or mise silently
 # ignores them; shared helpers live in mise-tasks/lib.sh.
 
 [env]
-# Seconds to pause before SSH-heavy tasks (do:converge, do:update,
-# do:validate-reboot, do:retire-bootstrap, the example runners). 0 = no pause.
+# Seconds to pause before SSH-heavy tasks (the do:play:* family and the
+# example runners). 0 = no pause.
 # Set >0 (e.g. 120) when running from behind an IPS/rate-limiter that drops
 # SSH bursts — see docs/notes/ucg-fibre-ips-ssh-blocking.md.
 SSH_SPACING_SECONDS = "0"

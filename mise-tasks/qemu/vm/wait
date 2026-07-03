@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Block until first-boot cloud-init is done on the QEMU VM (next: qemu:converge)"
+#MISE description="Block until first-boot cloud-init is done on the QEMU VM (next: qemu:play:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 

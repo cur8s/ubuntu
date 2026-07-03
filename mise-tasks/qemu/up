@@ -4,5 +4,5 @@ set -eu
 mise run qemu:vm:create
 mise run qemu:vm:boot
 mise run qemu:vm:wait
-mise run qemu:converge
+mise run qemu:play:converge
 echo "QEMU lab is up and converged."
