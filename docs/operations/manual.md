@@ -46,7 +46,7 @@ provider-side.
 
 ```sh
 mise run do:up         # create → wait out first boot → converge
-mise run do:list       # ID, IP, status
+mise run do:status     # ID, IP, status
 ```
 
 `do:up` is the whole sequence: `do:create` renders
@@ -139,12 +139,12 @@ mise run do:ssh-ansible
 mise run do:ssh-sysadmin
 
 mise run do:reboot      # provider-level reboot (no validation; prefer do:validate-reboot)
-mise run do:delete      # destroy the droplet (asks for confirmation)
-mise run clean          # do:delete + qemu:destroy + remove .generated/
+mise run do:destroy     # destroy the droplet (asks for confirmation)
+mise run clean          # do:destroy + qemu:destroy + remove .generated/
 ```
 
 The droplet is disposable by design: recreating the full verified state is
-`do:create` + `do:converge`, about five minutes.
+one `do:up`, about five minutes.
 
 ## 8. Local QEMU lab
 
@@ -184,8 +184,7 @@ VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
 ## 9. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
-them by theme and technique). Run one against a lab VM — the droplet by
-default, or the local QEMU VM:
+them by theme and technique). Run one against either lab:
 
 ```sh
 mise run do:example docker     # against the droplet

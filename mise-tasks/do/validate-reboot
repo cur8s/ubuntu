@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Acceptance test: reboot the VM, re-verify baseline access and baseline services"
+#MISE description="Acceptance test: reboot the droplet, re-verify baseline access and services"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
