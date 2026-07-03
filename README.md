@@ -102,9 +102,9 @@ then `mise run qemu:up`; see the operations manual).
 SSH shortcuts:
 
 ```sh
-mise run do:ssh-root      # provider bootstrap path (until retirement)
-mise run do:ssh-ansible
-mise run do:ssh-sysadmin
+mise run do:ssh:root      # provider bootstrap path (until retirement)
+mise run do:ssh:ansible
+mise run do:ssh:sysadmin
 ```
 
 ## Ansible Shape

@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Show the droplet lab state (ID, IP, status)"
-#MISE quiet=true
-set -eu
-doctl compute droplet list "$DROPLET_NAME" \
-  --format ID,Name,PublicIPv4,Status,Image

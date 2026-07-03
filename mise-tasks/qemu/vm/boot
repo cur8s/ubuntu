@@ -1,9 +1,8 @@
 #!/usr/bin/env sh
-#MISE description="Boot the local QEMU Ubuntu test VM, daemonized (next: qemu:wait)"
-#MISE hide=true
+#MISE description="Boot the local QEMU Ubuntu test VM, daemonized (next: qemu:vm:wait)"
 set -eu
 if [ ! -d "$QEMU_VM_DIR" ]; then
-  echo "No local QEMU VM found (run mise run qemu:create first)." >&2
+  echo "No local QEMU VM found (run mise run qemu:vm:create first)." >&2
   exit 1
 fi
 if [ -f "$QEMU_VM_DIR/qemu.pid" ] && kill -0 "$(cat "$QEMU_VM_DIR/qemu.pid")" 2>/dev/null; then
@@ -29,5 +28,5 @@ qemu-system-aarch64 \
   -pidfile "$QEMU_VM_DIR/qemu.pid" \
   -serial "file:$QEMU_VM_DIR/console.log"
 
-echo "VM booting: SSH forwarded to 127.0.0.1:$QEMU_SSH_PORT (console: mise run qemu:console)"
-echo "First boot dist-upgrades and reboots; mise run qemu:wait blocks until it is ready."
+echo "VM booting: SSH forwarded to 127.0.0.1:$QEMU_SSH_PORT (console: mise run qemu:vm:console)"
+echo "First boot dist-upgrades and reboots; mise run qemu:vm:wait blocks until it is ready."

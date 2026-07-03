@@ -20,10 +20,10 @@ Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
   and rendered user-data are ever written there — no secrets.
 
 Bare `mise run` prints the workflow cheat sheet — the golden path through
-both labs. `mise tasks` lists the operator-level tasks; the step tasks the
-workflow tasks run internally (`do:create`, `qemu:boot`, …) are hidden from
-the listing but remain runnable by name for debugging — this manual and the
-task breadcrumbs name them where relevant.
+both labs. `mise tasks` lists the operator-level tasks; the plumbing tasks
+that workflow tasks pull in as dependencies (`key:prep`,
+`cloud-init:render`, `do:key:upload`, `qemu:fetch`) are hidden from the
+listing but remain runnable by name.
 
 ## 2. Keys
 
@@ -44,7 +44,7 @@ mise run qemu:prep   # 1Password keys + cloud image download (local lab)
 Both are safe to rerun (the key extraction refreshes, everything else
 no-ops) — after `mise run clean`, rerunning the prep of whichever lab you
 use restores the groundwork. Under the hood they share `key:prep` (the
-1Password extraction — expect one agent approval). `do:key-delete` removes
+1Password extraction — expect one agent approval). `do:key:delete` removes
 the bootstrap key from DigitalOcean if it must be rotated or retired
 provider-side.
 
@@ -52,15 +52,15 @@ provider-side.
 
 ```sh
 mise run do:up         # create → wait out first boot → converge
-mise run do:status     # ID, IP, status
+mise run do:vm:status  # stages done so far, and the next step
 ```
 
-`do:up` is the whole sequence: `do:create` renders
+`do:up` is the whole sequence: `do:vm:create` renders
 `.generated/cloud-init/ubuntu-baseline.yaml` from the same sources the roles
 own (RFC-005) and creates droplet `ubuntu-ansible-lab` (Ubuntu 24.04,
 `s-1vcpu-1gb`, `tor1`); at first boot, cloud-init creates the `ansible` and
 `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades, and reboots
-unconditionally; `do:wait` blocks until that first-boot cycle is done (the
+unconditionally; `do:vm:wait` blocks until that first-boot cycle is done (the
 droplet reaching `active` predates it by minutes); `do:converge` runs the
 first converge. The steps remain runnable individually for debugging — each
 one's description names what normally follows it.
@@ -133,20 +133,20 @@ mise run do:retire-bootstrap   # asks for confirmation
 
 This converges with `BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root`: after the
 account validations pass, it strips root's `authorized_keys`, removes the
-cloud-init sudoers file, and locks the account. Afterward `mise run do:ssh-root`
+cloud-init sudoers file, and locks the account. Afterward `mise run do:ssh:root`
 stops working — by design — and recovery is the provider console. Routine
 `do:converge` never retires anything (the toggle defaults off).
 
 ## 7. SSH shortcuts and teardown
 
 ```sh
-mise run do:ssh-root       # provider bootstrap path (dead after retirement)
-mise run do:ssh-ansible
-mise run do:ssh-sysadmin
+mise run do:ssh:root       # provider bootstrap path (dead after retirement)
+mise run do:ssh:ansible
+mise run do:ssh:sysadmin
 
-mise run do:reboot      # provider-level reboot (no validation; prefer do:validate-reboot)
-mise run do:destroy     # destroy the droplet (asks for confirmation)
-mise run clean          # do:destroy + qemu:destroy + remove .generated/
+mise run do:vm:reboot   # provider-level reboot (no validation; prefer do:validate-reboot)
+mise run do:vm:destroy  # destroy the droplet (asks for confirmation)
+mise run clean          # do:vm:destroy + qemu:vm:destroy + remove .generated/
 ```
 
 The droplet is disposable by design: recreating the full verified state is
@@ -166,21 +166,21 @@ mise run qemu:prep   # once: 1Password keys + cloud image download
 mise run qemu:up     # create → boot (SSH on 127.0.0.1:2222) → wait → converge
 ```
 
-`qemu:up` runs `qemu:create` (NoCloud seed ISO + overlay disk from the
-rendered cloud-init), `qemu:boot` (daemonized), `qemu:wait` (blocks through
+`qemu:up` runs `qemu:vm:create` (NoCloud seed ISO + overlay disk from the
+rendered cloud-init), `qemu:vm:boot` (daemonized), `qemu:vm:wait` (blocks through
 the first-boot dist-upgrade and reboot), then `qemu:converge` — each step
 runnable individually for debugging. From there: `validate-reboot`,
-`update`, `ssh-*`, as with `do:*`.
+`update`, `ssh:*`, as with `do:*`.
 
 Differences from the droplet flow:
 
 - **No bootstrap door.** NoCloud has no provider-injected account; the
   rendered user-data defines the only users that ever exist. There is no
-  `qemu` counterpart to `do:ssh-root` or `do:retire-bootstrap` — nothing to
+  `qemu` counterpart to `do:ssh:root` or `do:retire-bootstrap` — nothing to
   retire.
-- **Serial console.** `mise run qemu:console` follows the boot console —
+- **Serial console.** `mise run qemu:vm:console` follows the boot console —
   the debugging window when SSH isn't up.
-- **Teardown is local.** `mise run qemu:destroy` kills the VM and deletes
+- **Teardown is local.** `mise run qemu:vm:destroy` kills the VM and deletes
   its state; the cached cloud image survives, so destroy → create → boot →
   wait → converge is a fully offline few-minute loop. `clean` destroys the
   QEMU VM too (and drops the image cache with the rest of `.generated/`).

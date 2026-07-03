@@ -5,20 +5,23 @@ set -eu
 cat <<'EOF'
 cur8s.ubuntu labs — full details: docs/operations/manual.md
 
-  Local QEMU lab (free, arm64)         DigitalOcean droplet (amd64)
-  ----------------------------         ----------------------------
-  qemu:prep       once                 do:prep       once per account
-  qemu:up         stand up the lab     do:up         stand up the lab
-  qemu:status     is it running?       do:status     is it running?
-  qemu:converge   re-assert (daily)    do:converge   re-assert (daily)
-  qemu:examples   test all examples    do:examples   test all examples
-  qemu:validate-reboot  acceptance     do:validate-reboot  acceptance
-  qemu:destroy    tear down            do:destroy    tear down
+  stage                     local QEMU (free, arm64)      droplet (amd64)
+  ------------------------  ----------------------------  ---------------------
+  1. prep (once)            qemu:prep                     do:prep
+  2. provision a VM         qemu:vm:create                do:vm:create
+                              -> qemu:vm:boot               -> do:vm:wait
+                              -> qemu:vm:wait
+  3. inspect by hand        qemu:ssh:ansible              do:ssh:ansible
+       where am I?          qemu:vm:status                do:vm:status
+       debug console        qemu:vm:console               —
+  4. converge (daily)       qemu:converge                 do:converge
+  5. test the examples      qemu:examples                 do:examples
+  6. acceptance gate        qemu:validate-reboot          do:validate-reboot
+  7. tear down              qemu:vm:destroy               do:vm:destroy
 
-  One example:   mise run qemu:example <name>   (or do:example <name>)
-  SSH in:        mise run qemu:ssh-ansible      (or do:ssh-ansible, ...)
-  Start over:    mise run clean
-  Every task:    mise tasks
+  Stages 2+4 in one shot:   qemu:up                       do:up
+  One example:              qemu:example <name>           do:example <name>
+  Start over completely:    clean          Every task:    mise tasks
 
 Run any of these as: mise run <task>
 EOF

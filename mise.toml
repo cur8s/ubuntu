@@ -1,12 +1,13 @@
 # Workstation CLIs are intentionally managed outside mise for now.
 # Expected commands: op, doctl, jq, ssh, ansible-playbook.
 #
-# Tasks are file tasks under mise-tasks/ (subdirectories namespace the task
-# names: mise-tasks/do/create -> do:create). Namespaces name the thing
-# operated on — a lab (do:, qemu:; future providers get aws:, azure:, ...)
-# or a workstation artifact — and stay exactly one level deep. Task scripts
-# must be executable or mise silently ignores them; shared helpers live in
-# mise-tasks/lib.sh.
+# Tasks are file tasks under mise-tasks/ (directories namespace the names:
+# mise-tasks/do/vm/create -> do:vm:create). Grammar: <lab>:<action> when the
+# lab host itself is the object (converge, up, examples); <lab>:<object>:<action>
+# when the verb acts on a component (vm lifecycle, ssh access, provider keys).
+# Future providers get their own family (aws:, azure:, ...). A namespace must
+# have multiple real members. Task scripts must be executable or mise silently
+# ignores them; shared helpers live in mise-tasks/lib.sh.
 
 [env]
 # Seconds to pause before SSH-heavy tasks (do:converge, do:update,

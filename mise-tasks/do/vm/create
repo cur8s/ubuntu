@@ -1,8 +1,7 @@
 #!/usr/bin/env sh
-#MISE description="Create the DigitalOcean Ubuntu test VM (next: do:wait — or just do:up)"
+#MISE description="Create the DigitalOcean Ubuntu test VM (next: do:vm:wait — or just do:up)"
 #MISE quiet=true
 #MISE depends=["cloud-init:render"]
-#MISE hide=true
 set -eu
 echo "Creating the DigitalOcean Ubuntu test VM"
 droplet_count="$(doctl compute droplet list "$DROPLET_NAME" --output json | jq length)"

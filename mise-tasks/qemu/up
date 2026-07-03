@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 #MISE description="Stand up the local QEMU lab from zero: create, boot, wait out first boot, converge"
 set -eu
-mise run qemu:create
-mise run qemu:boot
-mise run qemu:wait
+mise run qemu:vm:create
+mise run qemu:vm:boot
+mise run qemu:vm:wait
 mise run qemu:converge
 echo "QEMU lab is up and converged."

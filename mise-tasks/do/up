@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 #MISE description="Stand up the droplet lab from zero: create, wait out first boot, converge"
 set -eu
-mise run do:create
-mise run do:wait
+mise run do:vm:create
+mise run do:vm:wait
 mise run do:converge
 echo "Droplet lab is up and converged."
