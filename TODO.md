@@ -24,5 +24,5 @@ Completed work lives in git history and the RFC Revisions blocks.
 - `docs/rfcs/` — the RFC series (start at RFC-000; architecture source of truth)
 - `docs/operations/manual.md` — the operations manual
 - `docs/notes/ucg-fibre-ips-ssh-blocking.md` — the IPS incident that drove the cloud-init design
-- `collection/playbooks/cloud-init/render.sh` — cloud-init generator (RFC-005)
+- `collection/scripts/render-cloud-init.sh` — cloud-init generator (RFC-005)
 - `collection/playbooks/converge.yml` — converge entrypoint

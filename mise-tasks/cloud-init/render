@@ -2,4 +2,4 @@
 #MISE description="Render cloud-init user-data from extracted public keys into .generated"
 #MISE quiet=true
 set -eu
-exec sh "$MISE_CONFIG_ROOT/collection/playbooks/cloud-init/render.sh"
+exec sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"

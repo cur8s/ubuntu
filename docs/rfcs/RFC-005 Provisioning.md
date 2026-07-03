@@ -34,7 +34,7 @@ The architecture that preceded this collection provisioned hosts bare and initia
 
 This RFC defines the provisioning architecture and its division of labor with convergence.
 
-It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-006: Convergence), or the rendering implementation (the operations manual and `playbooks/cloud-init/`).
+It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-006: Convergence), or the rendering implementation (the operations manual and `collection/scripts/`).
 
 ## Revisions
 

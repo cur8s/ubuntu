@@ -123,7 +123,7 @@ The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
 asserted (see each role's README for what was deliberately left out).
 
-`collection/playbooks/cloud-init/render.sh` generates the first-boot user-data from the
+`collection/scripts/render-cloud-init.sh` generates the first-boot user-data from the
 same key files and sshd drop-in the roles own, which is what makes the first
 converge a no-op.
 
