@@ -1,6 +1,6 @@
 # RFC-009: Conventions Contract
 
-Status: Draft
+Status: Accepted
 
 Layers and consumers need names they can hardcode. This RFC enumerates the stable contract: everything listed here changes only through a revision to this RFC, because consumers are entitled to rely on it without configuration.
 
@@ -23,7 +23,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 
 The collection playbooks read their inputs from environment variables: `ANSIBLE_PUB_KEY` and `SYSADMIN_PUB_KEY` name the ed25519 public key files, and bootstrap retirement is gated by `BOOTSTRAP_RETIRE` with `BOOTSTRAP_USER` naming the provider bootstrap account (RFC-004: Identity and Trust).
 
-This RFC remains a draft until the first use-case collection (`cur8s.k3s`) has consumed the contract and proven it sufficient. Consuming it is expected to surface whatever is missing.
+The runnable examples in `examples/` are consumers of this contract — every one resolves the collection by FQCN, connects through the fixed accounts, and supplies inputs through the environment variables above. Future use-case collections that surface missing conventions add them through revisions to this RFC.
 
 ## Scope
 
@@ -34,3 +34,5 @@ It does not define the meaning of the controls behind them (RFC-003: Baseline Co
 ## Revisions
 
 Initial draft.
+
+Accepted: the runnable examples consume the contract end-to-end (FQCN playbooks, fixed accounts, environment-variable inputs); proving it against further consumers happens by revision, not by draft status.
