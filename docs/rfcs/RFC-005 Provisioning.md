@@ -22,9 +22,13 @@ The Ansible roles are the single source of truth for everything cloud-init appli
 
 What "the same" requires is per-module. State-based modules compare system state, so cloud-init and the roles only need to produce the same end state for accounts and keys. File-shaped controls are checksum-compared, so they must share bytes. Exactly two controls are file-shaped: the sshd drop-in, which the user-data renderer reads directly from the role-owned file, and the per-account sudoers rules, which the renderer duplicates byte-for-byte and keeps in lockstep with the role by explicit discipline — the rule is one line, and a shared source file would cost more than it protects. cloud-init's `sudo:` shortcut is deliberately not used: it writes a combined sudoers file the roles do not manage, which would surface as permanent drift.
 
-## Bare Metal
+## Hosts Not Born Here: Adoption
 
-Bare-metal hosts use Ubuntu Autoinstall, nesting the same cloud-config under `autoinstall.user-data` and seeding it through the NoCloud datasource. The host that emerges is the same host cloud provisioning produces.
+Provisioning, as this RFC defines it, is cloud provisioning: provider user-data driving cloud-init at first boot. Hosts that never passed through it — bare-metal machines installed by whatever means, servers already running workloads — are not provisioned into the baseline; they are adopted into it.
+
+Adoption is a genuinely different problem, because it starts from a host whose state is unknown rather than empty. It must first discover what exists, then decide per finding whether to overwrite, coexist, or refuse and defer to a human. Those semantics are their own design effort (`docs/notes/adopting-existing-servers.md`) and are out of scope here.
+
+Install automation itself — how an operator gets Ubuntu onto bare metal, with Ubuntu Autoinstall or anything else — is deliberately outside this collection's concern. However a host was installed, it enters the baseline through adoption.
 
 ## Why cloud-init — a Reversal
 
