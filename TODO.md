@@ -12,9 +12,6 @@ Completed work lives in git history and the RFC Revisions blocks.
 ## 3. First release (RFC-008; after adoption)
 - [ ] Cut `v24.4.0` once adoption lands: bump nothing (version already `24.4.0`), tag, `git push origin main --tags`, then pin the tag in `examples/requirements.yml` and the manual's install snippets.
 
-## Separate work (other repos)
-- `cur8s.tailscale` collection (opt-in access layer; the canonical dogfood consumer).
-
 ## Key files
 - `docs/rfcs/` — the RFC series (start at RFC-000; architecture source of truth)
 - `docs/operations/manual.md` — the operations manual
