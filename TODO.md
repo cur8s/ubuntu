@@ -28,7 +28,7 @@ Update as items land. `[x]` done · `[~]` in progress · `[ ]` not started.
 - [ ] RFC-001 §14 open item: enumerate the full **conventions contract** (stable paths, Ansible facts/vars layers may rely on) as roles solidify.
 
 ## Collection / packaging (RFC-001 §3, §10)
-- [ ] Make this a proper **`baseline.ubuntu` Ansible collection**: `galaxy.yml`, namespace, **semver tiered to the Ubuntu LTS**, N-1 LTS support policy.
+- [x] Make this a proper **`baseline.ubuntu` Ansible collection** — **done 2026-07-03.** Distribution is git-only (no registry): `ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git`. Version `24.4.x`: major.minor mirror the target LTS (24.04), `x` counts releases; forever backward-compatible within the LTS era (the policy IS the contract), next LTS starts `26.4.0` and demotes this series to N-1. `main` is prod; version bumps get `v<version>` tags. **Verified:** clean tarball (build_ignore hygiene), install from git works, `baseline.ubuntu.converge` and `baseline.ubuntu.validate_reboot` resolve by FQCN with roles resolving inside the collection (playbook renamed — FQCNs forbid hyphens).
 - [ ] Prove the **three-tier composition**: a use-case collection (e.g. `baseline.k3s`) depends on `baseline.ubuntu` and its converge re-asserts the floor.
 
 ## Out of scope for THIS repo (separate work)
