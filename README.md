@@ -3,11 +3,72 @@
 This repository is the `cur8s.ubuntu` Ansible collection: the baseline every
 Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
-the installable collection lives in `collection/`; the architecture and its
-rationale live in `docs/rfcs/` (start with RFC-000 and read in order); the
-how-to lives in `docs/operations/manual.md`; runnable consumption examples
-live in `examples/`. The `mise` test harness may call cloud providers and a
-secrets manager; the collection itself never does.
+the installable collection lives in `collection/`, the how-to lives in
+`docs/operations/manual.md`, and runnable consumption examples live in
+`examples/`.
+
+**To understand the system**, read the mental model below, then
+`docs/rfcs/RFC-001 The Host Baseline.md` and onward for depth. **To change
+the system**, start instead at `docs/rfcs/RFC-000 The Role of RFCs.md` —
+the RFCs are the normative architecture contract, and changes must keep
+them true.
+
+## The mental model
+
+**The baseline is the invariant state every managed Ubuntu host gets** — a
+known, hardened, reproducible starting point. A host either conforms or it
+doesn't; if it came from this baseline, it's fit for production. Think of
+it as a floor: everything else builds above it, and nothing ever goes
+below it.
+
+**A host is born conformant, then kept conformant.** At first boot,
+cloud-init — rendered from the very same files the Ansible roles own —
+creates the access accounts, applies the SSH policy, patches everything,
+and reboots (which doubles as a smoke test: if the box doesn't come back,
+nothing else proceeds). From then on, *converge* re-asserts the declared
+state over plain SSH, forever. Git is the source of truth: an out-of-band
+change by a person or an AI agent is drift, and the next converge reverts
+it. On a healthy host every converge reports zero changes, so a non-zero
+report *is* the drift alarm — and check mode gives the same report without
+touching anything.
+
+**The baseline is deliberately small, and stays close to Ubuntu's
+defaults.** It pins only what must be guaranteed: two fixed accounts
+(`ansible` for automation, `sysadmin` for human break-glass), key-only
+SSH, automatic security updates that never reboot on their own, and logs
+that survive reboots. Everything a default already guarantees is trusted,
+not asserted — nothing declared means nothing to maintain. It refuses, on
+purpose, to own time sync, auditd, firewalls, or kernel tuning: those
+belong to the layers above, and a baseline that fought them would be a
+bug factory.
+
+**Trust starts with the provider and ends with the baseline.** A new VM is
+reachable only through the provider's bootstrap account. Once both baseline
+accounts are proven working, that provider door can be retired — locked,
+never deleted — and the host looks identical regardless of which cloud it
+came from. All keys are ed25519; private keys live in the operator's
+secrets manager and never touch this repository. Per-person identity is
+deliberately not the baseline's job — that's for an access layer like a
+tailnet, layered on top.
+
+**Verification is deliberate, not ambient.** Baseline roles declare state;
+they don't second-guess it. Proving the promises hold is the job of
+opt-in acceptance gates — chiefly reboot validation, which reboots the
+host and verifies access, services, and log history survived. Anything
+dangerous (like retiring the bootstrap door) requires that gate first, and
+the collection's only reboot path is the one that validates.
+
+**Everything composes upward.** Purpose layers (a k3s node, a database
+host) re-assert the baseline first, then add their own state — see
+`examples/` for eight runnable demonstrations of the pattern. Environment
+repositories sit on top, holding the inventory, keys, and schedule.
+Because every tier re-asserts the baseline, it holds on every host, on
+every converge.
+
+**It ships as git, versioned by the Ubuntu it targets.** No registry:
+install straight from this repository. Version `24.4.x` means "the 24.04
+baseline, release x" — forever backward-compatible within its LTS era.
+`main` is the production release; tags mark pinnable versions.
 
 The steel thread:
 
@@ -76,7 +137,7 @@ The collection is distributed from this git repository only — no galaxy
 registry. Install it (or depend on it) via a git source:
 
 ```sh
-ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git
+ansible-galaxy collection install 'git+https://github.com/cur8s/ubuntu.git#/collection/'
 ```
 
 The version is `24.4.x`: major.minor mirror the Ubuntu LTS the baseline targets
