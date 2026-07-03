@@ -1,4 +1,4 @@
-RFC-003: Floor Contents
+# RFC-003: Floor Contents
 
 Status: Accepted
 
@@ -12,7 +12,7 @@ The floor is intentionally small. A host conforms to it when the following hold.
 
 **Persistent journald log capture.** The journal survives reboots: `Storage=persistent` is pinned. Stock `Storage=auto` persists only when `/var/log/journal` happens to exist, which is true on some provider images and not others; the pin makes the guarantee unconditional. Journal size limits, log forwarding, and rsyslog stay at distro defaults.
 
-**Excluded From the Floor**
+## Excluded From the Floor
 
 Time synchronization — trusted to distro and provider defaults. `systemd-timesyncd` ships installed, enabled, and syncing on every Ubuntu cloud image, and providers supply time sources. Pinning the mechanism would uninstall chrony from under a layer that legitimately wants it: the floor fighting a layer. Revisit with a mechanism-agnostic assert on the first real clock incident.
 
@@ -26,12 +26,12 @@ fail2ban — key-only SSH makes brute force moot, and a self-banning daemon is a
 
 Network perimeter — a provider or use-case concern, layered as needed.
 
-**Scope**
+## Scope
 
 This RFC enumerates the floor. It accrues a revision whenever a control enters or leaves.
 
 It does not define the inclusion test or role-authoring doctrine (RFC-002: Floor Doctrine), the identity model (RFC-004: Identity and Trust), or how the controls are implemented.
 
-**Revisions**
+## Revisions
 
 Initial version. Records the floor as first verified end-to-end: accounts, OpenSSH policy, unattended-upgrades, journald persistence. Time synchronization was implemented, verified, and then deliberately removed in favor of trusting defaults.

@@ -1,4 +1,4 @@
-RFC-000: The Role of RFCs
+# RFC-000: The Role of RFCs
 
 Status: Accepted
 
@@ -20,12 +20,12 @@ RFC numbers are stable identifiers. They are never renumbered or reused. In this
 
 Each RFC declares a status. `Accepted` RFCs are in force. `Draft` RFCs record direction not yet proven by implementation. `Example` documents illustrate possibilities without prescribing anything.
 
-**Scope**
+## Scope
 
 This RFC defines the purpose, authority, and evolution model of the baseline RFCs.
 
 It does not define the baseline itself, the supported operating system releases, the security posture, or the automation architecture. Those concerns are established by subsequent RFCs.
 
-**Revisions**
+## Revisions
 
 Initial version.

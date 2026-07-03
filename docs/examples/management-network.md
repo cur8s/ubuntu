@@ -1,4 +1,4 @@
-Management Network Example
+# Management Network Example
 
 Status: Example
 
@@ -14,10 +14,10 @@ The trust model defined by RFC-004: Identity and Trust establishes bootstrap and
 
 Tailscale is an implementation choice rather than an architectural requirement. Any implementation is acceptable provided it preserves these properties.
 
-**Scope**
+## Scope
 
 This example sketches a management network layered on the baseline. It prescribes nothing.
 
-**Revisions**
+## Revisions
 
 Carried over from the prototype RFC series and updated to the collection architecture.
