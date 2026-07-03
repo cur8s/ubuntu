@@ -1,27 +1,49 @@
-# Consuming cur8s.ubuntu
+# Examples
 
-Consumer-side files, shaped like the smallest possible environment repo
-(tier three in RFC-001: The Host Baseline). Copy them into your own
-repository as a starting point — they are not part of the collection's
-installable content.
+Runnable, copy-paste-able examples of consuming `cur8s.ubuntu`. Each example
+is a self-contained directory: a `site.yml` that re-asserts the baseline
+first (the composition pattern every layer follows — RFC-001: The Host
+Baseline) and then applies its layer, plus a README naming the techniques it
+demonstrates. Examples are layers, so unlike baseline roles they may verify
+their own outcomes in-play (RFC-002: Baseline Doctrine).
 
-Install the collection from git (pin a release tag once one exists —
-RFC-008):
+## Index
+
+| Example | Theme | Techniques demonstrated | Status |
+| --- | --- | --- | --- |
+| `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays | ported |
+| `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation | ported |
+| `postgres/` | database | versioned vendor package from PGDG, deb822 repo | planned |
+| `zot/` | containers | GitHub release binary → system user/dirs → config from vars → templated systemd unit + handlers | planned |
+| `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service | planned |
+| `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) | planned |
+| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | planned |
+
+## Running against the lab VM (contributors)
+
+The lab droplet must exist (see `docs/operations/manual.md`). Examples
+resolve `cur8s.ubuntu` from the working tree via a symlink under
+`.generated/` — created automatically — so role edits are picked up without
+committing or reinstalling:
+
+```sh
+mise run example:run docker
+```
+
+Run an example twice: the second run should report `changed=0` end to end
+(baseline no-op + idempotent layer).
+
+## Using from your own repository (consumers)
+
+Install the collection from git, then copy the example directory you want
+into your environment repository as a starting point:
 
 ```sh
 ansible-galaxy collection install -r requirements.yml
-```
-
-Then converge a host (the same environment-variable inputs the contributor
-harness uses — see RFC-009: Conventions Contract):
-
-```sh
 ANSIBLE_PUB_KEY=/path/to/ubuntu-ansible.pub \
 SYSADMIN_PUB_KEY=/path/to/ubuntu-sysadmin.pub \
-ansible-playbook -i <host-ip>, site.yml
+ansible-playbook -i <host-ip>, docker/site.yml
 ```
 
-`site.yml` shows the composition pattern: re-assert the baseline first,
-then add your own plays after it. Use-case collections (for example
-`cur8s.k3s`) follow exactly the same pattern inside their own converge
-playbook.
+The environment-variable inputs are the stable consumer surface (RFC-009:
+Conventions Contract).

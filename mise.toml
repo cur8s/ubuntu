@@ -159,6 +159,27 @@ ansible-playbook \
   "$MISE_CONFIG_ROOT/collection/playbooks/validate_reboot.yml"
 '''
 
+[tasks."examples:link"]
+description = "Symlink the working-tree collection into .generated so examples resolve cur8s.ubuntu"
+quiet = true
+run = '''
+mkdir -p "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s"
+ln -sfn ../../../../collection "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s/ubuntu"
+echo "Linked .generated/collections/ansible_collections/cur8s/ubuntu -> collection/"
+'''
+
+[tasks."example:run"]
+description = "Run an example against the test VM: mise run example:run <name>"
+depends = ["examples:link"]
+run = '''
+sleep "${SSH_SPACING_SECONDS:-0}"
+mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections" ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  "$MISE_CONFIG_ROOT/examples/{{arg(name="example")}}/site.yml"
+'''
+
 [tasks.clean]
 description = "Delete the DigitalOcean Ubuntu test VM and generated local files"
 depends = ["vm:delete"]

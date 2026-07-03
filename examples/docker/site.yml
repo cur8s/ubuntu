@@ -1,0 +1,91 @@
+---
+# Docker Engine from Docker's own apt repository.
+#
+# Techniques demonstrated:
+#   - vendor apt repository as a deb822 .sources file with a Signed-By keyring
+#   - multi-package install pinned to the vendor repo
+#   - service enable/start plus in-play validation
+#
+# Layer example (RFC-001): the baseline is re-asserted first, then the layer
+# is applied. Run against the lab VM: mise run example:run docker
+- name: Re-assert the baseline
+  ansible.builtin.import_playbook: cur8s.ubuntu.converge
+
+- name: Install Docker Engine
+  hosts: all
+  remote_user: ansible
+  become: true
+  gather_facts: false
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+
+  tasks:
+    - name: Read dpkg architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: dpkg_architecture
+      changed_when: false
+
+    - name: Ensure apt transport dependencies are present
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+        state: present
+
+    - name: Ensure Docker apt keyring directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Trust packages signed by Docker
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Add Docker apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/docker.sources
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Types: deb
+          URIs: https://download.docker.com/linux/ubuntu
+          Suites: noble
+          Components: stable
+          Architectures: {{ dpkg_architecture.stdout }}
+          Signed-By: /etc/apt/keyrings/docker.asc
+
+    - name: Install Docker Engine packages
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Enable and start Docker
+      ansible.builtin.systemd_service:
+        name: docker.service
+        enabled: true
+        state: started
+
+    - name: Validate Docker service is active
+      ansible.builtin.command: systemctl is-active docker.service
+      changed_when: false
+
+    - name: Validate Docker command is available
+      ansible.builtin.command: docker --version
+      changed_when: false
+
+    - name: Validate Docker Compose plugin is available
+      ansible.builtin.command: docker compose version
+      changed_when: false
