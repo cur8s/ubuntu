@@ -196,12 +196,12 @@ tab-complete `do:test:` or `qemu:test:` to see the catalog:
 ```sh
 mise run do:test:docker       # against the droplet
 mise run qemu:test:docker     # against the local QEMU VM
-mise run qemu:test:examples   # every example, in one run
+mise run qemu:test:all   # every example, in one run
 ```
 
 Every `test:` task enforces the examples' idempotency contract: it runs
 the example twice and fails unless the second pass reports `changed=0`.
-The suite (`test:examples`) covers the `examples/` directory by globbing —
+The suite (`test:all`) covers the `examples/` directory by globbing —
 an example without a per-name wrapper is still tested, with a warning — and
 skips `tailscale` unless `TAILSCALE_AUTHKEY` is set (a join from a
 disposable VM leaves a node in the tailnet admin console unless the key is

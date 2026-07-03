@@ -40,8 +40,8 @@ mise run qemu:test:docker   # against the local QEMU VM
 
 Every `test:` task enforces the examples' contract: it runs the example
 twice and fails unless the second pass reports `changed=0` end to end
-(baseline no-op + idempotent layer). `do:test:examples` and
-`qemu:test:examples` do the same across every example (skipping `tailscale`
+(baseline no-op + idempotent layer). `do:test:all` and
+`qemu:test:all` do the same across every example (skipping `tailscale`
 unless `TAILSCALE_AUTHKEY` is set).
 
 ## Using from your own repository (consumers)
