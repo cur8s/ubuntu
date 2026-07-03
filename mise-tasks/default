@@ -17,7 +17,7 @@ fi
 cat <<EOF
 ${B}cur8s.ubuntu labs${R} ${D}— full details: docs/operations/manual.md${R}
 
-${B}GRAMMAR${R}: every task is   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
+${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}providers${R}
     ${C}qemu${R}    local QEMU VM ${D}(free, arm64)${R}
@@ -32,6 +32,9 @@ ${B}GRAMMAR${R}: every task is   ${D}mise run${R} ${C}<provider>:<object>:<actio
   ${B}workflows${R} ${D}(no object — the provider itself is the object)${R}
     ${C}prep${R}    one-time groundwork
     ${C}up${R}      provision + converge
+
+  ${B}workstation${R} ${D}(no provider — acts on this repo checkout)${R}
+    ${C}clean${R}   destroy both lab VMs and wipe .generated ${D}(recover: re-run prep)${R}
 
   Same grammar on every provider: swap ${C}qemu:${R} for ${C}do:${R} and it just works.
 
@@ -52,5 +55,5 @@ ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
   ${B}Droplet extras${R}: ${C}do:ssh:root${R} is the provider bootstrap door — until
   ${C}do:play:retire-bootstrap${R} locks it ${D}(run the acceptance gate first)${R}.
 
-  ${C}clean${R}  destroy both labs + wipe .generated        ${C}mise tasks${R}  the full list
+  ${D}The full task list:${R} ${C}mise tasks${R}
 EOF
