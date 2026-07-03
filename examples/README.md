@@ -17,7 +17,7 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 | `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers | ported |
 | `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service | ported |
 | `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) | ported |
-| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | planned |
+| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | ported |
 
 ## Running against the lab VM (contributors)
 
