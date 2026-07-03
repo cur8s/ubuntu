@@ -3,13 +3,16 @@
 Open work only, in priority order. `[~]` in progress · `[ ]` not started.
 Completed work lives in git history and the RFC Revisions blocks.
 
-## 1. Bare-metal autoinstall + QEMU test harness (in progress next)
-- [ ] Add autoinstall support and a QEMU-based lab to test it locally: render an autoinstall seed that nests the existing cloud-config under `autoinstall.user-data` (RFC-005 already sketches this; reuse `collection/scripts/render-cloud-init.sh` output — one source, three moments), seed via the NoCloud datasource, and drive install/boot/verify through a new `mise-tasks/qemu/` task family (the file-task migration was done to make room for exactly this). End state: the same steel thread — install → first boot → converge no-op — proven on a QEMU VM without a cloud provider.
+## 1. QEMU cloud-image harness (next up)
+- [ ] A local, provider-free lab replicating the droplet flow: fetch the Ubuntu 24.04 cloud image (qcow2), build a NoCloud seed from the *unchanged* output of `collection/scripts/render-cloud-init.sh`, and drive it through a new `mise-tasks/qemu/` task family (fetch/create/boot/ssh/destroy, SSH port-forward). End state: the existing steel thread — boot → first-boot cloud-init → converge `changed=0` — proven on a local QEMU VM. Also becomes the free test bed for examples and, later, adoption (a stock image booted with a minimal seed simulates an "existing server").
 
-## 2. Server adoption (after autoinstall local testing)
-- [ ] Implement adoption of existing Ubuntu 24.04 servers (bare metal without the baseline accounts): read-only `adoptable` assessment + additive `adopt` playbook, per the design in `docs/notes/adopting-existing-servers.md`. Starts only once the QEMU/autoinstall lab exists (it provides the local test bed for adoption too). Re-validate the design against the code when picked up; includes the deferred key-drift-reversion and retirement sudo-group questions recorded there.
+## 2. Bare-metal autoinstall (builds on the harness)
+- [ ] Simulate a bare-metal install: live-server ISO + blank disk, autoinstall seed nesting the same cloud-config under `autoinstall.user-data` (RFC-005), the install-then-reboot two-boot lifecycle, serial-console debugging, long timeouts. End state: the same steel thread proven against the *installed* disk. Kept separate from #1 so installer failures debug as installer failures, not harness failures.
 
-## 3. First release (RFC-008; after adoption)
+## 3. Server adoption (after autoinstall, per sequencing decision)
+- [ ] Implement adoption of existing Ubuntu 24.04 servers (bare metal without the baseline accounts): read-only `adoptable` assessment + additive `adopt` playbook, per the design in `docs/notes/adopting-existing-servers.md`. Its hard dependency is only #1 (the harness provides the local "existing server" test bed); sitting after #2 is a scheduling choice. Re-validate the design against the code when picked up; includes the deferred key-drift-reversion and retirement sudo-group questions recorded there.
+
+## 4. First release (RFC-008; after adoption)
 - [ ] Cut `v24.4.0` once adoption lands: bump nothing (version already `24.4.0`), tag, `git push origin main --tags`, then pin the tag in `examples/requirements.yml` and the manual's install snippets.
 
 ## Key files
