@@ -136,6 +136,17 @@ ansible-playbook \
   "$MISE_CONFIG_ROOT/collection/playbooks/converge.yml"
 '''
 
+[tasks."vm:update"]
+description = "Operator-invoked full package update on the test VM (never reboots; reports if one is pending)"
+run = '''
+sleep "${SSH_SPACING_SECONDS:-0}"
+mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+ansible-playbook \
+  -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
+  "$MISE_CONFIG_ROOT/collection/playbooks/update.yml"
+'''
+
 [tasks."vm:retire-bootstrap"]
 description = "Converge with bootstrap retirement: lock the provider bootstrap user (root on DigitalOcean)"
 confirm = "Retire the provider bootstrap user? Root SSH to the VM will stop working; recovery is the provider console."

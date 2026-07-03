@@ -9,6 +9,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 * The collection is `cur8s.ubuntu`, distributed from its git repository (RFC-008: Release and Versioning).
 * The converge entry point is the collection playbook `cur8s.ubuntu.converge`.
 * The reboot acceptance gate is the collection playbook `cur8s.ubuntu.validate_reboot`.
+* The operator-invoked full package update is the collection playbook `cur8s.ubuntu.update`; it never reboots.
 * The account names are `ansible` and `sysadmin`: always present, locked passwords, passwordless sudo (RFC-004: Identity and Trust).
 
 ## Paths

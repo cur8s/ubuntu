@@ -1,0 +1,45 @@
+---
+# Operator-invoked full package update (RFC-003's automatic floor covers
+# security updates only; this applies everything else, deliberately).
+#
+# This play NEVER reboots. If the update leaves a reboot pending (a new
+# kernel, typically), it says so and defers to cur8s.ubuntu.validate_reboot —
+# the collection's only reboot path is the one that validates the host came
+# back conformant (RFC-007). lock_timeout lets the run coexist with a
+# concurrently firing apt-daily timer instead of failing on the dpkg lock.
+- name: Update Ubuntu packages without rebooting
+  hosts: all
+  remote_user: ansible
+  become: true
+  gather_facts: false
+
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+
+  tasks:
+    - name: Update apt package cache
+      ansible.builtin.apt:
+        update_cache: true
+        lock_timeout: 300
+
+    - name: Upgrade installed Ubuntu packages
+      ansible.builtin.apt:
+        upgrade: "yes"
+        lock_timeout: 300
+
+    - name: Check whether Ubuntu requires a reboot
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: update_reboot_required
+
+    - name: Report pending reboot requirement
+      ansible.builtin.debug:
+        msg: >-
+          Package updates require a reboot. Run the validating reboot path:
+          cur8s.ubuntu.validate_reboot (mise run vm:validate-reboot).
+      when: update_reboot_required.stat.exists
+
+    - name: Report no reboot required
+      ansible.builtin.debug:
+        msg: No reboot required.
+      when: not update_reboot_required.stat.exists
