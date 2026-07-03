@@ -77,6 +77,21 @@ set `SSH_SPACING_SECONDS` (default `0`) to pause before SSH-heavy tasks:
 `SSH_SPACING_SECONDS=120 mise run vm:converge`. Background: see
 `docs/notes/ucg-fibre-ips-ssh-blocking.md`.
 
+Converge refuses hosts that don't run the targeted Ubuntu release (the
+release guard — RFC-002, RFC-008): applying the 24.4.x series to a 22.04 or
+26.04 host fails before anything is mutated.
+
+**Patching.** The automatic baseline covers security updates only. For a
+deliberate full update:
+
+```sh
+mise run vm:update
+```
+
+It never reboots; if updates leave a reboot pending it says so — run
+`mise run vm:validate-reboot`, the collection's only (and validating)
+reboot path.
+
 ## 5. Acceptance validation
 
 ```sh

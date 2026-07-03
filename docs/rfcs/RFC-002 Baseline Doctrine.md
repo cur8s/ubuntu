@@ -22,6 +22,8 @@ Declared configuration is a maintenance liability: every pin must track upstream
 
 Baseline roles contain no verification-only code: no probes or assertions that check state without declaring it. Verification of outcomes belongs to acceptance gates (RFC-007: Validation and Acceptance), where it runs deliberately rather than on every converge.
 
+Preflight guards are not checks in this sense. Converge may assert its preconditions — required inputs, and that the host runs the Ubuntu release this baseline series targets (RFC-008: Release and Versioning) — before mutating anything. A guard protects the host from the wrong baseline; a check second-guesses the right one.
+
 Exclusion is reversible and cheap; premature inclusion is not. When in doubt, a control stays out of the baseline until a real incident supplies the evidence.
 
 ## Scope
@@ -35,3 +37,5 @@ It does not enumerate the baseline's contents (RFC-003: Baseline Contents) or de
 Initial version.
 
 Renamed from Floor Doctrine; "baseline" now names the invariant tier throughout the series.
+
+Clarified that preflight guards (converge preconditions, including the release guard) are permitted and are not verification-only code.
