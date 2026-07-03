@@ -5,7 +5,8 @@ Consumer-side files, shaped like the smallest possible environment repo
 repository as a starting point — they are not part of the collection's
 installable content.
 
-Install the collection from git at a pinned tag:
+Install the collection from git (pin a release tag once one exists —
+RFC-008):
 
 ```sh
 ansible-galaxy collection install -r requirements.yml

@@ -141,17 +141,20 @@ git push origin main --tags
 Install directly from git (no registry — RFC-008):
 
 ```sh
-ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git,v24.4.0
+ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git
 ```
 
-or in a consumer's `requirements.yml`, pin a tag (see `examples/`):
+or in a consumer's `requirements.yml` (see `examples/`):
 
 ```yaml
 collections:
   - name: https://github.com/cur8s/ubuntu.git
     type: git
-    version: v24.4.0
+    version: main
 ```
+
+Once release tags exist, pin one (`version: v24.4.0`) for reproducible
+installs and rollback targets.
 
 The stable consumer surface — playbook FQCNs (`baseline.ubuntu.converge`,
 `baseline.ubuntu.validate_reboot`), account names, paths, and environment
