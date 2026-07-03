@@ -20,7 +20,7 @@ Update as items land. `[x]` done · `[~]` in progress · `[ ]` not started.
 ## Validation & testing (RFC-001 §11, §12)
 - [x] **Reboot-validation acceptance test** — `playbooks/validate-reboot.yml` + `mise run vm:validate-reboot`: reboot (IPS-aware `post_reboot_delay`) → re-verify `ansible`+`sysadmin` SSH+sudo → floor units active → previous-boot journal readable (proves the journald pin across reboots). **Verified 2026-07-02** on the droplet.
 - [x] Confirm every role is **check-mode-clean** (`--check --diff` trustworthy, no false "changed"). **Verified 2026-07-02** for `users`/`ssh`/`unattended_upgrades`/`journald`: fixed `ssh` role (its `sshd -T` probe was skipped under `--check`, breaking the assert; now `check_mode: false`), full `--check --diff` runs `changed=0 failed=0`. Discipline for new roles: read-only probes get `changed_when: false` + `check_mode: false`.
-- [ ] Honor §12: run SSH-heavy ops (reboot validation, first converge) from CI/tailnet, not bursted from behind the UCG IPS.
+- [x] Honor §12 (SSH bursts vs. the UCG IPS) — resolved differently: the UCG IPS was disabled 2026-07-03, and `mise.toml` gained `SSH_SPACING_SECONDS` (default `0`, honored by `vm:converge`/`vm:validate-reboot`/`vm:retire-bootstrap`) so spacing can be turned back on per-run if an IPS/rate-limiter ever returns. Running converges from CI/tailnet remains an environment-repo concern, not this collection's.
 
 ## Cleanup & structure
 - [x] Retire/remove legacy **`playbooks/initialize.yml`** — deleted 2026-07-02 along with the `vm:init` mise task (Model B settled; git history is the fallback). README rewritten to the cloud-init flow.

@@ -2,6 +2,11 @@
 # Expected commands: op, doctl, jq, ssh, ansible-playbook.
 
 [env]
+# Seconds to pause before SSH-heavy tasks (vm:converge, vm:validate-reboot,
+# vm:retire-bootstrap). 0 = no pause. Set >0 (e.g. 120) when running from
+# behind an IPS/rate-limiter that drops SSH bursts — see
+# docs/notes/ucg-fibre-ips-ssh-blocking.md.
+SSH_SPACING_SECONDS = "0"
 DROPLET_NAME = "ubuntu-ansible-lab"
 DO_BOOTSTRAP_KEY_NAME = "ubuntu-bootstrap"
 BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
@@ -123,6 +128,7 @@ doctl compute droplet-action reboot "$(doctl compute droplet list "$DROPLET_NAME
 [tasks."vm:converge"]
 description = "Converge the DigitalOcean Ubuntu test VM over ansible SSH"
 run = '''
+sleep "${SSH_SPACING_SECONDS:-0}"
 mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 ansible-playbook \
@@ -134,6 +140,7 @@ ansible-playbook \
 description = "Converge with bootstrap retirement: lock the provider bootstrap user (root on DigitalOcean)"
 confirm = "Retire the provider bootstrap user? Root SSH to the VM will stop working; recovery is the provider console."
 run = '''
+sleep "${SSH_SPACING_SECONDS:-0}"
 mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
@@ -144,6 +151,7 @@ BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root ansible-playbook \
 [tasks."vm:validate-reboot"]
 description = "Acceptance test: reboot the VM, re-verify baseline access and floor services"
 run = '''
+sleep "${SSH_SPACING_SECONDS:-0}"
 mkdir -p "$ANSIBLE_LOCAL_TEMP"
 
 ansible-playbook \
