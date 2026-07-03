@@ -1,7 +1,7 @@
 ---
 # Tailscale: install from the vendor apt repository, then join a tailnet
 # with SSH enabled — a working sketch of the management-network access
-# layer (docs/examples/management-network.md).
+# layer (docs/notes/management-network.md).
 #
 # Techniques demonstrated:
 #   - vendor-hosted keyring and .list files fetched directly (Tailscale

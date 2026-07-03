@@ -2,7 +2,7 @@
 
 Installs Tailscale from its apt repository and joins the host to a tailnet
 with Tailscale SSH enabled — a working sketch of the management-network
-access layer (`docs/examples/management-network.md`), layered on the
+access layer (`docs/notes/management-network.md`), layered on the
 baseline. The real product for this concern is the future `cur8s.tailscale`
 collection; this example preserves the techniques.
 

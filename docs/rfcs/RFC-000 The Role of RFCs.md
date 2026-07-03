@@ -12,7 +12,7 @@ Any change that violates an accepted RFC is an architectural change and must be 
 
 RFCs are authoritative but not immutable. Improvements that clarify intent, make implicit reasoning explicit, or improve readability may be incorporated directly into an RFC and recorded as revisions. Changes that alter architectural meaning, scope, or constraints require a new RFC or an explicit revision recorded against the affected RFC.
 
-RFCs deliberately describe what the system is and why it exists, not how it is operated or implemented. The operations manual (`docs/operations/manual.md`) owns the how. Engineering notes (`docs/notes/`) preserve the incidents and experiments that RFCs cite as evidence. Examples (`docs/examples/`, `examples/`) illustrate possibilities and prescribe nothing.
+RFCs deliberately describe what the system is and why it exists, not how it is operated or implemented. The operations manual (`docs/operations/manual.md`) owns the how. Engineering notes (`docs/notes/`) preserve the thinking around the architecture: evidence from incidents and experiments, and recorded designs that are not commitments. Runnable examples (`examples/`) illustrate consumption and prescribe nothing.
 
 The audience for these RFCs is anyone evolving or consuming this repository: contributors, users deciding whether to adopt the baseline, and AI coding agents working in the tree. They provide a stable architectural contract that allows implementation details to change without changing the identity of the system.
 
@@ -29,3 +29,5 @@ It does not define the baseline itself, the supported operating system releases,
 ## Revisions
 
 Initial version.
+
+Simplified the documentation taxonomy: design sketches live in `docs/notes/` alongside evidence; `docs/examples/` is retired in favor of the runnable `examples/`.

@@ -22,7 +22,7 @@ Purposes stack on the baseline in three tiers. The baseline is the generic botto
 
 Because every tier re-asserts it, the baseline is guaranteed on every host, on every converge.
 
-Access layers follow the same pattern. An identity-aware management network is an opt-in layer, never baked into the baseline, which must stay access-agnostic and work without one. A sketch is held in `docs/examples/management-network.md`.
+Access layers follow the same pattern. An identity-aware management network is an opt-in layer, never baked into the baseline, which must stay access-agnostic and work without one. A design sketch is held in `docs/notes/management-network.md`, and a runnable technique demo in `examples/tailscale/`.
 
 ## Non-Goals
 
