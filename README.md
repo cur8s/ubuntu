@@ -65,3 +65,23 @@ converge a no-op.
 `mise.toml` is contributor convenience only. It can call 1Password,
 DigitalOcean, and Ansible for local development, but provider and
 secret-manager behavior does not move into reusable collection roles.
+
+## Versioning & releases
+
+The collection is distributed from this git repository only — no galaxy
+registry. Install it (or depend on it) via a git source:
+
+```sh
+ansible-galaxy collection install git+https://github.com/cur8s/ubuntu.git
+```
+
+The version is `24.4.x`: major.minor mirror the Ubuntu LTS the floor targets
+(24.04), and `x` counts collection releases. The floor is **forever
+backward-compatible within its LTS era** — that policy, not version
+arithmetic, is the compatibility contract — so `x` only ever increments.
+When the next LTS lands, a new series starts (`26.4.0`) and the previous
+series moves to N-1 support (fixes, no new controls).
+
+`main` is the prod release. Each `galaxy.yml` version bump is tagged
+`v<version>`, so environments that want reproducible pins or rollback
+targets pin tags; dev environments track `main`.
