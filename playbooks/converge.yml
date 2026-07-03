@@ -50,6 +50,8 @@
 
     - role: time_sync
 
+    - role: journald
+
   post_tasks:
     # ==========================================================================
     # Validate Baseline Access
