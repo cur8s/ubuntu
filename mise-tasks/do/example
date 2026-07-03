@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Run one example against the droplet: mise run do:example <name>"
-#MISE depends=["example:link"]
-#USAGE arg "<example>" help="Example directory name under examples/"
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
-
-example_run "$usage_example" do

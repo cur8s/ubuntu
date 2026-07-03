@@ -21,7 +21,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run do:example zot
+mise run do:test:zot
 ```
 
 The first play re-asserts the baseline (RFC-001); the second installs zot.

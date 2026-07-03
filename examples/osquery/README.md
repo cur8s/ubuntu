@@ -17,7 +17,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run do:example osquery
+mise run do:test:osquery
 ```
 
 Then inspect interactively: `mise run ssh:sysadmin`, then e.g.

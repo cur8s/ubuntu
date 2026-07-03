@@ -83,45 +83,59 @@ wait_for_cloud_init() {
   echo "cloud-init is done; the VM is ready."
 }
 
-# Run every example twice against a lab: example_run_all <do|qemu>.
+# Test one example against a lab: example_test <name> <do|qemu>.
 # The examples' contract: the second run is a full no-op. Second-run output
 # goes to a log so a clean pass stays quiet; recap lines are the only place
 # ansible prints "changed=N", so grepping the log for a non-zero count is
 # exact.
-example_run_all() {
-  _run_all_target="$1"
-  _run_all_skipped=""
+example_test() {
+  _test_name="$1"
+  _test_target="$2"
+
+  echo "==> $_test_name ($_test_target): first run"
+  example_run "$_test_name" "$_test_target"
+
+  echo "==> $_test_name ($_test_target): second run (idempotency contract: changed=0)"
+  _second_log="$ANSIBLE_LOCAL_TEMP/example-test-$_test_name.log"
+  if ! example_run "$_test_name" "$_test_target" > "$_second_log" 2>&1; then
+    cat "$_second_log"
+    echo "FAIL $_test_name: second run failed." >&2
+    exit 1
+  fi
+  if grep -qE 'changed=[1-9]' "$_second_log"; then
+    grep -A9 "PLAY RECAP" "$_second_log" || cat "$_second_log"
+    echo "FAIL $_test_name: second run reported changes." >&2
+    exit 1
+  fi
+  grep -hA3 "PLAY RECAP" "$_second_log" | sed "s/^/    /"
+}
+
+# Test every example against a lab: example_test_all <do|qemu>. Coverage
+# comes from globbing examples/ — a missing per-example task wrapper can
+# never silently drop an example from the suite; it only earns a warning.
+example_test_all() {
+  _test_all_target="$1"
+  _test_all_skipped=""
 
   for _example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
     _example_name="$(basename "$_example_dir")"
     [ -f "$_example_dir/site.yml" ] || continue
 
+    if [ ! -x "$MISE_CONFIG_ROOT/mise-tasks/$_test_all_target/test/$_example_name" ]; then
+      echo "WARN examples/$_example_name has no mise-tasks/$_test_all_target/test/$_example_name wrapper (still tested by this suite)." >&2
+    fi
+
     if [ "$_example_name" = "tailscale" ] && [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
       echo "SKIP tailscale: TAILSCALE_AUTHKEY is not set. (Joining also leaves a node"
       echo "in the tailnet admin console unless the auth key is ephemeral.)"
-      _run_all_skipped="$_run_all_skipped tailscale"
+      _test_all_skipped="$_test_all_skipped tailscale"
       continue
     fi
 
-    echo "==> $_example_name ($_run_all_target): first run"
-    example_run "$_example_name" "$_run_all_target"
-
-    echo "==> $_example_name ($_run_all_target): second run (idempotency contract: changed=0)"
-    _second_log="$ANSIBLE_LOCAL_TEMP/example-run-all-$_example_name.log"
-    if ! example_run "$_example_name" "$_run_all_target" > "$_second_log" 2>&1; then
-      cat "$_second_log"
-      echo "FAIL $_example_name: second run failed." >&2
-      exit 1
-    fi
-    if grep -qE 'changed=[1-9]' "$_second_log"; then
-      grep -A9 "PLAY RECAP" "$_second_log" || cat "$_second_log"
-      echo "FAIL $_example_name: second run reported changes." >&2
-      exit 1
-    fi
-    grep -hA3 "PLAY RECAP" "$_second_log" | sed "s/^/    /"
+    example_test "$_example_name" "$_test_all_target"
   done
 
-  echo "All examples passed twice on $_run_all_target.${_run_all_skipped:+ Skipped:$_run_all_skipped.}"
+  echo "All examples passed twice on $_test_all_target.${_test_all_skipped:+ Skipped:$_test_all_skipped.}"
 }
 
 # SSH to the local QEMU VM: qemu_ssh <user> <identity-file> [command...]

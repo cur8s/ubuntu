@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="Test the osquery example against the local QEMU VM (run twice; second pass must report changed=0)"
+#MISE depends=["example:link"]
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+example_test osquery qemu

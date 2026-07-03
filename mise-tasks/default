@@ -15,12 +15,12 @@ cur8s.ubuntu labs — full details: docs/operations/manual.md
        where am I?          qemu:vm:status                do:vm:status
        debug console        qemu:vm:console               —
   4. converge (daily)       qemu:play:converge            do:play:converge
-  5. test the examples      qemu:examples                 do:examples
+  5. test the examples      qemu:test:examples            do:test:examples
   6. acceptance gate        qemu:play:validate-reboot     do:play:validate-reboot
   7. tear down              qemu:vm:destroy               do:vm:destroy
 
   Stages 2+4 in one shot:   qemu:up                       do:up
-  One example:              qemu:example <name>           do:example <name>
+  One example:              qemu:test:<name>              do:test:<name>
   Start over completely:    clean          Every task:    mise tasks
 
 Run any of these as: mise run <task>

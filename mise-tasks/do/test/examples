@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="Test every example against the droplet (each twice; second passes must report changed=0)"
+#MISE depends=["example:link"]
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+example_test_all do

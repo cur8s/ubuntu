@@ -18,7 +18,7 @@ Techniques demonstrated:
 Run against the lab VM (droplet must exist — see the operations manual):
 
 ```sh
-mise run do:example lynis
+mise run do:test:lynis
 ```
 
 Then audit by hand: `mise run ssh:sysadmin`, `sudo lynis audit system`.

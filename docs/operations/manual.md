@@ -190,27 +190,29 @@ VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
 ## 9. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
-them by theme and technique). Run one against either lab:
+them by theme and technique). Each example has a test task per lab —
+tab-complete `do:test:` or `qemu:test:` to see the catalog:
 
 ```sh
-mise run do:example docker     # against the droplet
-mise run qemu:example docker   # against the local QEMU VM
+mise run do:test:docker       # against the droplet
+mise run qemu:test:docker     # against the local QEMU VM
+mise run qemu:test:examples   # every example, in one run
 ```
 
-`do:examples` and `qemu:examples` run every example twice against their lab
-and fail unless each second pass reports `changed=0` — the examples'
-idempotency contract, enforced. They skip `tailscale` unless
-`TAILSCALE_AUTHKEY` is set (a join from a disposable VM leaves a node in
-the tailnet admin console unless the key is ephemeral). Examples must work
-on both supported architectures (RFC-008), and the two labs cover them:
-droplet amd64, QEMU arm64.
+Every `test:` task enforces the examples' idempotency contract: it runs
+the example twice and fails unless the second pass reports `changed=0`.
+The suite (`test:examples`) covers the `examples/` directory by globbing —
+an example without a per-name wrapper is still tested, with a warning — and
+skips `tailscale` unless `TAILSCALE_AUTHKEY` is set (a join from a
+disposable VM leaves a node in the tailnet admin console unless the key is
+ephemeral). Examples must work on both supported architectures (RFC-008),
+and the two labs cover them: droplet amd64, QEMU arm64.
 
-The example runners depend on a hidden `example:link` task that symlinks
-the working-tree collection into `.generated/collections/` so each
-example's `import_playbook: cur8s.ubuntu.converge` resolves against your
-live edits — no commit or reinstall between iterations. Every example is
-idempotent by contract: run it twice and the second pass reports
-`changed=0`.
+The test tasks depend on a hidden `example:link` task that symlinks the
+working-tree collection into `.generated/collections/` so each example's
+`import_playbook: cur8s.ubuntu.converge` resolves against your live edits —
+no commit or reinstall between iterations. Adding an example means adding
+its two `mise-tasks/<lab>/test/<name>` wrappers alongside the directory.
 
 ## 10. Releasing
 
