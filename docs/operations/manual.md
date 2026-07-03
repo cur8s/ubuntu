@@ -69,7 +69,7 @@ Drift detection without enforcement (RFC-006):
 ```sh
 mise x -- sh -c 'ansible-playbook \
   -i "$(doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header)," \
-  playbooks/converge.yml --check --diff'
+  collection/playbooks/converge.yml --check --diff'
 ```
 
 If the workstation sits behind a rate-limiter or IPS that drops SSH bursts,
@@ -128,6 +128,7 @@ mise run ssh:root       # provider bootstrap path (dead after retirement)
 mise run ssh:ansible
 mise run ssh:sysadmin
 
+mise run vm:reboot      # provider-level reboot (no validation; prefer vm:validate-reboot)
 mise run vm:delete      # destroy the droplet (asks for confirmation)
 mise run clean          # vm:delete + remove .generated/
 ```
@@ -135,7 +136,22 @@ mise run clean          # vm:delete + remove .generated/
 The droplet is disposable by design: recreating the full verified state is
 `vm:create` + `vm:converge`, about five minutes.
 
-## 8. Releasing
+## 8. Examples
+
+Runnable consumer-shaped examples live in `examples/` (its README indexes
+them by theme and technique). Run one against the lab VM:
+
+```sh
+mise run example:run docker
+```
+
+`example:run` depends on `examples:link`, which symlinks the working-tree
+collection into `.generated/collections/` so each example's
+`import_playbook: cur8s.ubuntu.converge` resolves against your live edits —
+no commit or reinstall between iterations. Every example is idempotent by
+contract: run it twice and the second pass reports `changed=0`.
+
+## 9. Releasing
 
 Versioning and distribution policy: RFC-008 (`24.4.x`, git-only, main is
 prod).
@@ -151,7 +167,7 @@ git tag -a v24.4.1 -m "cur8s.ubuntu 24.4.1"
 git push origin main --tags
 ```
 
-## 9. Consuming the collection
+## 10. Consuming the collection
 
 Install directly from git (no registry — RFC-008):
 

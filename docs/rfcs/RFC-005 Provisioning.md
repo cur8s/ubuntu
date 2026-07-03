@@ -20,7 +20,7 @@ The provider bootstrap identity remains usable through first boot as a debug pat
 
 The Ansible roles are the single source of truth for everything cloud-init applies. The user-data is rendered from the same sources the roles own, so the two moments cannot diverge — and the first converge is therefore a no-op for accounts and SSH policy, doing new work only for the converge-only baseline controls.
 
-What "the same" requires is per-module. State-based modules compare system state, so cloud-init and the roles only need to produce the same end state for accounts and keys. File-shaped controls are checksum-compared, so they must share bytes: exactly two files — the sshd drop-in and the per-account sudoers rules — are rendered into user-data from the role-owned sources. cloud-init's `sudo:` shortcut is deliberately not used: it writes a combined sudoers file the roles do not manage, which would surface as permanent drift.
+What "the same" requires is per-module. State-based modules compare system state, so cloud-init and the roles only need to produce the same end state for accounts and keys. File-shaped controls are checksum-compared, so they must share bytes. Exactly two controls are file-shaped: the sshd drop-in, which the user-data renderer reads directly from the role-owned file, and the per-account sudoers rules, which the renderer duplicates byte-for-byte and keeps in lockstep with the role by explicit discipline — the rule is one line, and a shared source file would cost more than it protects. cloud-init's `sudo:` shortcut is deliberately not used: it writes a combined sudoers file the roles do not manage, which would surface as permanent drift.
 
 ## Bare Metal
 
@@ -39,3 +39,5 @@ It does not define the baseline (RFC-003: Baseline Contents), convergence semant
 ## Revisions
 
 Initial version. Supersedes the prototype-era provisioning architecture, which excluded cloud-init.
+
+Clarified the byte-identity mechanics: the sshd drop-in is read from the role-owned file; the sudoers rules are lockstep duplicates, not a shared source.

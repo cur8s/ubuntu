@@ -12,7 +12,7 @@ Convergence is agentless: Ansible pushes over standard SSH through the `ansible`
 
 Converge is idempotent. On a conformant host every run reports zero changes, and the first converge after provisioning is already a no-op for everything first boot applied (RFC-005: Provisioning). A non-zero change count on a steady-state host is a drift report, not noise.
 
-Detection and enforcement are one playbook and one flag: check mode reports what differs without changing anything; a normal run enforces. Roles are authored check-mode-clean — read-only probes never report change and still run under check mode — so the drift report is trustworthy.
+Detection and enforcement are one playbook and one flag: check mode reports what differs without changing anything; a normal run enforces. Roles are authored check-mode-clean — on a conformant host, check mode reports zero pending changes, and read-only probes never report change — so the drift report is trustworthy.
 
 ## Composition
 
@@ -31,3 +31,5 @@ It does not define what converge asserts (RFC-003: Baseline Contents), provision
 ## Revisions
 
 Initial version.
+
+Softened the check-mode wording: probes never report change, but not every probe runs under check mode.

@@ -2,21 +2,26 @@
 
 This role owns the baseline OpenSSH daemon policy for Ubuntu hosts.
 
-It intentionally does not install `openssh-server` yet. The current target is a
-DigitalOcean Ubuntu image that is already reachable over SSH, so this role starts
-by owning the daemon configuration and socket listener boot state.
+It does not install `openssh-server` — doctrine, not omission (RFC-002:
+Baseline Doctrine): every Ubuntu server image ships sshd, and converge can
+only run against a host that is already reachable over SSH, so the
+package's presence is a precondition of converge, not a state this role
+could meaningfully declare.
 
 The role uses an `sshd_config.d` drop-in instead of editing
-`/etc/ssh/sshd_config` in place. That is the conventional Ansible approach when
-the platform supports it: write the file you own, ensure `ssh.socket` is enabled
-and listening, validate the config before installing, reload the service, and
-assert the effective daemon configuration.
+`/etc/ssh/sshd_config` in place: write the file you own, validate it with
+`sshd -t` before install, ensure `ssh.socket` is enabled and listening,
+reload on change, and assert the effective daemon configuration with
+`sshd -T`. The same drop-in file is embedded into first-boot user-data by
+the cloud-init renderer (RFC-005: Provisioning), which is why the first
+converge is a no-op for SSH policy.
 
-Current fixed policy:
+Fixed policy (`files/10-ubuntu-baseline.conf`):
 
 - password authentication disabled
 - keyboard-interactive authentication disabled
 - public key authentication enabled
-- root password login disabled; root public key login remains available for bootstrap recovery
+- root password login disabled; root public-key login remains available as
+  the provider bootstrap path until retirement (RFC-004: Identity and Trust)
 - X11 forwarding disabled
-- idle client keepalive configured
+- idle client keepalive (300s interval, two missed replies disconnect)
