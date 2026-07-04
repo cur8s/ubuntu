@@ -17,7 +17,7 @@
 set -eu
 
 if [ ! -s "$ANSIBLE_PUB_KEY" ] || [ ! -s "$SYSADMIN_PUB_KEY" ]; then
-  echo "Missing extracted public keys. Run 'mise run do:prep' or 'mise run qemu:prep' first." >&2
+  echo "Missing public key files: point ANSIBLE_PUB_KEY and SYSADMIN_PUB_KEY at your extracted public keys." >&2
   exit 1
 fi
 

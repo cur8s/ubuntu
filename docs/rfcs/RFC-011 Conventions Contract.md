@@ -27,7 +27,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 
 The collection playbooks read their inputs from environment variables: `ANSIBLE_PUB_KEY` and `SYSADMIN_PUB_KEY` name the ed25519 public key files, `LOCK_ACCOUNTS` names the comma-separated accounts whose doors `cur8s.ubuntu.lock_accounts` closes (RFC-005: Accounts and Access), `ADOPT_USER` names the pre-baseline account adoption connects through (RFC-007: Adoption), and `ROTATE_ACCOUNT` with `ROTATE_NEW_PUB_KEY` name the baseline account and its replacement public key for `cur8s.ubuntu.rotate_key` (RFC-004: Identity and Trust).
 
-The runnable examples in `examples/` are consumers of this contract — every one resolves the collection by FQCN, connects through the fixed accounts, and supplies inputs through the environment variables above. Future use-case collections that surface missing conventions add them through revisions to this RFC.
+The runnable examples in `examples/` and the provider integration folders in `test/integration/` are consumers of this contract — every one resolves the collection by FQCN, connects through the fixed accounts, and supplies inputs through the environment variables above. Future use-case collections that surface missing conventions add them through revisions to this RFC.
 
 ## Scope
 

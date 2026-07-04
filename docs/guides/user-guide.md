@@ -13,7 +13,10 @@ repository rather than using it, you want `docs/guides/developer-guide.md`.
   `ansible` automation account, one for the `sysadmin` break-glass account
   (RFC-004: Identity and Trust). Their public halves as files on disk;
   the private halves stay in the secrets manager and its SSH agent,
-  always.
+  always. (For a fully worked 1Password arrangement — vault items,
+  extraction, agent signing, rotation choreography — see
+  `test/integration/digital-ocean/README.md`: a self-contained,
+  copy-pastable operational folder built exactly this way.)
 - Ubuntu 24.04 hosts, or a cloud account to create them. This series
   targets 24.04 only — every playbook refuses anything else (RFC-010:
   Release and Versioning).
@@ -91,6 +94,10 @@ ansible-playbook -i <host>, cur8s.ubuntu.converge
 On that first converge only the converge-only pins report `changed`
 (unattended-upgrades and journald); accounts and SSH policy are already
 no-ops because cloud-init applied them from the same sources.
+
+The executable version of this whole section, DigitalOcean edition, is
+`test/integration/digital-ocean/` in the collection repository — every
+step above as a runnable task, ready to copy into your environment.
 
 ## 5. Hosts that already exist (adoption)
 
@@ -192,6 +199,10 @@ sibling so the operation never depends on the key it replaces (RFC-004):
    (or `SYSADMIN_PUB_KEY`) at the new public key, and converge:
    `changed=0` everywhere plus a clean `report_access` confirms
    completion.
+
+   (The 1Password version of this choreography — second vault item,
+   retitle, archive-evicts-from-agent — is worked step by step in
+   `test/integration/digital-ocean/README.md`.)
 
 ## 7. Composing on top
 

@@ -4,8 +4,10 @@ This repository is the `cur8s.ubuntu` Ansible collection: the baseline every
 Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
 the installable collection lives in `collection/`, the how-to lives in
-`docs/guides/` (a user guide and a developer guide), and runnable consumption examples live in
-`examples/`.
+`docs/guides/` (a user guide and a developer guide), runnable consumption
+examples live in `examples/`, and per-provider integration tests — each a
+self-contained folder that doubles as an operational starting point —
+live in `test/integration/`.
 
 **To understand the system**, read the mental model below, then
 `docs/rfcs/RFC-001 The Host Baseline.md` and onward for depth. **To change
@@ -72,44 +74,50 @@ baseline, release x" — forever backward-compatible within its LTS era.
 
 The steel thread:
 
-1. Extract SSH public keys from 1Password.
+1. Public keys come from your secrets manager (public halves only —
+   private keys never touch this repository).
 2. Render cloud-init user-data from the same sources the roles use.
-3. Create a DigitalOcean Ubuntu VM; cloud-init creates the `ansible` and
-   `sysadmin` users, applies the sshd hardening drop-in, dist-upgrades, and
-   reboots (RFC-006: Provisioning).
+3. Create an Ubuntu VM whose first boot applies it; cloud-init creates the
+   `ansible` and `sysadmin` users, applies the sshd hardening drop-in,
+   dist-upgrades, and reboots (RFC-006: Provisioning).
 4. Converge over the `ansible` SSH path. The first converge is a no-op for
    everything cloud-init already applied; only the behavioral baseline controls
    do new work. Every subsequent converge is a no-op.
 
+Run it locally — free, unattended, throwaway lab keys, no vault:
+
 ```sh
-mise run do:prep   # once: 1Password keys + DigitalOcean bootstrap key
-mise run do:up     # create → wait out first boot → converge
+mise run qemu:prep   # once: lab keys + cloud image cache
+mise run qemu:up     # create → wait out first boot → converge
 ```
 
-(Bare `mise run` prints the workflow cheat sheet for both labs.)
+(Bare `mise run` prints the workflow cheat sheet.)
 
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run do:play:validate-reboot   # reboot → re-verify access + baseline services
+mise run qemu:play:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
-The same thread runs provider-free on a local QEMU VM — the arm64 cloud
-image under native virtualization, first-boot config via a NoCloud seed
-built from the identical rendered cloud-init (`mise run qemu:prep` once,
-then `mise run qemu:up`; see the developer guide).
+The same thread runs against real DigitalOcean from
+`test/integration/digital-ocean/` — a self-contained folder (1Password
+custody as the worked example, billable resources) that is also a
+copy-pastable operational starting point; `mise run e2e:digital-ocean`
+drives its whole lifecycle, birth to locked-down, as the release-gate
+integration test (RFC-009: Validation and Acceptance).
 
 Hosts that already exist — bare metal however installed, inherited
 servers — enter through adoption instead (RFC-007): a read-only
 assessment, an additive adopt that creates the two accounts, then the
 same converge; the old access path is closed deliberately at the end.
+Both door shapes the clouds hand you are rehearsed locally by
+`mise run qemu:test:scenarios` (root-user and sudo-user scenarios).
 
-SSH shortcuts:
+SSH shortcuts (local lab):
 
 ```sh
-mise run do:ssh:root      # provider bootstrap path (until retirement)
-mise run do:ssh:ansible
-mise run do:ssh:sysadmin
+mise run qemu:ssh:ansible
+mise run qemu:ssh:sysadmin
 ```
 
 ## Ansible Shape
@@ -129,9 +137,10 @@ Outside converge, two standalone playbooks act on the access surface
 (RFC-005: Accounts and Access): `cur8s.ubuntu.report_access` renders every
 door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
 doors named in `LOCK_ACCOUNTS` (the `account_lock` role) after re-proving
-both baseline accounts — converge itself never removes access. On the lab
-VM: `mise run do:play:lock-accounts` locks the provider door; run
-`do:play:validate-reboot` first.
+both baseline accounts — converge itself never removes access. The local
+scenario chain rehearses the whole arc (`qemu:test:scenarios`); on a real
+droplet the integration folder's `play:lock-accounts` closes the provider
+door (acceptance gate first).
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
@@ -141,9 +150,11 @@ asserted (see each role's README for what was deliberately left out).
 same key files and sshd drop-in the roles own, which is what makes the first
 converge a no-op.
 
-`mise.toml` is contributor convenience only. It can call 1Password,
-DigitalOcean, and Ansible for local development, but provider and
-secret-manager behavior does not move into reusable collection roles.
+`mise.toml` is contributor convenience only, and the root harness knows
+only the local QEMU lab. Provider and secret-manager wiring lives in the
+self-contained `test/integration/<provider>/` folders — which is also
+what makes each of them liftable into a real environment — and none of
+it ever moves into reusable collection roles.
 
 ## Versioning & releases
 

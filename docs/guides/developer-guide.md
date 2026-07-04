@@ -40,35 +40,38 @@ Two standards with teeth:
 
 CLIs (managed outside `mise` for now): `mise`, `ansible-playbook`
 (ansible-core ≥ 2.16), `ssh`, `git`, `qemu` (Homebrew, Apple Silicon) for
-the local lab, plus `op` (1Password) and `doctl` + `jq` only if you use
-the droplet lab.
+the local lab. The DigitalOcean integration folder lists its own extras
+(`doctl` + `jq`, and `op` for its default 1Password custody) — you need
+them only when you run it.
 
-- The droplet lab needs a 1Password `devops` vault with SSH key items
-  `ubuntu-bootstrap`, `ubuntu-ansible`, `ubuntu-sysadmin` (each exposing a
-  `public key` field), and `doctl auth init`. Expect one SSH-agent
-  approval per session.
-- **The QEMU lab needs neither.** It generates throwaway keypairs and
-  runs its own promptless ssh-agent (RFC-004: ephemeral lab credentials),
-  so the entire local loop is unattended — no prompts, no vault.
-- Everything generated lands in git-ignored `.generated/`; `mise run
-  clean` destroys the lab VMs and wipes it. Recover with the prep of
-  whichever lab you use.
+- **The everyday loop needs no vault and no cloud.** The QEMU lab
+  generates throwaway keypairs and runs its own promptless ssh-agent
+  (RFC-004: ephemeral lab credentials), so the entire local loop is
+  unattended — no prompts, no billing.
+- Everything generated lands in git-ignored `.generated/` (the
+  integration folders keep their own, inside themselves); `mise run
+  clean` destroys the local VM and wipes the root one. Recover with
+  `qemu:prep`.
 
 ## 3. The task surface
 
 Bare `mise run` prints the cheat sheet — the golden path through the
 labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
-in as dependencies (`key:prep`, `qemu:keys`, `cloud-init:render`,
-`do:key:upload`, `qemu:fetch`, `example:link`) are hidden but runnable by
-name. The grammar:
+in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`,
+`e2e:link-digital-ocean`) are hidden but runnable by name. The grammar:
 
-- providers `qemu` (local, arm64, free) and `do` (DigitalOcean, amd64);
-  future clouds get their own family.
+- provider `qemu` (local, arm64, free) is the root harness's only lab.
+  Cloud providers are self-contained child configs under
+  `test/integration/<provider>/` — the folder is the namespace, so
+  inside one the same grammar reads `<object>:<action>` with no prefix
+  (drive it from root with `mise -C`).
 - objects: `vm` (machine lifecycle), `play` (collection playbooks, 1:1
   with `cur8s.ubuntu.*` FQCNs), `ssh` (a shell, by account), `test`
-  (examples), `key` (provider keys).
+  (examples, and the scenario chain).
 - provider workflows with no object: `prep` (one-time groundwork), `up`
-  (provision + converge). Workstation-scoped: `clean`, `default`.
+  (provision + converge). Workstation-scoped: `clean`, `default`, and
+  the `e2e:` family, which orchestrates the integration folders end to
+  end.
 
 ## 4. The QEMU lab — the everyday loop
 
@@ -87,8 +90,8 @@ Mechanics worth knowing when debugging:
   `SSH_AUTH_SOCK`. Public keys are 0600: ssh tries identity files as
   private keys and refuses world-readable ones.
 - **Per-lab render**: the lab renders its own
-  `.generated/cloud-init/ubuntu-baseline-qemu.yaml`; the droplet's render
-  is never clobbered.
+  `.generated/cloud-init/ubuntu-baseline-qemu.yaml`; the DigitalOcean
+  folder renders its own user-data inside itself.
 - **The inventory alias is load-bearing**: an inventory host literally
   named `127.0.0.1` is treated by Ansible as a localhost alias, so the
   lab inventory names the host `ubuntu-qemu-lab` with
@@ -99,45 +102,81 @@ Mechanics worth knowing when debugging:
   with it. `qemu:vm:destroy` keeps the image cache: destroy → up is an
   offline few-minute loop.
 
-**The adoption rehearsal** — a faithful "existing server" (installer-style
-sudo `ubuntu` user on the bootstrap key, password auth on, no baseline):
+**The adoption rehearsals** — faithful "existing servers", one per door
+shape the clouds hand you (RFC-007). Two scenarios: `root-user` (the
+DigitalOcean shape: bootstrap key on root, no sudo chain anywhere) and
+`sudo-user` (the AWS/installer shape by default; the Azure shape with
+`SCENARIO_USER=azureuser` — nothing in the collection may care which,
+and that is what the parameter proves). One command runs both stories
+sequentially, each asserted and destroyed on its own:
 
 ```sh
-mise run qemu:vm:create-vanilla && mise run qemu:vm:boot
+mise run qemu:test:scenarios
+```
+
+Or walk one by hand:
+
+```sh
+mise run qemu:vm:create-sudo-user-scenario && mise run qemu:vm:boot
 mise run qemu:play:adoptable     # verdict; ADOPT_USER defaults to ubuntu
 mise run qemu:play:adopt
 mise run qemu:play:converge      # the delta the verdict predicted, then 0
 mise run qemu:play:validate-reboot
-mise run qemu:play:lock-accounts # closes the ubuntu door (the default)
+mise run qemu:play:lock-accounts # closes the scenario door (the default)
 ```
 
-## 5. The droplet lab
+(For the root-user scenario, set `ADOPT_USER=root` and
+`LOCK_ACCOUNTS=root` on the corresponding steps.)
+
+## 5. The DigitalOcean integration folder
+
+`test/integration/digital-ocean/` is a self-contained child mise config
+— its own tasks, helpers, env, and `.generated/` state — that runs the
+baseline against a real droplet. It is deliberately consumer-shaped: the
+collection resolves from its `requirements.yml`, custody defaults to
+1Password as the worked example (its README owns that story, rotation
+choreography included), and the whole directory is copy-pastable as an
+operational starting point. In-repo, `e2e:link-digital-ocean` symlinks
+the working tree over the pin so integration runs test your edits.
 
 ```sh
-mise run do:prep       # once: 1Password keys + DO bootstrap key upload
-mise run do:up         # create → wait out first boot → converge (~5 min)
-mise run do:vm:status  # stages done, next command
+cd test/integration/digital-ocean
+mise trust && mise run prep     # once: custody keys + DO key + collection
+mise run up                     # create → wait out first boot → converge
+mise run vm:status              # stages done, next command
 ```
 
-The droplet (`ubuntu-ansible-lab`, `s-1vcpu-1gb`, `tor1`) is billable —
-`do:vm:destroy` when done; recreating verified state is one `do:up`. Its
-provider bootstrap door is root; `do:play:lock-accounts` defaults to
-locking it (acceptance gate first). If your network's IPS drops SSH
-bursts, set `SSH_SPACING_SECONDS` (see
-`docs/notes/ucg-fibre-ips-ssh-blocking.md`).
+The droplet is billable — `vm:destroy` when done; recreating verified
+state is one `up`. Its provider bootstrap door is root;
+`play:lock-accounts` defaults to locking it (acceptance gate first). If
+your network's IPS drops SSH bursts, set `SSH_SPACING_SECONDS` in the
+folder's env (see `docs/notes/ucg-fibre-ips-ssh-blocking.md`).
+
+**`mise run e2e:digital-ocean`** (root, attended, billable) drives the
+whole arc as the integration test: prep → create → first boot →
+converge ×2 asserting `changed=0` → validate-reboot → lock root →
+report asserting exactly two doors → destroy on success, keep on
+failure. It is the release gate (RFC-009), run ad hoc otherwise.
+`e2e:digital-ocean-examples` runs the example suite against the
+folder's droplet — the amd64 leg of example coverage. Folder tasks must
+never lean on root `[env]` — when the directory is copied out, only its
+own config exists.
 
 ## 6. Testing
 
-Each example has a per-provider test task (`qemu:test:docker`,
-`do:test:zot`, ... and `test:all` for the suite). Every one enforces the
+Each example has a local test task (`qemu:test:docker`, ... and
+`qemu:test:all` for the suite); `e2e:digital-ocean-examples` runs the
+same suite against the integration droplet. Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
 drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. The hidden
 `example:link` task symlinks the working tree into
 `.generated/collections/`, so examples resolve your live edits — no
-reinstall between iterations. The two labs split architecture coverage:
-droplet amd64, QEMU arm64 (RFC-010); nothing may assume an architecture
-it did not detect.
+reinstall between iterations. Architecture coverage splits as: QEMU
+arm64 every day, real amd64 via the DigitalOcean e2e at release cadence
+(RFC-009, RFC-010); nothing may assume an architecture it did not
+detect. `qemu:test:scenarios` is the third leg: both adoption
+rehearsals, each asserted end to end (§4).
 
 ## 7. Adding things
 
@@ -157,6 +196,14 @@ wrapper per provider, and a user-guide runbook section.
 requirements.yml) plus its two `mise-tasks/<provider>/test/<name>`
 wrappers. It must work on both architectures.
 
+**A provider integration folder**: copy the shape of
+`test/integration/digital-ocean/` — self-contained child mise config,
+object-grammar tasks, its own helpers and state, custody wiring
+parameterized in `[env]` — plus an `e2e:<provider>` orchestrator at
+root and a `mise trust` note in its README. The provider's bootstrap
+account becomes the default `LOCK_ACCOUNTS` target. Gate it on a real
+workload needing that provider (TODO item 8's rule).
+
 **An RFC**: next free number; keep the reading-order arc sensible (the
 numbers follow it); state `Accepted` when in force; end with the Scope /
 "It does not define" pattern naming the neighbors.
@@ -165,10 +212,13 @@ numbers follow it); state `Accepted` when in force; end with the Scope /
 
 Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
-1. Bump `version:` in `collection/galaxy.yml`.
-2. `mise x -- ansible-galaxy collection build collection/ --output-path
+1. Pass the release gate (RFC-009): `mise run e2e:digital-ocean` and
+   `mise run e2e:digital-ocean-examples` against a real droplet, plus
+   `mise run qemu:test:all` and `mise run qemu:test:scenarios` locally.
+2. Bump `version:` in `collection/galaxy.yml`.
+3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
-3. Commit, then `git tag -a v24.4.x -m "cur8s.ubuntu 24.4.x"` and
+4. Commit, then `git tag -a v24.4.x -m "cur8s.ubuntu 24.4.x"` and
    `git push origin main --tags`.
 
 ## 9. For coding agents
