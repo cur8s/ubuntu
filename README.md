@@ -76,7 +76,7 @@ The steel thread:
 2. Render cloud-init user-data from the same sources the roles use.
 3. Create a DigitalOcean Ubuntu VM; cloud-init creates the `ansible` and
    `sysadmin` users, applies the sshd hardening drop-in, dist-upgrades, and
-   reboots (RFC-005: Provisioning).
+   reboots (RFC-006: Provisioning).
 4. Converge over the `ansible` SSH path. The first converge is a no-op for
    everything cloud-init already applied; only the behavioral baseline controls
    do new work. Every subsequent converge is a no-op.
@@ -149,7 +149,7 @@ The version is `24.4.x`: major.minor mirror the Ubuntu LTS the baseline targets
 (24.04), and `x` counts collection releases. The baseline is **forever
 backward-compatible within its LTS era** — that policy, not version
 arithmetic, is the compatibility contract — so `x` only ever increments.
-When the baseline advances to the next LTS (RFC-008: Release and
+When the baseline advances to the next LTS (RFC-009: Release and
 Versioning), a new series starts (`26.4.0`) and the previous series moves to
 maintenance (fixes, no new controls).
 

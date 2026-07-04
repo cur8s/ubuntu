@@ -1,5 +1,5 @@
 ---
-# Install cur8s.ubuntu from its git repository (RFC-008: Release and
+# Install cur8s.ubuntu from its git repository (RFC-009: Release and
 # Versioning). main is the prod release; once release tags exist, pin one
 # (e.g. version: v24.4.0) for reproducible installs and rollback.
 collections:

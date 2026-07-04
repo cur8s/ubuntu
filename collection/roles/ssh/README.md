@@ -13,7 +13,7 @@ The role uses an `sshd_config.d` drop-in instead of editing
 `sshd -t` before install, ensure `ssh.socket` is enabled and listening,
 reload on change, and assert the effective daemon configuration with
 `sshd -T`. The same drop-in file is embedded into first-boot user-data by
-the cloud-init renderer (RFC-005: Provisioning), which is why the first
+the cloud-init renderer (RFC-006: Provisioning), which is why the first
 converge is a no-op for SSH policy.
 
 Fixed policy (`files/10-ubuntu-baseline.conf`):

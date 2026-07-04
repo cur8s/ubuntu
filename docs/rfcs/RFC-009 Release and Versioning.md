@@ -1,4 +1,4 @@
-# RFC-008: Release and Versioning
+# RFC-009: Release and Versioning
 
 Status: Accepted
 

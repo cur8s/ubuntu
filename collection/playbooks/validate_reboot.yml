@@ -1,5 +1,5 @@
 ---
-# Reboot-validation acceptance test (RFC-007: Validation and Acceptance). Opt-in gate — NEVER part
+# Reboot-validation acceptance test (RFC-008: Validation and Acceptance). Opt-in gate — NEVER part
 # of routine converge: proves the baseline access contract and baseline services
 # survive a reboot (kernel updates from unattended-upgrades included). Run it
 # before lockout-sensitive changes such as bootstrap retirement.

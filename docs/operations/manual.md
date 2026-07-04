@@ -57,7 +57,7 @@ mise run do:vm:status  # stages done so far, and the next step
 
 `do:up` is the whole sequence: `do:vm:create` renders
 `.generated/cloud-init/ubuntu-baseline.yaml` from the same sources the roles
-own (RFC-005) and creates droplet `ubuntu-ansible-lab` (Ubuntu 24.04,
+own (RFC-006) and creates droplet `ubuntu-ansible-lab` (Ubuntu 24.04,
 `s-1vcpu-1gb`, `tor1`); at first boot, cloud-init creates the `ansible` and
 `sysadmin` accounts, lays down the sshd drop-in, dist-upgrades, and reboots
 unconditionally; `do:vm:wait` blocks until that first-boot cycle is done (the
@@ -76,11 +76,11 @@ What healthy runs look like:
 - **First converge on a fresh VM:** only the converge-only baseline controls
   report `changed` (the unattended-upgrades and journald pins). Accounts and
   SSH policy are already no-ops — cloud-init applied them from the same
-  sources (RFC-005).
+  sources (RFC-006).
 - **Every converge after that:** `changed=0`. A non-zero count on a
   steady-state host is a drift report — read it, don't rerun past it.
 
-Drift detection without enforcement (RFC-006):
+Drift detection without enforcement (RFC-007):
 
 ```sh
 mise x -- sh -c 'ansible-playbook \
@@ -94,7 +94,7 @@ set `SSH_SPACING_SECONDS` (default `0`) to pause before SSH-heavy tasks:
 `docs/notes/ucg-fibre-ips-ssh-blocking.md`.
 
 Converge refuses hosts that don't run the targeted Ubuntu release (the
-release guard — RFC-002, RFC-008): applying the 24.4.x series to a 22.04 or
+release guard — RFC-002, RFC-009): applying the 24.4.x series to a 22.04 or
 26.04 host fails before anything is mutated.
 
 **Patching.** The automatic baseline covers security updates only. For a
@@ -114,7 +114,7 @@ reboot path.
 mise run do:play:validate-reboot
 ```
 
-The reboot-validation gate (RFC-007): reboots the host, waits for it to
+The reboot-validation gate (RFC-008): reboots the host, waits for it to
 return, re-verifies `ansible` and `sysadmin` SSH + passwordless sudo,
 confirms the baseline units are active, and reads the previous boot from the
 journal (proving the persistence pin across reboots). Opt-in only — never
@@ -205,7 +205,7 @@ The suite (`test:all`) covers the `examples/` directory by globbing —
 an example without a per-name wrapper is still tested, with a warning — and
 skips `tailscale` unless `TAILSCALE_AUTHKEY` is set (a join from a
 disposable VM leaves a node in the tailnet admin console unless the key is
-ephemeral). Examples must work on both supported architectures (RFC-008),
+ephemeral). Examples must work on both supported architectures (RFC-009),
 and the two labs cover them: droplet amd64, QEMU arm64.
 
 The test tasks depend on a hidden `example:link` task that symlinks the
@@ -216,7 +216,7 @@ its two `mise-tasks/<provider>/test/<name>` wrappers alongside the directory.
 
 ## 10. Releasing
 
-Versioning and distribution policy: RFC-008 (`24.4.x`, git-only, main is
+Versioning and distribution policy: RFC-009 (`24.4.x`, git-only, main is
 prod).
 
 1. Bump `version:` in `galaxy.yml` (next `24.4.x`).
@@ -232,7 +232,7 @@ git push origin main --tags
 
 ## 11. Consuming the collection
 
-Install directly from git (no registry — RFC-008):
+Install directly from git (no registry — RFC-009):
 
 ```sh
 ansible-galaxy collection install 'git+https://github.com/cur8s/ubuntu.git#/collection/'
@@ -252,6 +252,6 @@ installs and rollback targets.
 
 The stable consumer surface — playbook FQCNs (`cur8s.ubuntu.converge`,
 `cur8s.ubuntu.validate_reboot`), account names, paths, and environment
-variable inputs — is enumerated in RFC-009: Conventions Contract. The
+variable inputs — is enumerated in RFC-010: Conventions Contract. The
 `examples/` directory holds a runnable environment-repo-shaped skeleton
 demonstrating the composition pattern.

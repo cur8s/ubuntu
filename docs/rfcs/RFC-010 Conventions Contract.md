@@ -1,4 +1,4 @@
-# RFC-009: Conventions Contract
+# RFC-010: Conventions Contract
 
 Status: Accepted
 
@@ -6,7 +6,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 
 ## Names
 
-* The collection is `cur8s.ubuntu`, distributed from its git repository (RFC-008: Release and Versioning).
+* The collection is `cur8s.ubuntu`, distributed from its git repository (RFC-009: Release and Versioning).
 * The converge entry point is the collection playbook `cur8s.ubuntu.converge`.
 * The reboot acceptance gate is the collection playbook `cur8s.ubuntu.validate_reboot`.
 * The operator-invoked full package update is the collection playbook `cur8s.ubuntu.update`; it never reboots.

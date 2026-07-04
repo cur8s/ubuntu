@@ -6,7 +6,7 @@
   ansible.builtin.import_playbook: cur8s.ubuntu.converge
 
 # Your workload plays follow. They connect through the baseline's automation
-# account (RFC-009: Conventions Contract).
+# account (RFC-010: Conventions Contract).
 #
 # - name: Apply the workload
 #   hosts: all

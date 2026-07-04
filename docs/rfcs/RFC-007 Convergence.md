@@ -1,4 +1,4 @@
-# RFC-006: Convergence
+# RFC-007: Convergence
 
 Status: Accepted
 
@@ -8,11 +8,11 @@ Desired state is declared in git; converge re-asserts it. Drift — an out-of-ba
 
 Convergence is agentless: Ansible pushes over standard SSH through the `ansible` account. No per-host agent, no self-healing daemon. Reconciliation is on demand — ad-hoc from an operator workstation or on a schedule from an environment repository — and it is the same playbook either way.
 
-Converge asserts; it never removes access. No routine run closes a door — not a leftover bootstrap account, not a foreign key (RFC-010: Account Strategy). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
+Converge asserts; it never removes access. No routine run closes a door — not a leftover bootstrap account, not a foreign key (RFC-005: Accounts and Access). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
 
 ## Steady State Is a No-Op
 
-Converge is idempotent. On a conformant host every run reports zero changes, and the first converge after provisioning is already a no-op for everything first boot applied (RFC-005: Provisioning). A non-zero change count on a steady-state host is a drift report, not noise.
+Converge is idempotent. On a conformant host every run reports zero changes, and the first converge after provisioning is already a no-op for everything first boot applied (RFC-006: Provisioning). A non-zero change count on a steady-state host is a drift report, not noise.
 
 Detection and enforcement are one playbook and one flag: check mode reports what differs without changing anything; a normal run enforces. Roles are authored check-mode-clean — on a conformant host, check mode reports zero pending changes, and read-only probes never report change — so the drift report is trustworthy.
 
@@ -28,7 +28,7 @@ Ansible was selected because it operates over standard SSH, requires no host-sid
 
 This RFC defines convergence semantics: the source of truth, the drift model, idempotency, detection, and the guarantee that converge never removes access.
 
-It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-005: Provisioning), or acceptance testing (RFC-007: Validation and Acceptance).
+It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-006: Provisioning), or acceptance testing (RFC-008: Validation and Acceptance).
 
 ## Revisions
 

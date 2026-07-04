@@ -4,7 +4,7 @@ Status: Idea — a recorded design proposal, **not committed to be executed**.
 Nothing described here exists in the collection. Revisit when adoption
 becomes a priority; expect to re-validate the design against the code at
 that time. Account-surface policy (doors, locking, reporting, ownership)
-is now normative in RFC-010: Account Strategy — where this note and that
+is now normative in RFC-005: Accounts and Access — where this note and that
 RFC differ (e.g. retirement as a converge mode), the RFC wins.
 
 Date: 2026-07-03
@@ -12,7 +12,7 @@ Date: 2026-07-03
 ## Problem
 
 The baseline currently reaches hosts only at birth: cloud-init at first
-boot (RFC-005) creates the baseline identities, and converge takes over
+boot (RFC-006) creates the baseline identities, and converge takes over
 from there. Existing servers — e.g. bare-metal Ubuntu 24.04 hosts that
 predate the baseline — have neither the `ansible` nor `sysadmin` accounts,
 so converge cannot connect at all. Adoption is the missing bridge.
@@ -20,7 +20,7 @@ so converge cannot connect at all. Adoption is the missing bridge.
 ## Design summary
 
 **Adoption is provisioning's third path, not a new kind of converge.**
-RFC-005 defines provisioning's contract as "produce a host reachable over
+RFC-006 defines provisioning's contract as "produce a host reachable over
 SSH by the baseline identities." Cloud user-data does it at first boot;
 autoinstall will do it for new bare metal; adoption achieves the same
 outcome over SSH for hosts that already exist. Everything after that —
@@ -98,8 +98,8 @@ proves the check catches what it claims.
 
 ## Documentation impact when implemented
 
-RFC-005 gains an Adoption section (third provisioning path, same
-contract); RFC-004 generalizes the bootstrap identity wording; RFC-009
+RFC-006 gains an Adoption section (third provisioning path, same
+contract); RFC-004 generalizes the bootstrap identity wording; RFC-010
 adds `cur8s.ubuntu.adoptable`, `cur8s.ubuntu.adopt`, and `ADOPT_USER`;
 the manual gains the adoption runbook; the README mental model gains one
 sentence.

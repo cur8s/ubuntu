@@ -18,7 +18,7 @@ Per-person attribution is the access layer's job, so both accounts are role-scop
 
 ## Why Fixed Names
 
-`ansible` and `sysadmin` are hardcoded and non-overridable: a stable contract of the bottom layer that access-layer ACLs, log parsing, runbooks, and use-case collections can rely on with zero configuration (RFC-009: Conventions Contract). They are role names, not people, so genericity is preserved — the keys installed into them remain consumer inputs. The names are self-documenting for humans and AI coding agents. `sysadmin` also avoids concrete traps that disqualify `admin`: the Ubuntu `admin` group is a `useradd` collision, and Azure reserves the name.
+`ansible` and `sysadmin` are hardcoded and non-overridable: a stable contract of the bottom layer that access-layer ACLs, log parsing, runbooks, and use-case collections can rely on with zero configuration (RFC-010: Conventions Contract). They are role names, not people, so genericity is preserved — the keys installed into them remain consumer inputs. The names are self-documenting for humans and AI coding agents. `sysadmin` also avoids concrete traps that disqualify `admin`: the Ubuntu `admin` group is a `useradd` collision, and Azure reserves the name.
 
 ## Key Custody
 
@@ -26,19 +26,19 @@ The repository handles public keys only. Private keys live solely in the operato
 
 ## Bootstrap Retirement
 
-The baseline normalizes hosts: after first boot, every host looks identical regardless of provider. Once replacement access is validated — both named accounts proven over SSH with working sudo — the provider bootstrap identity is retired by locking it (RFC-010: Account Strategy): authorized keys stripped, provisioning-time sudoers removed, password locked, privileged group memberships removed. The account is never deleted; deletion is provider-specific, and provider tooling may assume it exists.
+The baseline normalizes hosts: after first boot, every host looks identical regardless of provider. Once replacement access is validated — both named accounts proven over SSH with working sudo — the provider bootstrap identity is retired by locking it (RFC-005: Accounts and Access): authorized keys stripped, provisioning-time sudoers removed, password locked, privileged group memberships removed. The account is never deleted; deletion is provider-specific, and provider tooling may assume it exists.
 
-Retirement is a deliberate, standalone invocation, never a converge side effect: development environments keep the provider door as a debug path, production closes it when ready. The lock operation itself re-proves both named accounts before closing anything, and retirement belongs only in environments that have passed reboot validation (RFC-007: Validation and Acceptance) — there is never a moment without a proven access path. After retirement, recovery is the provider console.
+Retirement is a deliberate, standalone invocation, never a converge side effect: development environments keep the provider door as a debug path, production closes it when ready. The lock operation itself re-proves both named accounts before closing anything, and retirement belongs only in environments that have passed reboot validation (RFC-008: Validation and Acceptance) — there is never a moment without a proven access path. After retirement, recovery is the provider console.
 
 ## Attribution
 
-Baseline attribution is role-level — automation versus human — plus what, when, and why from git and converge history (RFC-006: Convergence). Per-person identity, session recording, and identity-aware SSH belong to an access layer. The baseline's only obligation to any access layer is to not fight it: keep OpenSSH for bootstrap and break-glass, and keep the account model per-person capable.
+Baseline attribution is role-level — automation versus human — plus what, when, and why from git and converge history (RFC-007: Convergence). Per-person identity, session recording, and identity-aware SSH belong to an access layer. The baseline's only obligation to any access layer is to not fight it: keep OpenSSH for bootstrap and break-glass, and keep the account model per-person capable.
 
 ## Scope
 
 This RFC defines the identity roles, key policy, custody rules, and the bootstrap retirement lifecycle.
 
-It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-005: Provisioning), key rotation procedures, or the operational workflow (the operations manual). It governs OpenSSH public keys, not OpenSSH user certificates.
+It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-006: Provisioning), key rotation procedures, or the operational workflow (the operations manual). It governs OpenSSH public keys, not OpenSSH user certificates.
 
 ## Revisions
 

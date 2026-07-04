@@ -8,7 +8,7 @@ demonstrates. Examples are layers, so unlike baseline roles they may verify
 their own outcomes in-play (RFC-002: Baseline Doctrine).
 
 Every example must work on both supported architectures, amd64 and arm64
-(RFC-008: Release and Versioning): repo lines declare both architectures,
+(RFC-009: Release and Versioning): repo lines declare both architectures,
 release binaries are selected through an architecture map (see `zot/`), and
 installers that detect the architecture themselves (see `k3s/`) are
 preferred. Nothing may assume an architecture it did not detect.
@@ -56,5 +56,5 @@ SYSADMIN_PUB_KEY=/path/to/ubuntu-sysadmin.pub \
 ansible-playbook -i <host-ip>, docker/site.yml
 ```
 
-The environment-variable inputs are the stable consumer surface (RFC-009:
+The environment-variable inputs are the stable consumer surface (RFC-010:
 Conventions Contract).

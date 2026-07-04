@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
-# Render the baseline cloud-init user-data for the Ubuntu host (RFC-005: Provisioning).
+# Render the baseline cloud-init user-data for the Ubuntu host (RFC-006: Provisioning).
 #
 # cloud-init establishes access and patches the OS; the Ansible roles remain the
 # single source of truth for the full baseline. This script reproduces only the
 # file-shaped controls the roles own -- the two access accounts, their per-user
 # sudoers, and the sshd drop-in -- from the *same sources*, so the first converge
-# is a no-op for users and SSH hardening (RFC-005: Provisioning).
+# is a no-op for users and SSH hardening (RFC-006: Provisioning).
 #
 # Reads the extracted public keys under .generated/ssh (produced by
 # `mise run key:prep`) and the role-owned sshd drop-in; writes the
@@ -100,7 +100,7 @@ $(sed 's/^/      /' "$sshd_dropin")
 # unconditionally. The reboot activates the new kernel AND is a smoke test --
 # converge can only connect afterward if the host came back with working SSH,
 # so a successful first converge proves the box survives a reboot. (The fuller
-# reboot-survivability acceptance test lives in the roles, per RFC-007: Validation and Acceptance.)
+# reboot-survivability acceptance test lives in the roles, per RFC-008: Validation and Acceptance.)
 # No runcmd: the drop-in is static and role-validated, and the reboot re-reads
 # it, so an sshd -t diagnostic / reload here would add nothing.
 package_update: true
