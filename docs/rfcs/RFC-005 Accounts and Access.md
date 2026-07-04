@@ -28,13 +28,15 @@ What violates the rule is the **unowned door**: the installer-created user nobod
 
 ## The Verbs and Who Wields Them
 
-Removing access is the operation that can lose a host: close the wrong door, or close the right one before its replacement is proven, and what remains is the console. That risk is why the access surface gets four distinct verbs, each assigned to the hands whose mistakes are survivable:
+Removing access is the operation that can lose a host: close the wrong door, or close the right one before its replacement is proven, and what remains is the console. That risk is why the access surface gets five distinct verbs, each assigned to the hands whose mistakes are survivable:
 
 **Converge asserts** the two baseline accounts — and never removes access from anything: not the leftover bootstrap door, not even a foreign key found on a baseline account. This is structural, not configurable: routine convergence must be safe to run blind, on a schedule, forever (RFC-008: Convergence). Closing a door is never a side effect.
 
 **Reporting observes** — because no door can be judged owned or unowned until someone can see it. A read-only report lays out the access surface — every door, every privilege holder, the state of previously closed doors, foreign keys on the baseline accounts — and changes nothing. Observation is deliberate, never ambient (RFC-002: Baseline Doctrine): converge does not narrate, and the report does not enforce.
 
 **Locking closes** doors named by a human: it strips the account's authorized keys, locks its password, and removes it from privileged groups and provisioning-time sudoers grants. It is a standalone, explicitly invoked operation — never part of converge — that refuses to target the baseline accounts or the account it is connected as, and proves both baseline doors open before closing anything. A second run changes nothing.
+
+**Rotating re-keys** a baseline door — the one operation permitted to change the keys of `ansible` or `sysadmin`. One account per invocation, entered through the sibling account so it never depends on the key it replaces (RFC-004: Identity and Trust): add the new key, prove it over SSH with sudo, then reduce the account to exactly the new key. It refuses to run if the account holds any key the baseline does not expect — rotation transitions known state to known state, and surprises summon a human. Converge never grows this power: enforcing an exact key set on a schedule would turn one bad input into a fleet lockout, so removing a key — like every removal of access — belongs only to this deliberate verb.
 
 **Deleting is human work**, outside the collection. Deletion destroys data and attribution, and is impossible for `root`; deciding it is ordinary system administration. The collection's primitive is lock, because lock is reversible from a console; the operator's option is delete, because the judgment is theirs.
 
@@ -46,7 +48,7 @@ Locking is also reversible from a console, where deletion is not. Ending access 
 
 ## Scope
 
-This RFC defines the account taxonomy, the doors model of the access surface, the baseline's claim of exactly two owned doors, the door-ownership conformance rule, and the division of verbs — assert, observe, lock, delete — among converge, reporting, explicit invocation, and humans.
+This RFC defines the account taxonomy, the doors model of the access surface, the baseline's claim of exactly two owned doors, the door-ownership conformance rule, and the division of verbs — assert, observe, lock, rotate, delete — among converge, reporting, explicit invocation, and humans.
 
 It does not define the identity roles, key policy, or bootstrap lifecycle (RFC-004: Identity and Trust), convergence semantics (RFC-008: Convergence), where verification lives (RFC-002: Baseline Doctrine, RFC-009: Validation and Acceptance), or the operational runbooks (the operations manual).
 

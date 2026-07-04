@@ -24,6 +24,14 @@ Per-person attribution is the access layer's job, so both accounts are role-scop
 
 The repository handles public keys only. Private keys live solely in the operator's secrets manager and its SSH agent — never committed, never embedded in provisioning assets, never written to generated files. This is a hard requirement because AI coding agents work on the operator's workstation. The baseline uses a small set of well-known, reused named keys, not per-VM keys. Standing credentials appear only in a consumer's environment repository; the generic collection holds none.
 
+## Key Rotation
+
+Keys are born and die inside the secrets manager. A replacement key is generated in the vault, so its private half never exists anywhere else; a retired key is archived there, which evicts it from the SSH agent — the step that operationally kills a credential once its public half has left the hosts. The vault's archive doubles as the audit trail.
+
+Rotation replaces one account's key per invocation, and always enters through the sibling account: rotating `ansible` connects as `sysadmin`, and vice versa, so the operation never depends on the credential it is replacing. This is the account pair doing the job it exists for (Why Two Named Accounts): there is always a proven door the rotation cannot break, which is also why the one-account-per-invocation constraint is deliberate rather than convenient.
+
+Host-side mechanics are the rotate verb (RFC-005: Accounts and Access): add the new key, prove it over SSH with working sudo, and only then reduce the account to exactly the new key — refusing outright if the account holds any key the baseline does not expect. Fleet completion is verified the usual way: a converge reporting zero changes and an access-surface report showing no foreign keys.
+
 ## Bootstrap Retirement
 
 The baseline normalizes hosts: after first boot, every host looks identical regardless of provider. Once replacement access is validated — both named accounts proven over SSH with working sudo — the provider bootstrap identity is retired by locking it (RFC-005: Accounts and Access): authorized keys stripped, provisioning-time sudoers removed, password locked, privileged group memberships removed. The account is never deleted; deletion is provider-specific, and provider tooling may assume it exists.
@@ -36,9 +44,9 @@ Baseline attribution is role-level — automation versus human — plus what, wh
 
 ## Scope
 
-This RFC defines the identity roles, key policy, custody rules, and the bootstrap retirement lifecycle.
+This RFC defines the identity roles, key policy, custody rules, the key rotation lifecycle, and the bootstrap retirement lifecycle.
 
-It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-006: Provisioning), key rotation procedures, or the operational workflow (the operations manual). It governs OpenSSH public keys, not OpenSSH user certificates.
+It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-006: Provisioning), or the operational workflow (the operations manual). It governs OpenSSH public keys, not OpenSSH user certificates.
 
 ## Revisions
 
