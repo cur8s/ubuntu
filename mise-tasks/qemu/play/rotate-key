@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+#MISE description="Re-key one baseline account via its sibling (set ROTATE_ACCOUNT + ROTATE_NEW_PUB_KEY)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+: "${ROTATE_ACCOUNT:?set ROTATE_ACCOUNT=ansible|sysadmin}"
+: "${ROTATE_NEW_PUB_KEY:?set ROTATE_NEW_PUB_KEY=/path/to/new.pub}"
+qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/rotate_key.yml" "$@"

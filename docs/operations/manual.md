@@ -48,6 +48,35 @@ use restores the groundwork. Under the hood they share `key:prep` (the
 the bootstrap key from DigitalOcean if it must be rotated or retired
 provider-side.
 
+**Rotating a baseline key** (RFC-004 owns the lifecycle: one account per
+invocation, always entered through the sibling account):
+
+1. In 1Password, generate the replacement as a *new* SSH Key item — the
+   private half is born in the vault and never leaves it.
+2. Extract its public key and rotate each host. The environment keeps
+   pointing at the *current* keys (the sibling's carries the connection,
+   the rotating account's feeds the precondition); the new key rides its
+   own variable:
+
+   ```sh
+   op read "op://devops/<new item>/public key" > .generated/ssh/rotate-new.pub
+   ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY=.generated/ssh/rotate-new.pub \
+     mise run do:play:rotate-key      # or qemu:play:rotate-key
+   ```
+
+   The playbook enters as the sibling, adds the new key, proves it over
+   SSH with sudo, then reduces the account to exactly the new key. It
+   refuses if the account holds any key it does not expect — inspect with
+   `report-access`, resolve deliberately, re-run. Safe to re-run anytime;
+   an already-rotated host reports `changed=0`.
+3. When the fleet is done, finish in 1Password: retitle the old item
+   (`ubuntu-ansible-retired-<date>`), retitle the new one to the
+   canonical name, and **archive** the retired item — archiving evicts
+   the private key from the SSH agent, which is what finally kills the
+   credential. The archived item is the audit trail.
+4. `mise run key:prep`, then converge: `changed=0` everywhere plus a
+   `report-access` showing zero foreign keys confirms completion.
+
 ## 3. Provision the test VM
 
 ```sh

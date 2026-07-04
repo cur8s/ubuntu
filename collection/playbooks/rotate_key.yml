@@ -1,0 +1,187 @@
+---
+# Re-keys one baseline account (RFC-004: Identity and Trust; the rotate
+# verb, RFC-005: Accounts and Access). One account per invocation, always
+# entered through the sibling account — rotating ansible connects as
+# sysadmin and vice versa — so the operation never depends on the key it
+# replaces. Sequence: add the new key, prove it over SSH with sudo, then
+# reduce the account to exactly the new key. Refuses if the account holds
+# any key the baseline does not expect: rotation transitions known state
+# to known state, and surprises summon a human (report_access, then
+# resolve, then re-run).
+#
+# Inputs: ROTATE_ACCOUNT (ansible|sysadmin), ROTATE_NEW_PUB_KEY (path to
+# the new ed25519 public key, generated inside the secrets manager), plus
+# the standard ANSIBLE_PUB_KEY/SYSADMIN_PUB_KEY still naming the CURRENT
+# keys — the rotating account's current key feeds the precondition, the
+# sibling's key carries the connection. Swap the vault items and re-run
+# key:prep only after the fleet is rotated (the operations manual owns
+# the choreography).
+- name: Validate local rotation inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    rotate_account: "{{ lookup('ansible.builtin.env', 'ROTATE_ACCOUNT') }}"
+    rotate_new_pub_key_file: "{{ lookup('ansible.builtin.env', 'ROTATE_NEW_PUB_KEY') }}"
+    rotate_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    rotate_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Require a baseline account to rotate
+      ansible.builtin.assert:
+        that:
+          - rotate_account in ['ansible', 'sysadmin']
+        fail_msg: >-
+          Set ROTATE_ACCOUNT to ansible or sysadmin — one account per
+          invocation; the sibling stays untouched as the way in
+          (RFC-004: Identity and Trust).
+
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ rotate_new_pub_key_file }}"
+          - "{{ rotate_ansible_public_key_file }}"
+          - "{{ rotate_sysadmin_public_key_file }}"
+
+    - name: Require an ed25519 replacement key
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.file', rotate_new_pub_key_file) is match('ssh-ed25519 ')
+        fail_msg: >-
+          {{ rotate_new_pub_key_file }} is not an ssh-ed25519 public key;
+          other key types are not approved (RFC-004: Identity and Trust).
+
+- name: Rotate the key through the sibling account
+  hosts: all
+  gather_facts: false
+  remote_user: "{{ rotate_sibling }}"
+  become: true
+  vars:
+    rotate_account: "{{ lookup('ansible.builtin.env', 'ROTATE_ACCOUNT') }}"
+    rotate_sibling: "{{ 'sysadmin' if rotate_account == 'ansible' else 'ansible' }}"
+    rotate_new_pub_key_file: "{{ lookup('ansible.builtin.env', 'ROTATE_NEW_PUB_KEY') }}"
+    rotate_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    rotate_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+    # The rotating account's CURRENT key, for the known-state precondition.
+    # Overridable (-e) for mid-transition recovery and lab testing.
+    rotate_current_pub_key_file: >-
+      {{ rotate_ansible_public_key_file if rotate_account == 'ansible'
+         else rotate_sysadmin_public_key_file }}
+    # Identity the proof probe presents. Defaults to the new public key
+    # (the secrets-manager agent holds the private half); overridable (-e)
+    # when the new key is a file-based test fixture.
+    rotate_new_identity_file: "{{ rotate_new_pub_key_file }}"
+    # The sibling's connection credential.
+    ansible_ssh_private_key_file: >-
+      {{ rotate_ansible_public_key_file if rotate_sibling == 'ansible'
+         else rotate_sysadmin_public_key_file }}
+    rotate_new_key: "{{ lookup('ansible.builtin.file', rotate_new_pub_key_file) | trim }}"
+    rotate_new_prefix: "{{ (rotate_new_key.split())[0:2] | join(' ') }}"
+    rotate_current_prefix: "{{ (lookup('ansible.builtin.file', rotate_current_pub_key_file).split())[0:2] | join(' ') }}"
+
+  pre_tasks:
+    # ==========================================================================
+    # Sibling Connection
+    # ==========================================================================
+    - name: Wait for SSH access as {{ rotate_sibling }}
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+    # ==========================================================================
+    # Release Guard
+    # ==========================================================================
+    - name: Gather distribution facts
+      ansible.builtin.setup:
+        gather_subset:
+          - "!all"
+          - "!min"
+          - distribution
+
+    - name: Require the supported Ubuntu release
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] | default('') == 'Ubuntu'
+          - ansible_facts['distribution_version'] | default('') == '24.04'
+        fail_msg: >-
+          This baseline series targets Ubuntu 24.04 LTS only (RFC-010);
+          found {{ ansible_facts['distribution'] | default('unknown') }}
+          {{ ansible_facts['distribution_version'] | default('') }}.
+
+    # ==========================================================================
+    # Known-State Precondition
+    # ==========================================================================
+    # Acceptable states: exactly the current key, exactly the new key
+    # (already rotated), or both (a resumed run). Anything else is an
+    # unexpected door — refused so routine maintenance can never silently
+    # destroy evidence or someone's deliberate access.
+    - name: Read authorized_keys for {{ rotate_account }}
+      ansible.builtin.shell: |
+        cat "/home/{{ rotate_account }}/.ssh/authorized_keys" 2>/dev/null || true
+      changed_when: false
+      register: rotate_existing_keys
+
+    - name: Refuse unexpected keys on {{ rotate_account }}
+      ansible.builtin.assert:
+        that:
+          - rotate_unexpected | length == 0
+          - rotate_known | length > 0
+        fail_msg: >-
+          {{ rotate_account }} holds keys the baseline does not expect
+          ({{ rotate_unexpected | length }} unexpected,
+          {{ rotate_known | length }} known). Rotation transitions known
+          state to known state — inspect with cur8s.ubuntu.report_access,
+          resolve deliberately, then re-run (RFC-005: Accounts and Access).
+      vars:
+        rotate_key_lines: "{{ rotate_existing_keys.stdout_lines | reject('match', '^\\s*(#|$)') | list }}"
+        rotate_known: >-
+          {{ rotate_key_lines | select('search', rotate_current_prefix | regex_escape) | list
+             + rotate_key_lines | select('search', rotate_new_prefix | regex_escape) | list }}
+        rotate_unexpected: >-
+          {{ rotate_key_lines
+             | reject('search', rotate_current_prefix | regex_escape)
+             | reject('search', rotate_new_prefix | regex_escape) | list }}
+
+  tasks:
+    # ==========================================================================
+    # Add, Prove, Replace
+    # ==========================================================================
+    - name: Add the new key to {{ rotate_account }}
+      ansible.posix.authorized_key:
+        user: "{{ rotate_account }}"
+        key: "{{ rotate_new_key }}"
+        state: present
+
+    - name: Validate SSH and sudo with the new key
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: "{{ rotate_account }}"
+        public_key_file: "{{ rotate_new_identity_file }}"
+        # hostvars lookup, not bare ansible_host: the probe task delegates to
+        # localhost, and lazy templating would resolve bare connection vars
+        # against the delegate instead of this host.
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+    # Only after the new key is proven does the old one go: the account is
+    # reduced to exactly the new key. This is the deliberate removal moment
+    # (RFC-005: Accounts and Access) — converge never does this.
+    - name: Reduce {{ rotate_account }} to exactly the new key
+      ansible.posix.authorized_key:
+        user: "{{ rotate_account }}"
+        key: "{{ rotate_new_key }}"
+        state: present
+        exclusive: true
+
+    - name: Re-validate SSH and sudo with the new key
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: "{{ rotate_account }}"
+        public_key_file: "{{ rotate_new_identity_file }}"
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+    - name: Report rotation
+      ansible.builtin.debug:
+        msg: >-
+          Rotated {{ rotate_account }} to the new key (entered as
+          {{ rotate_sibling }}). When the fleet is done: retitle and
+          archive the old vault item, re-run key:prep, and converge —
+          changed=0 confirms the world agrees (RFC-004).
