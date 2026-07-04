@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+#MISE description="Rides out the first boot (next: play:converge)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+# Resolve the address once; probing through droplet_ip would hit the
+# DigitalOcean API on every retry.
+droplet_address="$(droplet_ip)"
+droplet_probe() {
+  ssh \
+    -o StrictHostKeyChecking=accept-new \
+    -o IdentitiesOnly=yes \
+    -o ConnectTimeout=10 \
+    -o ServerAliveInterval=15 \
+    -o ServerAliveCountMax=4 \
+    -i "$ANSIBLE_PUB_KEY" \
+    "ansible@$droplet_address" "$@"
+}
+
+wait_for_cloud_init droplet_probe

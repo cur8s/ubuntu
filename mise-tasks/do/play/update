@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Full package update; never reboots, reports if one is pending"
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
-
-ansible-playbook \
-  -i "$(droplet_ip)," \
-  "$MISE_CONFIG_ROOT/collection/playbooks/update.yml"

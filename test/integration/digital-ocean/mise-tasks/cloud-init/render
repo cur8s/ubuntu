@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="Render user-data from the extracted keys and the collection's role sources"
+#MISE quiet=true
+#MISE hide=true
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ensure_collection
+exec sh "$(collection_dir)/scripts/render-cloud-init.sh"

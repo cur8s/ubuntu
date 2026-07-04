@@ -20,13 +20,14 @@ ${B}cur8s.ubuntu labs${R} ${D}— full details: docs/guides/developer-guide.md${
 ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}providers${R}
-    ${C}qemu${R}    local QEMU VM ${D}(free, arm64)${R}
-    ${C}do${R}      DigitalOcean droplet ${D}(amd64)${R}
+    ${C}qemu${R}    local QEMU VM ${D}(free, arm64 — the everyday lab)${R}
+    cloud providers are self-contained folders: ${C}test/integration/<provider>/${R}
+    ${D}(work inside one, or drive it with mise -C; same object grammar, no prefix)${R}
 
   ${B}objects${R}
     ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
     ${C}play${R}    a collection playbook    ${D}converge, update, validate-reboot, ...${R}
-    ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin, root${R}
+    ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or all       ${D}docker, k3s, zot, ..., all${R}
 
   ${B}workflows${R} ${D}(no object — the provider itself is the object)${R}
@@ -34,9 +35,9 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
     ${C}up${R}      provision + converge
 
   ${B}workstation${R} ${D}(no provider — acts on this repo checkout)${R}
-    ${C}clean${R}   destroy both lab VMs and wipe .generated ${D}(recover: re-run prep)${R}
-
-  Same grammar on every provider: swap ${C}qemu:${R} for ${C}do:${R} and it just works.
+    ${C}clean${R}   destroy the local lab VM and wipe .generated ${D}(recover: re-run prep)${R}
+    ${C}e2e:digital-ocean${R}  the full droplet lifecycle against real DigitalOcean
+                       ${D}(billable, attended; runs before every release)${R}
 
 ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
 
@@ -52,8 +53,9 @@ ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
   ${D}mise run${R} ${C}qemu:play:validate-reboot${R}   acceptance gate: reboot, re-verify access
   ${D}mise run${R} ${C}qemu:vm:destroy${R}       tear down; the cached image survives
 
-  ${B}Droplet extras${R}: ${C}do:ssh:root${R} is the provider bootstrap door — until
-  ${C}do:play:lock-accounts${R} closes it ${D}(run the acceptance gate first)${R}.
+  ${B}Real DigitalOcean${R}: ${C}test/integration/digital-ocean/${R} is the operational
+  folder ${D}(cd in: mise run prep, up, play:lock-accounts, ...)${R} — and
+  ${C}e2e:digital-ocean${R} drives its whole lifecycle as the integration test.
 
   ${D}The full task list:${R} ${C}mise tasks${R}
 EOF

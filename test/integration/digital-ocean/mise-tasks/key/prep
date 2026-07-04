@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+#MISE description="Extract public keys from the vault into .generated/ssh (one agent approval)"
+#MISE quiet=true
+#MISE hide=true
+set -eu
+echo "Extracting SSH public keys from 1Password into .generated/ssh"
+mkdir -p "$(dirname "$BOOTSTRAP_PUB_KEY")"
+
+op read --force --out-file "$BOOTSTRAP_PUB_KEY" "$OP_BOOTSTRAP_KEY_REF"
+op read --force --out-file "$ANSIBLE_PUB_KEY" "$OP_ANSIBLE_KEY_REF"
+op read --force --out-file "$SYSADMIN_PUB_KEY" "$OP_SYSADMIN_KEY_REF"

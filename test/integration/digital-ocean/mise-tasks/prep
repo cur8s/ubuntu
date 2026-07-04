@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="One-time: custody keys + provider bootstrap key + the collection (next: up)"
+#MISE depends=["key:upload"]
+#MISE quiet=true
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ensure_collection
+echo "Prepared: keys extracted, bootstrap key registered, collection present. Next: mise run up"

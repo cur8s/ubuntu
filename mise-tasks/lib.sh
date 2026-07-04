@@ -2,23 +2,10 @@
 # mise only detects executable files as tasks, so this stays a library.
 # (Corollary: new task scripts MUST be chmod +x or mise silently ignores them.)
 
-droplet_ip() {
-  doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header
-}
-
 # Preamble for SSH-heavy tasks: optional IPS spacing + ansible temp dir.
 ssh_task_preamble() {
   sleep "${SSH_SPACING_SECONDS:-0}"
   mkdir -p "$ANSIBLE_LOCAL_TEMP"
-}
-
-# Interactive SSH to the droplet: droplet_ssh <user> <identity-file>
-droplet_ssh() {
-  exec ssh \
-    -o StrictHostKeyChecking=accept-new \
-    -o IdentitiesOnly=yes \
-    -i "$2" \
-    "$1@$(droplet_ip)"
 }
 
 # Point the key env vars at the QEMU lab's throwaway keypairs, generating
@@ -26,8 +13,8 @@ droplet_ssh() {
 # but a disposable VM on a loopback port, live git-ignored, and die with
 # `clean`). Private keys sit next to their .pub, so every existing
 # `-i <pubfile>` mechanic works without the 1Password agent: ssh uses the
-# adjacent private file. The droplet family never calls this and keeps the
-# vault-held keys.
+# adjacent private file. The DigitalOcean integration folder never calls
+# this and keeps the vault-held keys.
 qemu_keys_env() {
   for _lab_key in ubuntu-bootstrap ubuntu-ansible ubuntu-sysadmin; do
     if [ ! -f "$QEMU_KEYS_DIR/$_lab_key" ]; then
@@ -87,13 +74,16 @@ qemu_ansible_playbook() {
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 
-# Run one example against a target lab: example_run <example> <do|qemu>
+# Run one example against a target lab: example_run <example> <do|qemu>.
+# The do target is the integration droplet; its address arrives via
+# E2E_DROPLET_ADDRESS (exported by the e2e wrappers, which also point the
+# key env vars at the folder's extracted keys).
 example_run() {
   _example_playbook="$MISE_CONFIG_ROOT/examples/$1/site.yml"
   (
     export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
     case "$2" in
-      do) ansible-playbook -i "$(droplet_ip)," "$_example_playbook" ;;
+      do) ansible-playbook -i "${E2E_DROPLET_ADDRESS:?run this via the e2e wrappers}," "$_example_playbook" ;;
       qemu) qemu_ansible_playbook "$_example_playbook" ;;
       *)
         echo "Unknown example target '$2' (expected do or qemu)." >&2
@@ -170,7 +160,8 @@ example_test_all() {
     _example_name="$(basename "$_example_dir")"
     [ -f "$_example_dir/site.yml" ] || continue
 
-    if [ ! -x "$MISE_CONFIG_ROOT/mise-tasks/$_test_all_target/test/$_example_name" ]; then
+    if [ "$_test_all_target" = "qemu" ] \
+      && [ ! -x "$MISE_CONFIG_ROOT/mise-tasks/$_test_all_target/test/$_example_name" ]; then
       echo "WARN examples/$_example_name has no mise-tasks/$_test_all_target/test/$_example_name wrapper (still tested by this suite)." >&2
     fi
 

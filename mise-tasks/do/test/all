@@ -1,8 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Every example twice; skips tailscale unless TAILSCALE_AUTHKEY is set"
-#MISE depends=["example:link"]
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
-
-example_test_all do

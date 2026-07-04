@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Re-assert the baseline; changed=0 means conformant"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+droplet_playbook converge

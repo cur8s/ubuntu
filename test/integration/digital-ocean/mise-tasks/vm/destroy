@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+#MISE description="Irreversible; asks for confirmation"
+#MISE confirm="Destroy the droplet? This cannot be undone."
+set -eu
+doctl compute droplet delete "$DROPLET_NAME" --force

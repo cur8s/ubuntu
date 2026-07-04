@@ -1,30 +1,27 @@
 # Workstation CLIs are intentionally managed outside mise for now.
-# Expected commands: op, doctl, jq, ssh, ansible-playbook.
+# Expected commands: ssh, ansible-playbook, git, qemu (Homebrew, Apple
+# Silicon). The cloud integration folders list their own extras (doctl,
+# jq, op).
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
-# mise-tasks/do/vm/create -> do:vm:create). Grammar:
-# <provider>:<object>:<action> — providers are do and qemu (future ones get
-# their own family: aws:, azure:, ...); objects are vm (machine lifecycle),
-# play (collection playbooks), ssh (shell access, by user), test (examples),
-# key (provider keys). Workflows where the provider itself is the object
-# (prep, up) take no object segment. A namespace must have multiple real
-# members. Task scripts must be executable or mise silently ignores them;
-# shared helpers live in mise-tasks/lib.sh.
+# mise-tasks/qemu/vm/create -> qemu:vm:create). Grammar:
+# <provider>:<object>:<action> — qemu is the local lab provider; cloud
+# providers are self-contained child configs under test/integration/
+# (the folder is the namespace: work inside it, or drive it with mise -C).
+# Objects are vm (machine lifecycle), play (collection playbooks), ssh
+# (shell access, by user), test (examples). The e2e: family orchestrates
+# the integration folders end to end. Workflows where the provider itself
+# is the object (prep, up) take no object segment. A namespace must have
+# multiple real members. Task scripts must be executable or mise silently
+# ignores them; shared helpers live in mise-tasks/lib.sh.
 
 [env]
-# Seconds to pause before SSH-heavy tasks (the do:play:* family and the
-# example runners). 0 = no pause.
-# Set >0 (e.g. 120) when running from behind an IPS/rate-limiter that drops
-# SSH bursts — see docs/notes/ucg-fibre-ips-ssh-blocking.md.
+# Seconds to pause before SSH-heavy tasks (the example runners). 0 = no
+# pause. Set >0 (e.g. 120) when running from behind an IPS/rate-limiter
+# that drops SSH bursts — see docs/notes/ucg-fibre-ips-ssh-blocking.md.
 SSH_SPACING_SECONDS = "0"
-DROPLET_NAME = "ubuntu-ansible-lab"
-DO_BOOTSTRAP_KEY_NAME = "ubuntu-bootstrap"
-BOOTSTRAP_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-bootstrap.pub"
-ANSIBLE_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-ansible.pub"
-SYSADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-sysadmin.pub"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
-CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline.yaml"
 
 # Local QEMU lab (mise-tasks/qemu/): Ubuntu arm64 cloud image booted with
 # hvf acceleration, first-boot config via a NoCloud seed ISO built from the
@@ -41,6 +38,6 @@ QEMU_VM_DIR = "{{config_root}}/.generated/qemu/vm"
 # The QEMU lab uses throwaway keypairs generated on the workstation
 # (RFC-004: ephemeral lab credentials) so the local loop needs no
 # 1Password approvals; qemu tasks point the key env vars here. The
-# droplet keeps the vault-held keys.
+# DigitalOcean integration folder keeps the vault-held keys.
 QEMU_KEYS_DIR = "{{config_root}}/.generated/qemu/keys"
 QEMU_CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline-qemu.yaml"

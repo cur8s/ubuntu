@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+#MISE description="Stages done so far, and the next command"
+#MISE quiet=true
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+next=""
+
+bootstrap_key_id="$(doctl compute ssh-key list --output json | jq -r --arg name "$DO_BOOTSTRAP_KEY_NAME" '.[] | select(.name == $name) | .id')"
+if [ -s "$ANSIBLE_PUB_KEY" ] && [ -s "$SYSADMIN_PUB_KEY" ] && [ -n "$bootstrap_key_id" ] && [ -e "$(collection_dir)" ]; then
+  echo "1 prep      done     keys extracted, bootstrap key registered (ID $bootstrap_key_id), collection present"
+else
+  echo "1 prep      todo     run: mise run prep"
+  next="prep"
+fi
+
+droplet_line="$(doctl compute droplet list "$DROPLET_NAME" --format Name,PublicIPv4,Status --no-header)"
+if [ -n "$droplet_line" ]; then
+  echo "2 vm        $droplet_line"
+else
+  echo "2 vm        absent   run: mise run vm:create (or up for the whole thread)"
+  next="${next:-up}"
+fi
+
+echo "3 converge  ?        converge is the check: changed=0 means conformant"
+echo
+echo "next: mise run ${next:-play:converge}"

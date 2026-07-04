@@ -1,0 +1,8 @@
+---
+# The baseline collection, installed from git (RFC-010: git-only
+# distribution). Pre-release this tracks main; pin the release tag
+# (version: v24.4.0) once one exists.
+collections:
+  - name: https://github.com/cur8s/ubuntu.git#/collection/
+    type: git
+    version: main

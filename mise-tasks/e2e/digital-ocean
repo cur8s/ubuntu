@@ -1,0 +1,86 @@
+#!/usr/bin/env sh
+#MISE description="Integration test: the full droplet lifecycle, birth to locked-down (billable; attended)"
+#MISE depends=["e2e:link-digital-ocean"]
+set -eu
+
+folder="$MISE_CONFIG_ROOT/test/integration/digital-ocean"
+log_dir="$MISE_CONFIG_ROOT/.generated/e2e"
+mkdir -p "$log_dir"
+
+run() { mise -C "$folder" run "$@"; }
+
+# Keep-on-failure: a dead droplet you can inspect is worth the pennies.
+on_exit() {
+  echo
+  echo "e2e:digital-ocean FAILED — the droplet is kept for forensics:" >&2
+  echo "  mise -C test/integration/digital-ocean run vm:status    # inspect" >&2
+  echo "  mise -C test/integration/digital-ocean run vm:destroy   # when done" >&2
+}
+trap on_exit EXIT
+
+echo "==> preflight"
+doctl account get >/dev/null
+if [ -n "$(run vm:ip | tr -d '[:space:]')" ]; then
+  echo "A droplet already exists — destroy or investigate it before running e2e." >&2
+  exit 1
+fi
+
+echo "==> prep (custody keys; expect a 1Password approval)"
+run prep
+
+echo "==> provision: create, then ride out the first boot"
+run vm:create
+run vm:wait
+
+echo "==> converge #1 (born conformant: only the converge-only controls change)"
+run play:converge
+
+echo "==> converge #2 (the contract: changed=0)"
+second_log="$log_dir/digital-ocean-converge2.log"
+if ! run play:converge > "$second_log" 2>&1; then
+  cat "$second_log"
+  echo "FAIL: second converge failed." >&2
+  exit 1
+fi
+if grep -qE 'changed=[1-9]' "$second_log"; then
+  grep -A9 "PLAY RECAP" "$second_log" || cat "$second_log"
+  echo "FAIL: second converge reported changes." >&2
+  exit 1
+fi
+grep -hA3 "PLAY RECAP" "$second_log" | sed 's/^/    /'
+
+echo "==> acceptance gate: validate-reboot"
+run play:validate-reboot
+
+echo "==> lock the provider door (root)"
+MISE_YES=1 run play:lock-accounts
+
+echo "==> report: assert the surface is exactly the two baseline doors"
+report_log="$log_dir/digital-ocean-report.log"
+if ! run play:report-access > "$report_log" 2>&1; then
+  cat "$report_log"
+  exit 1
+fi
+cat "$report_log"
+doors="$(awk '/doors, ssh keys/{f=1;next} /doors, unlocked passwords/{f=0} f' "$report_log" \
+  | tr -d '",' | awk '{print $1}' | grep -v '^(none)$' | sort | paste -s -d' ' -)"
+if [ "$doors" != "ansible sysadmin" ]; then
+  echo "FAIL: expected exactly the two baseline doors, saw: ${doors:-none}" >&2
+  exit 1
+fi
+if ! awk '/doors, unlocked passwords/{f=1;next} /privileged group members/{f=0} f' "$report_log" | grep -q '(none)'; then
+  echo "FAIL: expected no unlocked-password doors." >&2
+  exit 1
+fi
+if ! grep -q 'ansible: 0' "$report_log" || ! grep -q 'sysadmin: 0' "$report_log"; then
+  echo "FAIL: foreign keys on a baseline account." >&2
+  exit 1
+fi
+echo "Access surface: exactly ansible + sysadmin."
+
+echo "==> destroy (success path)"
+MISE_YES=1 run vm:destroy
+
+trap - EXIT
+echo
+echo "e2e:digital-ocean PASSED — birth to locked-down, changed=0, two doors."

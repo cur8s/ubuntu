@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Destroy both lab VMs and delete .generated/"
-#MISE depends=["do:vm:destroy", "qemu:vm:destroy"]
+#MISE description="Destroy the local lab VM and delete .generated/"
+#MISE depends=["qemu:vm:destroy"]
 set -eu
 rm -rf "$MISE_CONFIG_ROOT/.generated"
