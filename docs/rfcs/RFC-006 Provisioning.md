@@ -14,7 +14,7 @@ Provider user-data drives cloud-init at first boot to:
 * lay down the baseline sshd drop-in;
 * run a full package upgrade (first boot is the ideal moment — the box is empty) and reboot unconditionally, activating any new kernel and doubling as a smoke test: converge can only connect afterward if the host came back with working SSH.
 
-The provider bootstrap identity remains usable through first boot as a debug path, until retirement (RFC-004: Identity and Trust).
+The provider's own bootstrap door — typically a key injected by provider machinery, outside the rendered user-data — remains usable through first boot as a debug path, until retirement, a deliberate lock invocation (RFC-004: Identity and Trust). The render neither creates nor suppresses that door: the user-data claims exactly the two baseline accounts, and whether a provider door exists, and on which account, is a provider fact verified by that provider's integration test.
 
 ## One Source, Two Moments
 

@@ -14,7 +14,7 @@ Reboot validation exists because the baseline's promises are boot-cycle promises
 
 ## Architecture Coverage
 
-The gates are architecture-blind, but coverage must not be: the same acceptance gates must pass on every supported architecture (RFC-010: Release and Versioning). In development the two labs split this coverage — an amd64 cloud host and an arm64 local VM run the identical steel thread.
+The gates are architecture-blind, but coverage must not be: the same acceptance gates must pass on every supported architecture (RFC-010: Release and Versioning). The everyday proof machine is the local arm64 lab; the amd64 half is covered by the provider integration test, which runs the identical steel thread against a real cloud host — covering at once the second architecture and the provider realities (datasource, image, network) no local VM can simulate. That test is a release gate: no release ships until it passes on a real provider (the developer guide names the harness entry point).
 
 ## Gating Dangerous Changes
 
