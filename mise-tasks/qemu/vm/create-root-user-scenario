@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+#MISE description="Scenario: a pre-baseline server whose door is root — the DigitalOcean shape (next: qemu:vm:boot, then ADOPT_USER=root qemu:play:adoptable)"
+#MISE quiet=true
+#MISE depends=["qemu:fetch"]
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_keys_env
+echo "Creating the root-user scenario VM (door on: root)"
+if [ -e "$QEMU_VM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2
+  exit 1
+fi
+mkdir -p "$QEMU_VM_DIR"
+
+# Copy-on-write overlay, exactly as qemu:vm:create.
+base_image="$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")"
+qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
+  "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
+
+# The seed models the DigitalOcean shape: the provider injects the
+# bootstrap key into root and creates no other account. Entering as root
+# involves no sudo chain anywhere — the code path no other rehearsal
+# covers — and locking root afterwards closes the one door that can
+# never be deleted. The users list naming only root keeps cloud-init
+# from creating the image's default user.
+seed_dir="$QEMU_VM_DIR/seed"
+mkdir -p "$seed_dir"
+{
+  printf '#cloud-config\n'
+  printf 'disable_root: false\n'
+  printf 'ssh_pwauth: false\n'
+  printf 'users:\n'
+  printf '  - name: root\n'
+  printf '    ssh_authorized_keys:\n'
+  printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
+} > "$seed_dir/user-data"
+printf 'instance-id: %s\nlocal-hostname: %s\n' "ubuntu-qemu-root-user" "ubuntu-qemu-root-user" \
+  > "$seed_dir/meta-data"
+hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
+  -o "$QEMU_VM_DIR/seed.iso" "$seed_dir"
+
+cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
+
+echo "root-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
+echo "Next: mise run qemu:vm:boot, then ADOPT_USER=root mise run qemu:play:adoptable"

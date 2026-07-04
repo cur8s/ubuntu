@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Read-only adoption verdict for the vanilla VM (next: qemu:play:adopt)"
+#MISE description="Read-only adoption verdict for the scenario VM (ADOPT_USER, default ubuntu; next: qemu:play:adopt)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble

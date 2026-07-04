@@ -2,6 +2,7 @@
 #MISE description="Integration test: the full droplet lifecycle, birth to locked-down (billable; attended)"
 #MISE depends=["e2e:link-digital-ocean"]
 set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 
 folder="$MISE_CONFIG_ROOT/test/integration/digital-ocean"
 log_dir="$MISE_CONFIG_ROOT/.generated/e2e"
@@ -42,12 +43,7 @@ if ! run play:converge > "$second_log" 2>&1; then
   echo "FAIL: second converge failed." >&2
   exit 1
 fi
-if grep -qE 'changed=[1-9]' "$second_log"; then
-  grep -A9 "PLAY RECAP" "$second_log" || cat "$second_log"
-  echo "FAIL: second converge reported changes." >&2
-  exit 1
-fi
-grep -hA3 "PLAY RECAP" "$second_log" | sed 's/^/    /'
+assert_changed_zero "$second_log" "e2e second converge"
 
 echo "==> acceptance gate: validate-reboot"
 run play:validate-reboot
@@ -62,21 +58,7 @@ if ! run play:report-access > "$report_log" 2>&1; then
   exit 1
 fi
 cat "$report_log"
-doors="$(awk '/doors, ssh keys/{f=1;next} /doors, unlocked passwords/{f=0} f' "$report_log" \
-  | tr -d '",' | awk '{print $1}' | grep -v '^(none)$' | sort | paste -s -d' ' -)"
-if [ "$doors" != "ansible sysadmin" ]; then
-  echo "FAIL: expected exactly the two baseline doors, saw: ${doors:-none}" >&2
-  exit 1
-fi
-if ! awk '/doors, unlocked passwords/{f=1;next} /privileged group members/{f=0} f' "$report_log" | grep -q '(none)'; then
-  echo "FAIL: expected no unlocked-password doors." >&2
-  exit 1
-fi
-if ! grep -q 'ansible: 0' "$report_log" || ! grep -q 'sysadmin: 0' "$report_log"; then
-  echo "FAIL: foreign keys on a baseline account." >&2
-  exit 1
-fi
-echo "Access surface: exactly ansible + sysadmin."
+assert_two_doors "$report_log"
 
 echo "==> destroy (success path)"
 MISE_YES=1 run vm:destroy

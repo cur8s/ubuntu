@@ -11,8 +11,8 @@ if [ -e "$QEMU_VM_DIR" ]; then
 fi
 
 # Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
-# into the lab's own output file — the droplet's render, built from the
-# vault keys, is never overwritten.
+# into the lab's own output file — the DigitalOcean integration folder
+# renders its own user-data separately and is never touched.
 qemu_keys_env
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 

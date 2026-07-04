@@ -1,11 +1,12 @@
 #!/usr/bin/env sh
-#MISE description="A stock Ubuntu VM with one installer-style user — the adoption specimen (next: qemu:vm:boot, then qemu:play:adoptable)"
+#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: qemu:vm:boot, then qemu:play:adoptable"
 #MISE quiet=true
 #MISE depends=["qemu:fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env
-echo "Creating the vanilla (pre-baseline) QEMU VM"
+scenario_user="${SCENARIO_USER:-ubuntu}"
+echo "Creating the sudo-user scenario VM (door on: $scenario_user)"
 if [ -e "$QEMU_VM_DIR" ]; then
   echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2
   exit 1
@@ -17,18 +18,20 @@ base_image="$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")"
 qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
   "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
 
-# The seed deliberately does NOT use the baseline render: this VM models an
-# existing server that predates the baseline. One installer-style user
-# (ubuntu, sudo-capable), reachable by the bootstrap key — the pre-baseline
-# door adoption connects through (ADOPT_USER=ubuntu) — and password auth
-# left on, so the adoptability warning has something real to find.
+# The seed deliberately does NOT use the baseline render: this VM models
+# an existing server that predates the baseline — the AWS/installer shape
+# with the default name, the Azure shape with SCENARIO_USER=azureuser
+# (nothing in the collection may care which; that is the point). One
+# sudo-capable user reachable by the bootstrap key — the pre-baseline
+# door adoption connects through (ADOPT_USER) — and password auth left
+# on, so the adoptability warning has something real to find.
 seed_dir="$QEMU_VM_DIR/seed"
 mkdir -p "$seed_dir"
 {
   printf '#cloud-config\n'
   printf 'ssh_pwauth: true\n'
   printf 'users:\n'
-  printf '  - name: ubuntu\n'
+  printf '  - name: %s\n' "$scenario_user"
   printf '    shell: /bin/bash\n'
   printf '    groups: [sudo]\n'
   printf '    sudo: "ALL=(ALL) NOPASSWD:ALL"\n'
@@ -36,12 +39,12 @@ mkdir -p "$seed_dir"
   printf '    ssh_authorized_keys:\n'
   printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
 } > "$seed_dir/user-data"
-printf 'instance-id: %s\nlocal-hostname: %s\n' "ubuntu-qemu-vanilla" "ubuntu-qemu-vanilla" \
+printf 'instance-id: %s\nlocal-hostname: %s\n' "ubuntu-qemu-sudo-user" "ubuntu-qemu-sudo-user" \
   > "$seed_dir/meta-data"
 hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
   -o "$QEMU_VM_DIR/seed.iso" "$seed_dir"
 
 cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
 
-echo "Vanilla VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
+echo "sudo-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
 echo "Next: mise run qemu:vm:boot, then mise run qemu:play:adoptable"

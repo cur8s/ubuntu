@@ -1,0 +1,59 @@
+#!/usr/bin/env sh
+#MISE description="Both adoption rehearsals, one VM at a time: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> two doors)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+log_dir="$MISE_CONFIG_ROOT/.generated/scenarios"
+mkdir -p "$log_dir"
+
+run_scenario() {
+  _scn_name="$1"
+  _scn_user="$2"
+
+  echo
+  echo "=== scenario: $_scn_name (door on: $_scn_user) ==="
+  if [ -d "$QEMU_VM_DIR" ]; then
+    MISE_YES=1 mise run qemu:vm:destroy
+  fi
+  mise run "qemu:vm:create-$_scn_name-scenario"
+  mise run qemu:vm:boot
+
+  ADOPT_USER="$_scn_user" mise run qemu:play:adoptable
+  ADOPT_USER="$_scn_user" mise run qemu:play:adopt
+
+  echo "--- converge #1 (the delta the verdict predicted)"
+  mise run qemu:play:converge
+
+  echo "--- converge #2 (the contract: changed=0)"
+  _scn_log="$log_dir/$_scn_name-converge2.log"
+  if ! mise run qemu:play:converge > "$_scn_log" 2>&1; then
+    cat "$_scn_log"
+    echo "FAIL scenario $_scn_name: second converge failed." >&2
+    exit 1
+  fi
+  assert_changed_zero "$_scn_log" "scenario $_scn_name"
+
+  echo "--- acceptance gate: validate-reboot"
+  mise run qemu:play:validate-reboot
+
+  echo "--- lock the scenario door ($_scn_user)"
+  LOCK_ACCOUNTS="$_scn_user" MISE_YES=1 mise run qemu:play:lock-accounts
+
+  echo "--- report: assert exactly the two baseline doors"
+  _scn_report="$log_dir/$_scn_name-report.log"
+  if ! mise run qemu:play:report-access > "$_scn_report" 2>&1; then
+    cat "$_scn_report"
+    exit 1
+  fi
+  assert_two_doors "$_scn_report"
+
+  MISE_YES=1 mise run qemu:vm:destroy
+  echo "=== scenario $_scn_name: PASSED"
+}
+
+run_scenario root-user root
+run_scenario sudo-user "${SCENARIO_USER:-ubuntu}"
+
+echo
+echo "qemu:test:scenarios PASSED - both rehearsals: adopt, changed=0, reboot survived, two doors."
