@@ -12,7 +12,7 @@ An operating system release is one part of a much larger ecosystem. Kernels, pac
 
 A series supports its Ubuntu release on both amd64 and arm64. The baseline is architecture-neutral by construction — it pins accounts, policy, and configuration, none of which depend on the CPU — and everything this repository ships, examples included, must hold on both architectures: nothing may assume an architecture it did not detect. The motivation is economic as much as technical: arm-based cloud instances are frequently cheaper, commodity home and datacenter hardware is amd64, and the choice between them belongs to the consumer, not the baseline.
 
-This is a contract about managed hosts. The development harness on the workstation may assume its own platform (the operations manual states its requirements).
+This is a contract about managed hosts. The development harness on the workstation may assume its own platform (the developer guide states its requirements).
 
 ## Version Scheme
 
@@ -30,7 +30,7 @@ The baseline is packaged and distributed as an Ansible collection, `cur8s.ubuntu
 
 This RFC defines the supported-release and supported-architecture policy, the version scheme, and the distribution model.
 
-It does not define upgrade procedures between LTS eras or the release workflow (the operations manual).
+It does not define upgrade procedures between LTS eras or the release workflow (the developer guide).
 
 ## Revisions
 

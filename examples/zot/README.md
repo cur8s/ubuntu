@@ -18,7 +18,7 @@ Techniques demonstrated:
 - **Handler-driven restarts** on binary/config/unit change, config `verify`
   before enable, and an API smoke test (`/v2/`) with retries.
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:zot

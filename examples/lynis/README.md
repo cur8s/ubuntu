@@ -15,7 +15,7 @@ Techniques demonstrated:
 - **A package with no service** — Lynis is a tool you run, not a daemon;
   nothing to enable or start.
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:lynis

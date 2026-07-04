@@ -13,7 +13,7 @@ Techniques demonstrated:
 - **Service enable/start with in-play validation** — layers may verify
   outcomes in-play (unlike baseline roles; see RFC-002: Baseline Doctrine).
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:docker

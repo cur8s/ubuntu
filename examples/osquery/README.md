@@ -14,7 +14,7 @@ Techniques demonstrated:
   `signed-by=` `.list` repo (see the lynis example for the annotated
   version).
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:osquery

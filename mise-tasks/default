@@ -15,7 +15,7 @@ else
 fi
 
 cat <<EOF
-${B}cur8s.ubuntu labs${R} ${D}— full details: docs/operations/manual.md${R}
+${B}cur8s.ubuntu labs${R} ${D}— full details: docs/guides/developer-guide.md${R}
 
 ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 

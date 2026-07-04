@@ -19,7 +19,7 @@ Techniques demonstrated:
   (join, or enable SSH on an already-joined host), then assert the outcome.
 - `--accept-dns=false` keeps the example from rewriting the lab VM's DNS.
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 TAILSCALE_AUTHKEY="$(op read 'op://devops/ubuntu-tailscale-auth-key/password')" \

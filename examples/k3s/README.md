@@ -24,7 +24,7 @@ Techniques demonstrated:
   rather than `systemctl is-active`; a k3s service can be active long
   before the node can schedule anything.
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:k3s

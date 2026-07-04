@@ -4,7 +4,7 @@ This repository is the `cur8s.ubuntu` Ansible collection: the baseline every
 Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
 the installable collection lives in `collection/`, the how-to lives in
-`docs/operations/manual.md`, and runnable consumption examples live in
+`docs/guides/` (a user guide and a developer guide), and runnable consumption examples live in
 `examples/`.
 
 **To understand the system**, read the mental model below, then
@@ -97,7 +97,7 @@ mise run do:play:validate-reboot   # reboot → re-verify access + baseline serv
 The same thread runs provider-free on a local QEMU VM — the arm64 cloud
 image under native virtualization, first-boot config via a NoCloud seed
 built from the identical rendered cloud-init (`mise run qemu:prep` once,
-then `mise run qemu:up`; see the operations manual).
+then `mise run qemu:up`; see the developer guide).
 
 Hosts that already exist — bare metal however installed, inherited
 servers — enter through adoption instead (RFC-007): a read-only

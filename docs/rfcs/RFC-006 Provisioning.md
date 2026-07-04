@@ -38,7 +38,7 @@ The architecture that preceded this collection provisioned hosts bare and initia
 
 This RFC defines the provisioning architecture and its division of labor with convergence.
 
-It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-008: Convergence), or the rendering implementation (the operations manual and `collection/scripts/`).
+It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-008: Convergence), or the rendering implementation (the guides and `collection/scripts/`).
 
 ## Revisions
 

@@ -29,7 +29,7 @@ preferred. Nothing may assume an architecture it did not detect.
 ## Running against a lab VM (contributors)
 
 The target lab must exist — the droplet or the local QEMU VM (see
-`docs/operations/manual.md`). Examples resolve `cur8s.ubuntu` from the
+`docs/guides/developer-guide.md`). Examples resolve `cur8s.ubuntu` from the
 working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 

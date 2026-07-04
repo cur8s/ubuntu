@@ -50,7 +50,7 @@ Locking is also reversible from a console, where deletion is not. Ending access 
 
 This RFC defines the account taxonomy, the doors model of the access surface, the baseline's claim of exactly two owned doors, the door-ownership conformance rule, and the division of verbs — assert, observe, lock, rotate, delete — among converge, reporting, explicit invocation, and humans.
 
-It does not define the identity roles, key policy, or bootstrap lifecycle (RFC-004: Identity and Trust), convergence semantics (RFC-008: Convergence), where verification lives (RFC-002: Baseline Doctrine, RFC-009: Validation and Acceptance), or the operational runbooks (the operations manual).
+It does not define the identity roles, key policy, or bootstrap lifecycle (RFC-004: Identity and Trust), convergence semantics (RFC-008: Convergence), where verification lives (RFC-002: Baseline Doctrine, RFC-009: Validation and Acceptance), or the operational runbooks (the user guide).
 
 ## Revisions
 

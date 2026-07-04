@@ -13,7 +13,7 @@ Techniques demonstrated:
   reason to use it over Ubuntu's archive.
 - **Service enable/start with in-play validation.**
 
-Run against the lab VM (droplet must exist — see the operations manual):
+Run against the lab VM (droplet must exist — see the developer guide):
 
 ```sh
 mise run do:test:postgres

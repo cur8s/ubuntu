@@ -48,7 +48,7 @@ Baseline attribution is role-level — automation versus human — plus what, wh
 
 This RFC defines the identity roles, key policy, custody rules, the key rotation lifecycle, and the bootstrap retirement lifecycle.
 
-It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-006: Provisioning), or the operational workflow (the operations manual). It governs OpenSSH public keys, not OpenSSH user certificates.
+It does not define the OpenSSH server policy (RFC-003: Baseline Contents), provisioning mechanics (RFC-006: Provisioning), or the operational workflow (the guides). It governs OpenSSH public keys, not OpenSSH user certificates.
 
 ## Revisions
 

@@ -9,10 +9,10 @@ This directory is the installable Ansible collection. Entry points:
 - `cur8s.ubuntu.validate_reboot` — the reboot acceptance gate.
 - `cur8s.ubuntu.update` — operator-invoked full package update (never reboots).
 
-Everything else — architecture RFCs, the operations manual, consumption
+Everything else — architecture RFCs, the guides, consumption
 examples, and the contributor test harness — lives at the repository root:
 <https://github.com/cur8s/ubuntu>. The repository README carries the mental
-model; `docs/operations/manual.md` is the how-to; the RFCs in `docs/rfcs/`
+model; `docs/guides/` holds the user and developer guides; the RFCs in `docs/rfcs/`
 are the normative contract.
 
 Install from git (no registry):

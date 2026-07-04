@@ -14,7 +14,7 @@
 # the standard ANSIBLE_PUB_KEY/SYSADMIN_PUB_KEY still naming the CURRENT
 # keys — the rotating account's current key feeds the precondition, the
 # sibling's key carries the connection. Swap the vault items and re-run
-# key:prep only after the fleet is rotated (the operations manual owns
+# key:prep only after the fleet is rotated (the user guide owns
 # the choreography).
 - name: Validate local rotation inputs
   hosts: localhost
