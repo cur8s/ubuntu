@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+#MISE description="Read-only adoption verdict for the vanilla VM (next: qemu:play:adopt)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+ADOPT_USER="${ADOPT_USER:-ubuntu}" qemu_ansible_playbook \
+  "$MISE_CONFIG_ROOT/collection/playbooks/adoptable.yml" \
+  --private-key "$BOOTSTRAP_PUB_KEY"

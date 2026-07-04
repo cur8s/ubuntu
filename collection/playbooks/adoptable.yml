@@ -1,0 +1,66 @@
+---
+# Read-only adoptability assessment (RFC-007: Adoption). Connects as the
+# pre-baseline user (ADOPT_USER), writes nothing, and renders the verdict:
+# the host's access surface, the baseline-account states, hard failures
+# that block adoption until a human acts, and warnings naming what the
+# first converge will change. Exits nonzero on hard failures so scripts
+# can gate on it. Authentication is whatever the host has — agent key, or
+# --ask-pass/--ask-become-pass; adoption is the one moment password auth
+# is tolerated, because it is what exists.
+- name: Validate local adoption inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    adopt_user: "{{ lookup('ansible.builtin.env', 'ADOPT_USER') }}"
+    adopt_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    adopt_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Require the pre-baseline user name
+      ansible.builtin.assert:
+        that:
+          - adopt_user | length > 0
+        fail_msg: Set ADOPT_USER to the pre-baseline account the host is reachable as.
+
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ adopt_ansible_public_key_file }}"
+          - "{{ adopt_sysadmin_public_key_file }}"
+
+- name: Assess adoptability as the pre-baseline user
+  hosts: all
+  gather_facts: false
+  remote_user: "{{ lookup('ansible.builtin.env', 'ADOPT_USER') }}"
+  become: true
+  vars:
+    adopt_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    adopt_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Wait for SSH access as the pre-baseline user
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+    # A named probe so "cannot become root" fails here, legibly, rather
+    # than inside an arbitrary later task.
+    - name: Probe privilege escalation for the pre-baseline user
+      ansible.builtin.command:
+        argv: ["id", "-un"]
+      changed_when: false
+
+    - name: Report the access surface
+      ansible.builtin.include_tasks: tasks/access-surface-report.yml
+      vars:
+        report_ansible_public_key_file: "{{ adopt_ansible_public_key_file }}"
+        report_sysadmin_public_key_file: "{{ adopt_sysadmin_public_key_file }}"
+
+    - name: Run the adoptability checks
+      ansible.builtin.include_tasks: tasks/adoptability-checks.yml
+
+    - name: Report adoptable
+      ansible.builtin.debug:
+        msg: >-
+          Adoptable. Next: cur8s.ubuntu.adopt (then converge,
+          validate_reboot, and lock the old doors — RFC-007).

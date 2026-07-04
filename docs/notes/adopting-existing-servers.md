@@ -1,14 +1,11 @@
 # Note: Adopting existing servers — design proposal
 
-Status: Idea — a recorded design proposal, **not committed to be executed**.
-Nothing described here exists in the collection. Revisit when adoption
-becomes a priority; expect to re-validate the design against the code at
-that time. Account-surface policy (doors, locking, reporting, ownership)
-is now normative in RFC-005: Accounts and Access, and adoption's contract
-and semantics in RFC-007: Adoption — where this note and those RFCs
-differ (e.g. retirement as a converge mode), the RFCs win. What remains
-useful here is the implementation sketch: the verdict checklists and the
-lab-testing ideas.
+Status: Implemented — kept as design history. The normative treatment is
+RFC-005: Accounts and Access (doors, locking, reporting, ownership) and
+RFC-007: Adoption (contract, assess-then-add, squat refusal); the code is
+`cur8s.ubuntu.adoptable` / `cur8s.ubuntu.adopt` and the manual's adoption
+runbook. Where this note and the RFCs differ (e.g. retirement as a
+converge mode), the RFCs win.
 
 Date: 2026-07-03
 

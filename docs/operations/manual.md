@@ -190,10 +190,10 @@ runnable individually for debugging. From there: `validate-reboot`,
 
 Differences from the droplet flow:
 
-- **No bootstrap door.** NoCloud has no provider-injected account; the
-  rendered user-data defines the only users that ever exist. There is no
-  `qemu` counterpart to `do:ssh:root` or `do:play:lock-accounts` — nothing to
-  close.
+- **No bootstrap door.** NoCloud has no provider-injected account; on a
+  baseline-born VM the rendered user-data defines the only users that ever
+  exist, so there is nothing to close. (`qemu:play:lock-accounts` exists
+  for the adoption specimen below, whose `ubuntu` user is a real door.)
 - **Serial console.** `mise run qemu:vm:console` follows the boot console —
   the debugging window when SSH isn't up.
 - **Teardown is local.** `mise run qemu:vm:destroy` kills the VM and deletes
@@ -203,7 +203,52 @@ Differences from the droplet flow:
 
 VM sizing and the forwarded port are `QEMU_*` variables in `mise.toml`.
 
-## 9. Examples
+## 9. Adopting existing hosts
+
+Hosts that predate the baseline — bare metal however installed, inherited
+servers — enter through adoption (RFC-007): a read-only assessment, an
+additive adopt, then the normal machinery. Real targets live in your own
+inventory, so the surface is the playbooks themselves, connected as
+whatever pre-baseline account the host has:
+
+```sh
+ADOPT_USER=olduser ansible-playbook -i host, cur8s.ubuntu.adoptable
+ADOPT_USER=olduser ansible-playbook -i host, cur8s.ubuntu.adopt
+```
+
+Authentication is whatever exists — an agent key, or `--ask-pass` and
+`--ask-become-pass`; adoption is the one moment password auth is
+tolerated. The assessment prints the access surface, the baseline-account
+states, warnings naming exactly what the first converge will change, and
+hard failures (wrong release, no root path, ignored drop-in directories,
+squatted baseline accounts) — and exits nonzero on hard failures, so it
+can gate scripts. `adopt` re-runs the same checks, refuses on the same
+grounds, adds the two accounts, and proves them over SSH with sudo.
+
+The full runbook, each stage gated by the one before:
+
+```
+adoptable → adopt → converge → validate-reboot → lock the old doors (§6)
+```
+
+The lab rehearsal against a faithful "existing server" (an installer-style
+sudo-capable `ubuntu` user reachable by the bootstrap key, password auth
+on, no baseline anything):
+
+```sh
+mise run qemu:vm:create-vanilla   # the specimen (replaces the lab VM slot)
+mise run qemu:vm:boot
+mise run qemu:play:adoptable      # verdict; ADOPT_USER defaults to ubuntu
+mise run qemu:play:adopt
+mise run qemu:play:converge       # first run: the delta the verdict predicted
+mise run qemu:play:validate-reboot
+mise run qemu:play:lock-accounts  # closes the ubuntu door (the default)
+```
+
+After the lock, `report-access` shows the ideal end state: the two
+baseline doors and nothing else.
+
+## 10. Examples
 
 Runnable consumer-shaped examples live in `examples/` (its README indexes
 them by theme and technique). Each example has a test task per provider —
@@ -230,7 +275,7 @@ working-tree collection into `.generated/collections/` so each example's
 no commit or reinstall between iterations. Adding an example means adding
 its two `mise-tasks/<provider>/test/<name>` wrappers alongside the directory.
 
-## 10. Releasing
+## 11. Releasing
 
 Versioning and distribution policy: RFC-010 (`24.4.x`, git-only, main is
 prod).
@@ -246,7 +291,7 @@ git tag -a v24.4.1 -m "cur8s.ubuntu 24.4.1"
 git push origin main --tags
 ```
 
-## 11. Consuming the collection
+## 12. Consuming the collection
 
 Install directly from git (no registry — RFC-010):
 

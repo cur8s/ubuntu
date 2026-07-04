@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+#MISE description="Close doors (default: ubuntu, the adopted specimen's); run qemu:play:validate-reboot first"
+#MISE confirm="Lock these accounts' doors on the QEMU VM?"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+LOCK_ACCOUNTS="${LOCK_ACCOUNTS:-ubuntu}" qemu_ansible_playbook \
+  "$MISE_CONFIG_ROOT/collection/playbooks/lock_accounts.yml"

@@ -1,0 +1,91 @@
+---
+# Adopt an existing host (RFC-007: Adoption): purely additive. Re-runs the
+# adoptability checks and refuses on any hard failure, then creates the two
+# baseline accounts from the same role converge asserts, and proves both
+# over SSH with working sudo. It edits nothing that exists, removes
+# nothing, restarts nothing — the pre-baseline door survives until the
+# operator closes it deliberately (cur8s.ubuntu.lock_accounts), after
+# converge and the reboot gate.
+- name: Validate local adoption inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    adopt_user: "{{ lookup('ansible.builtin.env', 'ADOPT_USER') }}"
+    adopt_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    adopt_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Require the pre-baseline user name
+      ansible.builtin.assert:
+        that:
+          - adopt_user | length > 0
+        fail_msg: Set ADOPT_USER to the pre-baseline account the host is reachable as.
+
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ adopt_ansible_public_key_file }}"
+          - "{{ adopt_sysadmin_public_key_file }}"
+
+- name: Adopt the host as the pre-baseline user
+  hosts: all
+  gather_facts: false
+  remote_user: "{{ lookup('ansible.builtin.env', 'ADOPT_USER') }}"
+  become: true
+  vars:
+    adopt_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    adopt_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  pre_tasks:
+    - name: Wait for SSH access as the pre-baseline user
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+    - name: Probe privilege escalation for the pre-baseline user
+      ansible.builtin.command:
+        argv: ["id", "-un"]
+      changed_when: false
+
+    # Refuses on any hard failure — including squatted baseline accounts —
+    # before anything is added.
+    - name: Run the adoptability checks
+      ansible.builtin.include_tasks: tasks/adoptability-checks.yml
+
+  tasks:
+    # ==========================================================================
+    # Add the Baseline Accounts (additive; same role converge asserts)
+    # ==========================================================================
+    - name: Create the baseline accounts
+      ansible.builtin.include_role:
+        name: users
+      vars:
+        ubuntu_users_ansible_public_key: "{{ lookup('ansible.builtin.file', adopt_ansible_public_key_file) | trim }}"
+        ubuntu_users_sysadmin_public_key: "{{ lookup('ansible.builtin.file', adopt_sysadmin_public_key_file) | trim }}"
+
+    # ==========================================================================
+    # Prove the New Doors
+    # ==========================================================================
+    - name: Validate ansible SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: ansible
+        public_key_file: "{{ adopt_ansible_public_key_file }}"
+        # hostvars lookup, not bare ansible_host: the probe task delegates to
+        # localhost, and lazy templating would resolve bare connection vars
+        # against the delegate instead of this host.
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+    - name: Validate sysadmin SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: sysadmin
+        public_key_file: "{{ adopt_sysadmin_public_key_file }}"
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+    - name: Report adopted
+      ansible.builtin.debug:
+        msg: >-
+          Adopted: both baseline accounts proven. Next: converge, then
+          validate_reboot, then close the old doors deliberately
+          (cur8s.ubuntu.lock_accounts) — RFC-007.

@@ -99,6 +99,11 @@ image under native virtualization, first-boot config via a NoCloud seed
 built from the identical rendered cloud-init (`mise run qemu:prep` once,
 then `mise run qemu:up`; see the operations manual).
 
+Hosts that already exist — bare metal however installed, inherited
+servers — enter through adoption instead (RFC-007): a read-only
+assessment, an additive adopt that creates the two accounts, then the
+same converge; the old access path is closed deliberately at the end.
+
 SSH shortcuts:
 
 ```sh
