@@ -118,29 +118,45 @@ The reboot-validation gate (RFC-008): reboots the host, waits for it to
 return, re-verifies `ansible` and `sysadmin` SSH + passwordless sudo,
 confirms the baseline units are active, and reads the previous boot from the
 journal (proving the persistence pin across reboots). Opt-in only — never
-part of routine converge. Run it before enabling bootstrap retirement in any
+part of routine converge. Run it before locking any door in any
 environment.
 
-## 6. Bootstrap retirement
+## 6. Watching and closing doors
 
-Point of no return for the provider SSH path (RFC-004). Preconditions: the
-target has passed `do:play:validate-reboot`, and both named accounts validated in
-converge.
+Two standalone playbooks act on the access surface (RFC-005: Accounts and
+Access); converge itself never removes access (RFC-007: Convergence).
+
+**See who can get in** — read-only, always `changed=0`:
 
 ```sh
-mise run do:play:retire-bootstrap   # asks for confirmation
+mise run do:play:report-access     # every door, every privilege holder,
+mise run qemu:play:report-access   # foreign keys on the baseline accounts
 ```
 
-This converges with `BOOTSTRAP_RETIRE=true BOOTSTRAP_USER=root`: after the
-account validations pass, it strips root's `authorized_keys`, removes the
-cloud-init sudoers file, and locks the account. Afterward `mise run do:ssh:root`
-stops working — by design — and recovery is the provider console. Routine
-`do:play:converge` never retires anything (the toggle defaults off).
+Doorless service accounts (`postgres`, `messagebus`, ...) never appear —
+the report is filtered by doors, not accounts.
+
+**Close doors** — the point of no return for the provider SSH path
+(RFC-004). Preconditions: the target has passed `do:play:validate-reboot`.
+
+```sh
+mise run do:play:lock-accounts     # asks for confirmation; default: root
+```
+
+This runs `cur8s.ubuntu.lock_accounts` with `LOCK_ACCOUNTS=root` (override
+the variable to lock other doors, comma-separated). The playbook re-proves
+`ansible` and `sysadmin` SSH + sudo first, refuses baseline accounts and
+the connection user as targets, then strips each named account's
+`authorized_keys`, removes the cloud-init sudoers file and privileged
+group memberships, and locks the password. Afterward `mise run do:ssh:root`
+stops working — by design — and recovery is the provider console. Locked
+accounts still run their processes and own their files; deleting accounts
+you no longer want is ordinary (human) system administration.
 
 ## 7. SSH shortcuts and teardown
 
 ```sh
-mise run do:ssh:root       # provider bootstrap path (dead after retirement)
+mise run do:ssh:root       # provider bootstrap path (dead once locked)
 mise run do:ssh:ansible
 mise run do:ssh:sysadmin
 
@@ -176,8 +192,8 @@ Differences from the droplet flow:
 
 - **No bootstrap door.** NoCloud has no provider-injected account; the
   rendered user-data defines the only users that ever exist. There is no
-  `qemu` counterpart to `do:ssh:root` or `do:play:retire-bootstrap` — nothing to
-  retire.
+  `qemu` counterpart to `do:ssh:root` or `do:play:lock-accounts` — nothing to
+  close.
 - **Serial console.** `mise run qemu:vm:console` follows the boot console —
   the debugging window when SSH isn't up.
 - **Teardown is local.** `mise run qemu:vm:destroy` kills the VM and deletes

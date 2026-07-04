@@ -1,0 +1,39 @@
+---
+# Read-only report of each host's access surface (RFC-005: Accounts and
+# Access): every door, every privilege holder, foreign keys on the baseline
+# accounts. Observes, never enforces — always changed=0 — and deliberately
+# carries no release guard: observation refuses nothing (converge is where
+# the guard lives). Run it whenever the question is "who can get into this
+# host, and does anyone have access we don't know about?"
+- name: Validate local report inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    report_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    report_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+
+  tasks:
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ report_ansible_public_key_file }}"
+          - "{{ report_sysadmin_public_key_file }}"
+
+- name: Report the access surface over ansible SSH
+  hosts: all
+  gather_facts: false
+  remote_user: ansible
+  become: true
+  vars:
+    report_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    report_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ report_ansible_public_key_file }}"
+
+  tasks:
+    - name: Wait for ansible SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+    - name: Report the access surface
+      ansible.builtin.include_tasks: tasks/access-surface-report.yml

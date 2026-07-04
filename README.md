@@ -119,10 +119,14 @@ The baseline roles, applied by `collection/playbooks/converge.yml`:
 - `collection/roles/unattended_upgrades` — automatic security updates; reboots are never
   automatic.
 - `collection/roles/journald` — pins `Storage=persistent` so logs survive reboots.
-- `collection/roles/bootstrap_retirement` — opt-in (`BOOTSTRAP_RETIRE=true`
-  `BOOTSTRAP_USER=<name>`): locks the provider bootstrap user once the
-  baseline accounts are validated; `mise run do:play:retire-bootstrap` for
-  the lab VM. Run `do:play:validate-reboot` first.
+
+Outside converge, two standalone playbooks act on the access surface
+(RFC-005: Accounts and Access): `cur8s.ubuntu.report_access` renders every
+door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
+doors named in `LOCK_ACCOUNTS` (the `account_lock` role) after re-proving
+both baseline accounts — converge itself never removes access. On the lab
+VM: `mise run do:play:lock-accounts` locks the provider door; run
+`do:play:validate-reboot` first.
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not

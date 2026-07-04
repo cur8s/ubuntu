@@ -10,6 +10,8 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 * The converge entry point is the collection playbook `cur8s.ubuntu.converge`.
 * The reboot acceptance gate is the collection playbook `cur8s.ubuntu.validate_reboot`.
 * The operator-invoked full package update is the collection playbook `cur8s.ubuntu.update`; it never reboots.
+* The door-closing playbook is `cur8s.ubuntu.lock_accounts` — standalone and never part of converge (RFC-005: Accounts and Access).
+* The access-surface report is the read-only collection playbook `cur8s.ubuntu.report_access`; it always reports zero changes.
 * The account names are `ansible` and `sysadmin`: always present, locked passwords, passwordless sudo (RFC-004: Identity and Trust).
 
 ## Paths
@@ -21,7 +23,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 
 ## Inputs
 
-The collection playbooks read their inputs from environment variables: `ANSIBLE_PUB_KEY` and `SYSADMIN_PUB_KEY` name the ed25519 public key files, and bootstrap retirement is gated by `BOOTSTRAP_RETIRE` with `BOOTSTRAP_USER` naming the provider bootstrap account (RFC-004: Identity and Trust).
+The collection playbooks read their inputs from environment variables: `ANSIBLE_PUB_KEY` and `SYSADMIN_PUB_KEY` name the ed25519 public key files, and `LOCK_ACCOUNTS` names the comma-separated accounts whose doors `cur8s.ubuntu.lock_accounts` closes (RFC-005: Accounts and Access).
 
 The runnable examples in `examples/` are consumers of this contract — every one resolves the collection by FQCN, connects through the fixed accounts, and supplies inputs through the environment variables above. Future use-case collections that surface missing conventions add them through revisions to this RFC.
 

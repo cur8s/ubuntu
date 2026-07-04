@@ -1,0 +1,70 @@
+---
+# Locks one account's doors (RFC-005: Accounts and Access): strips its
+# authorized_keys, removes provisioning-time sudoers grants and privileged
+# group memberships, and locks its password. The identity survives — the
+# account still runs processes and owns files; only outside login ends.
+# Deletion is deliberately not offered: that is human work.
+#
+# Callers own the safety ordering: invoke this ONLY after both baseline
+# accounts have been proven over SSH with working sudo
+# (cur8s.ubuntu.lock_accounts does exactly that) — closing an old door
+# before the new ones are proven is the lockout this ordering prevents.
+- name: Check lock target inputs
+  ansible.builtin.assert:
+    that:
+      - account_lock_name | default('') | length > 0
+      - account_lock_name not in ['ansible', 'sysadmin']
+    fail_msg: >-
+      Set account_lock_name to the account whose doors should close —
+      never a baseline account (RFC-005: Accounts and Access).
+
+- name: Read account {{ account_lock_name }}
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ account_lock_name }}"
+
+# ==========================================================================
+# Remove the SSH door
+# ==========================================================================
+- name: Remove authorized_keys for {{ account_lock_name }}
+  ansible.builtin.file:
+    path: "{{ getent_passwd[account_lock_name][4] }}/.ssh/authorized_keys"
+    state: absent
+
+# ==========================================================================
+# Remove provisioning-time sudoers
+# ==========================================================================
+# cloud-init's combined file grants rules only to provisioning-time users —
+# which are precisely pre-baseline doors. The baseline accounts use per-user
+# files (/etc/sudoers.d/ansible, /etc/sudoers.d/sysadmin) written from the
+# same source as roles/users, so this removal cannot touch them.
+- name: Remove cloud-init provisioning sudoers
+  ansible.builtin.file:
+    path: /etc/sudoers.d/90-cloud-init-users
+    state: absent
+
+# ==========================================================================
+# Remove privileged group memberships
+# ==========================================================================
+- name: Read group database
+  ansible.builtin.getent:
+    database: group
+
+- name: Remove {{ account_lock_name }} from privileged groups
+  ansible.builtin.command:
+    argv: ["gpasswd", "--delete", "{{ account_lock_name }}", "{{ item }}"]
+  when:
+    - getent_group[item] is defined
+    - account_lock_name in (getent_group[item][2] | split(','))
+  changed_when: true
+  loop:
+    - sudo
+    - admin
+
+# ==========================================================================
+# Lock the password
+# ==========================================================================
+- name: Lock password for {{ account_lock_name }}
+  ansible.builtin.user:
+    name: "{{ account_lock_name }}"
+    password_lock: true

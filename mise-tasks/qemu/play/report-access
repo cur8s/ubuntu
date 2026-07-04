@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Who can get in? Read-only; always changed=0"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/report_access.yml"

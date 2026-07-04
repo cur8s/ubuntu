@@ -1,0 +1,152 @@
+---
+# Closes named accounts' login doors (RFC-005: Accounts and Access). The
+# invocation is the consent: this is never part of converge, and there is
+# no enable toggle. LOCK_ACCOUNTS names the targets (comma-separated).
+#
+# Safety ordering is built in, not assumed: both baseline accounts are
+# proven over SSH with working sudo before any door closes, the baseline
+# accounts and the connection user are refused as targets, and every named
+# account must exist. Locked, never deleted — recovery is a console
+# (provider or physical), which is exactly why lock is the verb this
+# tooling is trusted with.
+- name: Validate local lock inputs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    lock_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    lock_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+    lock_accounts_list: >-
+      {{ lookup('ansible.builtin.env', 'LOCK_ACCOUNTS') | default('', true)
+         | split(',') | map('trim') | reject('equalto', '') | list }}
+
+  tasks:
+    - name: Require lock targets
+      ansible.builtin.assert:
+        that:
+          - lock_accounts_list | length > 0
+        fail_msg: >-
+          Set LOCK_ACCOUNTS to a comma-separated list of accounts whose
+          doors should close (e.g. LOCK_ACCOUNTS=root).
+
+    - name: Refuse baseline accounts as lock targets
+      ansible.builtin.assert:
+        that:
+          - lock_accounts_list | intersect(['ansible', 'sysadmin']) | length == 0
+        fail_msg: >-
+          The baseline accounts are never valid lock targets
+          (RFC-005: Accounts and Access).
+
+    - name: Validate extracted public key files
+      ansible.builtin.include_tasks: tasks/validate-extracted-public-key-files.yml
+      vars:
+        extracted_public_key_files:
+          - "{{ lock_ansible_public_key_file }}"
+          - "{{ lock_sysadmin_public_key_file }}"
+
+- name: Lock account doors over ansible SSH
+  hosts: all
+  gather_facts: false
+  remote_user: ansible
+  become: true
+  vars:
+    lock_ansible_public_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
+    lock_sysadmin_public_key_file: "{{ lookup('ansible.builtin.env', 'SYSADMIN_PUB_KEY') }}"
+    ansible_ssh_private_key_file: "{{ lock_ansible_public_key_file }}"
+    lock_accounts_list: >-
+      {{ lookup('ansible.builtin.env', 'LOCK_ACCOUNTS') | default('', true)
+         | split(',') | map('trim') | reject('equalto', '') | list }}
+
+  pre_tasks:
+    # ==========================================================================
+    # Ansible Connection
+    # ==========================================================================
+    - name: Wait for ansible SSH access
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+
+    # ==========================================================================
+    # Release Guard
+    # ==========================================================================
+    # Precondition, not verification (RFC-002): this series targets exactly
+    # one Ubuntu LTS (RFC-009).
+    - name: Gather distribution facts
+      ansible.builtin.setup:
+        gather_subset:
+          - "!all"
+          - "!min"
+          - distribution
+
+    - name: Require the supported Ubuntu release
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] | default('') == 'Ubuntu'
+          - ansible_facts['distribution_version'] | default('') == '24.04'
+        fail_msg: >-
+          This baseline series targets Ubuntu 24.04 LTS only (RFC-009);
+          found {{ ansible_facts['distribution'] | default('unknown') }}
+          {{ ansible_facts['distribution_version'] | default('') }}.
+
+    # ==========================================================================
+    # Target Guards
+    # ==========================================================================
+    - name: Read the connection user
+      ansible.builtin.command:
+        argv: ["id", "-un"]
+      become: false
+      changed_when: false
+      register: lock_connection_user
+
+    - name: Refuse the connection user as a lock target
+      ansible.builtin.assert:
+        that:
+          - lock_connection_user.stdout | trim not in lock_accounts_list
+        fail_msg: >-
+          Refusing to lock {{ lock_connection_user.stdout | trim }} — it is
+          the account this play is connected as.
+
+    # A typo must fail loudly before any door closes, not midway through.
+    - name: Require every lock target to exist
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ item }}"
+      loop: "{{ lock_accounts_list }}"
+
+    # ==========================================================================
+    # Prove Replacement Access
+    # ==========================================================================
+    # Old doors close only after the new ones are proven open.
+    - name: Validate ansible SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: ansible
+        public_key_file: "{{ lock_ansible_public_key_file }}"
+        # hostvars lookup, not bare ansible_host: the probe task delegates to
+        # localhost, and lazy templating would resolve bare connection vars
+        # against the delegate instead of this host.
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+    - name: Validate sysadmin SSH and sudo access
+      ansible.builtin.include_tasks: tasks/validate-ssh-sudo-access.yml
+      vars:
+        user_name: sysadmin
+        public_key_file: "{{ lock_sysadmin_public_key_file }}"
+        target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+
+  tasks:
+    # ==========================================================================
+    # Close the Doors
+    # ==========================================================================
+    - name: Lock account
+      ansible.builtin.include_role:
+        name: account_lock
+      vars:
+        account_lock_name: "{{ lock_target }}"
+      loop: "{{ lock_accounts_list }}"
+      loop_control:
+        loop_var: lock_target
+
+    - name: Report locked accounts
+      ansible.builtin.debug:
+        msg: >-
+          Locked: {{ lock_accounts_list | join(', ') }}. Doors closed;
+          identities, processes, and files untouched. Recovery is a console.

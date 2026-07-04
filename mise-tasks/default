@@ -53,7 +53,7 @@ ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
   ${D}mise run${R} ${C}qemu:vm:destroy${R}       tear down; the cached image survives
 
   ${B}Droplet extras${R}: ${C}do:ssh:root${R} is the provider bootstrap door — until
-  ${C}do:play:retire-bootstrap${R} locks it ${D}(run the acceptance gate first)${R}.
+  ${C}do:play:lock-accounts${R} closes it ${D}(run the acceptance gate first)${R}.
 
   ${D}The full task list:${R} ${C}mise tasks${R}
 EOF

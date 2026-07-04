@@ -1,0 +1,109 @@
+---
+# Renders one host's access surface (RFC-005: Accounts and Access): every
+# door (authorized_keys, unlocked passwords), every privilege holder, and
+# foreign keys on the baseline accounts. Read-only by contract — every task
+# reports changed=false — and filtered by doors, not accounts: a healthy
+# doorless service account never appears here.
+#
+# Inputs: report_ansible_public_key_file, report_sysadmin_public_key_file —
+# controller-side paths to the expected baseline public keys.
+#
+# Shared by cur8s.ubuntu.report_access (standalone observation) and, when
+# adoption lands, the adoptable assessment.
+
+# ==========================================================================
+# Doors: SSH keys
+# ==========================================================================
+- name: Find accounts with authorized_keys
+  ansible.builtin.shell: |
+    set -eu
+    awk -F: '$6 != "" {print $1" "$6}' /etc/passwd | while read -r user home; do
+      f="$home/.ssh/authorized_keys"
+      if [ -s "$f" ]; then
+        printf '%s %s\n' "$user" "$(grep -c -E '^[^#[:space:]]' "$f" || true)"
+      fi
+    done
+  changed_when: false
+  register: report_key_doors
+
+# ==========================================================================
+# Doors: unlocked passwords
+# ==========================================================================
+# Only usernames leave this task; hashes are classified, never printed.
+- name: Find accounts with unlocked passwords
+  ansible.builtin.shell: |
+    set -eu
+    awk -F: '$2 != "" && $2 !~ /^[!*]/ {print $1}' /etc/shadow
+  changed_when: false
+  register: report_password_doors
+
+# ==========================================================================
+# Privilege: groups and sudoers grants
+# ==========================================================================
+- name: Read privileged group members
+  ansible.builtin.shell: |
+    getent group sudo admin | awk -F: '$4 != "" {print $1": "$4}' || true
+  changed_when: false
+  register: report_privileged_groups
+
+- name: Read sudoers.d grants
+  ansible.builtin.shell: |
+    grep -sv '^[[:space:]]*#' /etc/sudoers.d/* 2>/dev/null | grep -v ':[[:space:]]*$' || true
+  changed_when: false
+  register: report_sudoers_grants
+
+# ==========================================================================
+# Baseline accounts: foreign keys
+# ==========================================================================
+- name: Read baseline account authorized_keys
+  ansible.builtin.shell: |
+    cat "/home/{{ report_account }}/.ssh/authorized_keys" 2>/dev/null || true
+  changed_when: false
+  register: report_baseline_keys
+  loop:
+    - ansible
+    - sysadmin
+  loop_control:
+    loop_var: report_account
+
+- name: Classify baseline account keys
+  ansible.builtin.set_fact:
+    report_foreign_keys: >-
+      {{ report_foreign_keys | default({}) | combine({
+           item.report_account:
+             item.stdout_lines
+             | reject('match', '^\s*(#|$)')
+             | reject('search', (expected_key.split()[0:2] | join(' ')) | regex_escape)
+             | list
+         }) }}
+  vars:
+    expected_key: >-
+      {{ lookup('ansible.builtin.file',
+                report_ansible_public_key_file if item.report_account == 'ansible'
+                else report_sysadmin_public_key_file) }}
+  loop: "{{ report_baseline_keys.results }}"
+  loop_control:
+    label: "{{ item.report_account }}"
+
+# ==========================================================================
+# Render
+# ==========================================================================
+- name: Render access surface
+  ansible.builtin.debug:
+    msg: >-
+      {{ ['ACCESS SURFACE — ' ~ inventory_hostname]
+         + ['doors, ssh keys (account: key count):']
+         + (report_key_doors.stdout_lines | map('regex_replace', '^', '  ') | list
+            or ['  (none)'])
+         + ['doors, unlocked passwords:']
+         + (report_password_doors.stdout_lines | map('regex_replace', '^', '  ') | list
+            or ['  (none)'])
+         + ['privileged group members:']
+         + (report_privileged_groups.stdout_lines | map('regex_replace', '^', '  ') | list
+            or ['  (none)'])
+         + ['sudoers.d grants:']
+         + (report_sudoers_grants.stdout_lines | map('regex_replace', '^', '  ') | list
+            or ['  (none)'])
+         + ['foreign keys on baseline accounts:']
+         + (['  ansible: ' ~ (report_foreign_keys['ansible'] | length),
+             '  sysadmin: ' ~ (report_foreign_keys['sysadmin'] | length)]) }}
