@@ -1,1 +1,1 @@
-docs/guides/developer-guide.md
+AGENTS.md

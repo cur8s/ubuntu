@@ -4,7 +4,7 @@ Open work only, in priority order. `[~]` in progress · `[ ]` not started.
 Completed work lives in git history and the RFC Revisions blocks.
 
 ## 1. Docs validation (pre-release review, first on purpose)
-- [~] The structure is done: the operations manual dissolved into `docs/guides/user-guide.md` (consumer lifecycle + runbooks) and `docs/guides/developer-guide.md` (repo iteration; `AGENTS.md`/`CLAUDE.md` symlink to it). Remaining: the operator validates the user guide by following it cold against real hosts, audits both guides plus README and role READMEs for gaps, and fixes land as found. Docs go first deliberately: edge cases discovered here may still change code freely, because the code reviews come later.
+- [~] The structure is done: the operations manual dissolved into `docs/guides/user-guide.md` (consumer lifecycle + runbooks) and `docs/guides/developer-guide.md` (repo iteration; `AGENTS.md` is the short agent-facing form, `CLAUDE.md` links to it). Remaining: the operator validates the user guide by following it cold against real hosts, audits both guides plus README and role READMEs for gaps, and fixes land as found. Docs go first deliberately: edge cases discovered here may still change code freely, because the code reviews come later.
 
 ## 2. RFC review and approval round
 - [ ] Read all twelve RFCs (000–011) end to end and approve each. Check the reading-order arc holds, cross-references are right, statuses are honest, and nothing normative contradicts the code as built. Amendments land as part of this item.
