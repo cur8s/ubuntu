@@ -24,6 +24,8 @@ Per-person attribution is the access layer's job, so both accounts are role-scop
 
 The repository handles public keys only. Private keys live solely in the operator's secrets manager and its SSH agent — never committed, never embedded in provisioning assets, never written to generated files. This is a hard requirement because AI coding agents work on the operator's workstation. The baseline uses a small set of well-known, reused named keys, not per-VM keys. Standing credentials appear only in a consumer's environment repository; the generic collection holds none.
 
+One narrow exception exists: **ephemeral lab credentials**. The local QEMU harness generates throwaway keypairs into git-ignored workstation state, so the local development loop runs unattended with no secrets-manager involvement. These are test fixtures, not credentials: they open nothing but a disposable VM on a loopback port, are never valid for a cloud host, never committed, and die with the workstation state. The custody rule above governs every key that opens anything real.
+
 ## Key Rotation
 
 Keys are born and die inside the secrets manager. A replacement key is generated in the vault, so its private half never exists anywhere else; a retired key is archived there, which evicts it from the SSH agent — the step that operationally kills a credential once its public half has left the hosts. The vault's archive doubles as the audit trail.

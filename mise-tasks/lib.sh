@@ -21,6 +21,49 @@ droplet_ssh() {
     "$1@$(droplet_ip)"
 }
 
+# Point the key env vars at the QEMU lab's throwaway keypairs, generating
+# them on first use (RFC-004: ephemeral lab credentials — they open nothing
+# but a disposable VM on a loopback port, live git-ignored, and die with
+# `clean`). Private keys sit next to their .pub, so every existing
+# `-i <pubfile>` mechanic works without the 1Password agent: ssh uses the
+# adjacent private file. The droplet family never calls this and keeps the
+# vault-held keys.
+qemu_keys_env() {
+  for _lab_key in ubuntu-bootstrap ubuntu-ansible ubuntu-sysadmin; do
+    if [ ! -f "$QEMU_KEYS_DIR/$_lab_key" ]; then
+      mkdir -p "$QEMU_KEYS_DIR"
+      ssh-keygen -q -t ed25519 -N '' -C "qemu-lab-$_lab_key" -f "$QEMU_KEYS_DIR/$_lab_key"
+      # 0600 like the vault-extracted pubs: ssh tries identity files as
+      # private keys first and refuses world-readable ones.
+      chmod 600 "$QEMU_KEYS_DIR/$_lab_key.pub"
+    fi
+  done
+
+  # A dedicated, promptless ssh-agent holds the lab keys, so every
+  # pub-as-identity mechanic (`-i <file>.pub`) works exactly as it does
+  # against 1Password — the lab merely substitutes its own agent.
+  _lab_sock="$QEMU_KEYS_DIR/agent.sock"
+  _lab_agent_state=0
+  SSH_AUTH_SOCK="$_lab_sock" ssh-add -l >/dev/null 2>&1 || _lab_agent_state=$?
+  if [ "$_lab_agent_state" -eq 2 ]; then
+    # No agent behind the socket (never started, or stale after a reboot).
+    rm -f "$_lab_sock"
+    ssh-agent -a "$_lab_sock" >/dev/null
+  fi
+  if [ "$_lab_agent_state" -ne 0 ]; then
+    SSH_AUTH_SOCK="$_lab_sock" ssh-add -q \
+      "$QEMU_KEYS_DIR/ubuntu-bootstrap" \
+      "$QEMU_KEYS_DIR/ubuntu-ansible" \
+      "$QEMU_KEYS_DIR/ubuntu-sysadmin"
+  fi
+  export SSH_AUTH_SOCK="$_lab_sock"
+
+  export BOOTSTRAP_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-bootstrap.pub"
+  export ANSIBLE_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-ansible.pub"
+  export SYSADMIN_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-sysadmin.pub"
+  export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
+}
+
 # Inventory for the local QEMU VM (regenerated on use so QEMU_* env stays
 # authoritative). A named alias is load-bearing: an inventory host literally
 # named 127.0.0.1 is treated as a localhost alias, so `hosts: localhost`
@@ -33,8 +76,14 @@ qemu_inventory() {
 }
 
 # Run a playbook against the local QEMU VM: qemu_ansible_playbook <playbook> [args...]
+# Exports the lab key env first, so playbooks that read *_PUB_KEY resolve
+# the throwaway lab keys, never the vault's.
 qemu_ansible_playbook() {
-  ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new" \
+  qemu_keys_env
+  # IdentityAgent is pinned explicitly: 1Password's ~/.ssh/config sets a
+  # global IdentityAgent, which overrides SSH_AUTH_SOCK — without the pin,
+  # lab traffic would consult the 1Password agent and prompt.
+  ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 
@@ -149,6 +198,7 @@ qemu_ssh() {
     -o UserKnownHostsFile="$QEMU_VM_DIR/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
     -o IdentitiesOnly=yes \
+    -o IdentityAgent="$QEMU_KEYS_DIR/agent.sock" \
     -o ConnectTimeout=10 \
     -o ServerAliveInterval=15 \
     -o ServerAliveCountMax=4 \

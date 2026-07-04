@@ -40,7 +40,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
 ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
 
-  ${D}mise run${R} ${C}qemu:prep${R}             once: 1Password keys + cloud image cache ${D}(~600MB)${R}
+  ${D}mise run${R} ${C}qemu:prep${R}             once: throwaway lab keys + cloud image cache ${D}(~600MB)${R}
   ${D}mise run${R} ${C}qemu:up${R}               stand up the lab, unattended
                                  ${D}(= vm:create -> vm:boot -> vm:wait -> play:converge)${R}
   ${D}mise run${R} ${C}qemu:vm:status${R}        where am I? stages done, and the next command

@@ -1,13 +1,21 @@
 #!/usr/bin/env sh
 #MISE description="Overlay disk + NoCloud seed from rendered cloud-init (next: qemu:vm:boot)"
 #MISE quiet=true
-#MISE depends=["cloud-init:render", "qemu:fetch"]
+#MISE depends=["qemu:fetch"]
 set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 if [ -e "$QEMU_VM_DIR" ]; then
   echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2
   exit 1
 fi
+
+# Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
+# into the lab's own output file — the droplet's render, built from the
+# vault keys, is never overwritten.
+qemu_keys_env
+sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
+
 mkdir -p "$QEMU_VM_DIR"
 
 # Copy-on-write overlay: the cached base image stays pristine, cloud-init's

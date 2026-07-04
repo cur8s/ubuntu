@@ -2,6 +2,7 @@
 #MISE description="Rides out the first boot (next: qemu:play:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_keys_env
 
 qemu_probe() {
   qemu_ssh ansible "$ANSIBLE_PUB_KEY" "$@"

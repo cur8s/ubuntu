@@ -2,4 +2,5 @@
 #MISE description="The break-glass account"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_keys_env
 qemu_ssh sysadmin "$SYSADMIN_PUB_KEY"

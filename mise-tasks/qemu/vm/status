@@ -4,9 +4,9 @@
 set -eu
 next=""
 
-if [ -s "$ANSIBLE_PUB_KEY" ] && [ -s "$SYSADMIN_PUB_KEY" ] \
+if [ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" ] && [ -s "$QEMU_KEYS_DIR/ubuntu-sysadmin.pub" ] \
   && [ -f "$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")" ]; then
-  echo "1 prep      done     keys extracted, image cached"
+  echo "1 prep      done     lab keys generated, image cached"
 else
   echo "1 prep      todo     run: mise run qemu:prep"
   next="qemu:prep"

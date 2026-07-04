@@ -15,13 +15,15 @@ Workstation CLIs (managed outside `mise` for now): `mise`, `op` (1Password),
   `ubuntu-ansible`, and `ubuntu-sysadmin`, each exposing a `public key` field.
   All keys are `ssh-ed25519` (RFC-004). Private keys never leave 1Password;
   SSH authenticates through the 1Password SSH agent, so expect an agent
-  authorization prompt on first use per session.
+  authorization prompt on first use per session. Only the droplet lab needs
+  this — the QEMU lab generates its own throwaway keys (RFC-004: ephemeral
+  lab credentials) and never touches 1Password.
 - Generated files land under `.generated/` (git-ignored). Only public keys
   and rendered user-data are ever written there — no secrets.
 
 Bare `mise run` prints the workflow cheat sheet — the golden path through
 both labs. `mise tasks` lists the operator-level tasks; the plumbing tasks
-that workflow tasks pull in as dependencies (`key:prep`,
+that workflow tasks pull in as dependencies (`key:prep`, `qemu:keys`,
 `cloud-init:render`, `do:key:upload`, `qemu:fetch`) are hidden from the
 listing but remain runnable by name.
 
@@ -38,14 +40,16 @@ attention-requiring up front:
 
 ```sh
 mise run do:prep     # 1Password keys + DigitalOcean bootstrap key (once per account)
-mise run qemu:prep   # 1Password keys + cloud image download (local lab)
+mise run qemu:prep   # throwaway lab keys + cloud image download (no 1Password)
 ```
 
-Both are safe to rerun (the key extraction refreshes, everything else
-no-ops) — after `mise run clean`, rerunning the prep of whichever lab you
-use restores the groundwork. Under the hood they share `key:prep` (the
-1Password extraction — expect one agent approval). `do:key:delete` removes
-the bootstrap key from DigitalOcean if it must be rotated or retired
+Both are safe to rerun (key extraction and generation refresh, everything
+else no-ops) — after `mise run clean`, rerunning the prep of whichever lab
+you use restores the groundwork. Under the hood, `do:prep` pulls `key:prep`
+(the 1Password extraction — expect one agent approval), while `qemu:prep`
+generates ephemeral lab keys instead (`qemu:keys`), so the entire local
+loop runs unattended with zero prompts. `do:key:delete` removes the
+bootstrap key from DigitalOcean if it must be rotated or retired
 provider-side.
 
 **Rotating a baseline key** (RFC-004 owns the lifecycle: one account per
@@ -207,7 +211,7 @@ image running at native speed under Hypervisor.framework, so the droplet
 architectures.
 
 ```sh
-mise run qemu:prep   # once: 1Password keys + cloud image download
+mise run qemu:prep   # once: throwaway lab keys + cloud image download
 mise run qemu:up     # create → boot (SSH on 127.0.0.1:2222) → wait → converge
 ```
 

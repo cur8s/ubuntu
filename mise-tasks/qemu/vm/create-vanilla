@@ -1,8 +1,10 @@
 #!/usr/bin/env sh
 #MISE description="A stock Ubuntu VM with one installer-style user — the adoption specimen (next: qemu:vm:boot, then qemu:play:adoptable)"
 #MISE quiet=true
-#MISE depends=["key:prep", "qemu:fetch"]
+#MISE depends=["qemu:fetch"]
 set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_keys_env
 echo "Creating the vanilla (pre-baseline) QEMU VM"
 if [ -e "$QEMU_VM_DIR" ]; then
   echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2

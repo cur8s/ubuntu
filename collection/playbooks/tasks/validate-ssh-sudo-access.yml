@@ -41,6 +41,13 @@
       - StrictHostKeyChecking=no
       - -o
       - IdentitiesOnly=yes
+      # Honor the caller's agent explicitly: a global IdentityAgent in
+      # ~/.ssh/config (1Password installs one) would otherwise override
+      # SSH_AUTH_SOCK. The literal token SSH_AUTH_SOCK is ssh's own
+      # "use the environment variable" spelling, so this is a no-op when
+      # no agent redirection is in play.
+      - -o
+      - "IdentityAgent={{ lookup('ansible.builtin.env', 'SSH_AUTH_SOCK') | default('SSH_AUTH_SOCK', true) }}"
       - -i
       - "{{ public_key_file }}"
       - -p

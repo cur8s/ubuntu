@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="Generate the lab's throwaway keypairs (no-op if present; no 1Password involved)"
+#MISE hide=true
+#MISE quiet=true
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qemu_keys_env
+echo "QEMU lab keys ready in $QEMU_KEYS_DIR (ephemeral lab credentials — RFC-004)"

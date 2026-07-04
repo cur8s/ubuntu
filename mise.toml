@@ -38,3 +38,9 @@ QEMU_IMAGE_URL = "https://cloud-images.ubuntu.com/noble/current/noble-server-clo
 QEMU_SHA256SUMS_URL = "https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
 QEMU_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
 QEMU_VM_DIR = "{{config_root}}/.generated/qemu/vm"
+# The QEMU lab uses throwaway keypairs generated on the workstation
+# (RFC-004: ephemeral lab credentials) so the local loop needs no
+# 1Password approvals; qemu tasks point the key env vars here. The
+# droplet keeps the vault-held keys.
+QEMU_KEYS_DIR = "{{config_root}}/.generated/qemu/keys"
+QEMU_CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/ubuntu-baseline-qemu.yaml"
