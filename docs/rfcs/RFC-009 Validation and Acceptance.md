@@ -1,4 +1,4 @@
-# RFC-008: Validation and Acceptance
+# RFC-009: Validation and Acceptance
 
 Status: Accepted
 
@@ -14,7 +14,7 @@ Reboot validation exists because the baseline's promises are boot-cycle promises
 
 ## Architecture Coverage
 
-The gates are architecture-blind, but coverage must not be: the same acceptance gates must pass on every supported architecture (RFC-009: Release and Versioning). In development the two labs split this coverage — an amd64 cloud host and an arm64 local VM run the identical steel thread.
+The gates are architecture-blind, but coverage must not be: the same acceptance gates must pass on every supported architecture (RFC-010: Release and Versioning). In development the two labs split this coverage — an amd64 cloud host and an arm64 local VM run the identical steel thread.
 
 ## Gating Dangerous Changes
 
@@ -24,7 +24,7 @@ Lockout-sensitive operations require a passed acceptance gate first. Bootstrap r
 
 This RFC defines where verification lives, the reboot-validation acceptance gate, and architecture coverage.
 
-It does not define the doctrine that excludes verification from baseline roles (RFC-002: Baseline Doctrine) or the drift-detection semantics of converge (RFC-007: Convergence).
+It does not define the doctrine that excludes verification from baseline roles (RFC-002: Baseline Doctrine) or the drift-detection semantics of converge (RFC-008: Convergence).
 
 ## Revisions
 

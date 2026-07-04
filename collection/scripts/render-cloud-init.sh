@@ -100,7 +100,7 @@ $(sed 's/^/      /' "$sshd_dropin")
 # unconditionally. The reboot activates the new kernel AND is a smoke test --
 # converge can only connect afterward if the host came back with working SSH,
 # so a successful first converge proves the box survives a reboot. (The fuller
-# reboot-survivability acceptance test lives in the roles, per RFC-008: Validation and Acceptance.)
+# reboot-survivability acceptance test lives in the roles, per RFC-009: Validation and Acceptance.)
 # No runcmd: the drop-in is static and role-validated, and the reboot re-reads
 # it, so an sshd -t diagnostic / reload here would add nothing.
 package_update: true

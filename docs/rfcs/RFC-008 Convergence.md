@@ -1,4 +1,4 @@
-# RFC-007: Convergence
+# RFC-008: Convergence
 
 Status: Accepted
 
@@ -28,7 +28,7 @@ Ansible was selected because it operates over standard SSH, requires no host-sid
 
 This RFC defines convergence semantics: the source of truth, the drift model, idempotency, detection, and the guarantee that converge never removes access.
 
-It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-006: Provisioning), or acceptance testing (RFC-008: Validation and Acceptance).
+It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-006: Provisioning), or acceptance testing (RFC-009: Validation and Acceptance).
 
 ## Revisions
 

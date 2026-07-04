@@ -26,7 +26,7 @@ What "the same" requires is per-module. State-based modules compare system state
 
 Provisioning, as this RFC defines it, is cloud provisioning: provider user-data driving cloud-init at first boot. Hosts that never passed through it — bare-metal machines installed by whatever means, servers already running workloads — are not provisioned into the baseline; they are adopted into it.
 
-Adoption is a genuinely different problem, because it starts from a host whose state is unknown rather than empty. It must first discover what exists, then decide per finding whether to overwrite, coexist, or refuse and defer to a human. Those semantics are their own design effort (`docs/notes/adopting-existing-servers.md`) and are out of scope here.
+Adoption is a genuinely different problem, because it starts from a host whose state is unknown rather than empty. It must first discover what exists, then decide per finding whether to overwrite, coexist, or refuse and defer to a human. Those semantics are RFC-007: Adoption.
 
 Install automation itself — how an operator gets Ubuntu onto bare metal, with Ubuntu Autoinstall or anything else — is deliberately outside this collection's concern. However a host was installed, it enters the baseline through adoption.
 
@@ -38,7 +38,7 @@ The architecture that preceded this collection provisioned hosts bare and initia
 
 This RFC defines the provisioning architecture and its division of labor with convergence.
 
-It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-007: Convergence), or the rendering implementation (the operations manual and `collection/scripts/`).
+It does not define the baseline (RFC-003: Baseline Contents), convergence semantics (RFC-008: Convergence), or the rendering implementation (the operations manual and `collection/scripts/`).
 
 ## Revisions
 

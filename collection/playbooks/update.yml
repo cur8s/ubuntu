@@ -5,7 +5,7 @@
 # This play NEVER reboots. If the update leaves a reboot pending (a new
 # kernel, typically), it says so and defers to cur8s.ubuntu.validate_reboot —
 # the collection's only reboot path is the one that validates the host came
-# back conformant (RFC-008). lock_timeout lets the run coexist with a
+# back conformant (RFC-009). lock_timeout lets the run coexist with a
 # concurrently firing apt-daily timer instead of failing on the dpkg lock.
 - name: Update Ubuntu packages without rebooting
   hosts: all

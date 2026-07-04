@@ -153,7 +153,7 @@ The version is `24.4.x`: major.minor mirror the Ubuntu LTS the baseline targets
 (24.04), and `x` counts collection releases. The baseline is **forever
 backward-compatible within its LTS era** — that policy, not version
 arithmetic, is the compatibility contract — so `x` only ever increments.
-When the baseline advances to the next LTS (RFC-009: Release and
+When the baseline advances to the next LTS (RFC-010: Release and
 Versioning), a new series starts (`26.4.0`) and the previous series moves to
 maintenance (fixes, no new controls).
 

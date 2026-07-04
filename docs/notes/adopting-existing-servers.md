@@ -4,8 +4,11 @@ Status: Idea — a recorded design proposal, **not committed to be executed**.
 Nothing described here exists in the collection. Revisit when adoption
 becomes a priority; expect to re-validate the design against the code at
 that time. Account-surface policy (doors, locking, reporting, ownership)
-is now normative in RFC-005: Accounts and Access — where this note and that
-RFC differ (e.g. retirement as a converge mode), the RFC wins.
+is now normative in RFC-005: Accounts and Access, and adoption's contract
+and semantics in RFC-007: Adoption — where this note and those RFCs
+differ (e.g. retirement as a converge mode), the RFCs win. What remains
+useful here is the implementation sketch: the verdict checklists and the
+lab-testing ideas.
 
 Date: 2026-07-03
 
@@ -99,7 +102,7 @@ proves the check catches what it claims.
 ## Documentation impact when implemented
 
 RFC-006 gains an Adoption section (third provisioning path, same
-contract); RFC-004 generalizes the bootstrap identity wording; RFC-010
+contract); RFC-004 generalizes the bootstrap identity wording; RFC-011
 adds `cur8s.ubuntu.adoptable`, `cur8s.ubuntu.adopt`, and `ADOPT_USER`;
 the manual gains the adoption runbook; the README mental model gains one
 sentence.

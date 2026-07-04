@@ -15,11 +15,11 @@ caller and loops it over `LOCK_ACCOUNTS`.
 Safety model (RFC-005: Accounts and Access; RFC-004: Identity and Trust):
 
 - **Never part of converge.** Converge asserts and never removes access
-  (RFC-007: Convergence). Locking is a deliberate, standalone invocation:
+  (RFC-008: Convergence). Locking is a deliberate, standalone invocation:
   the playbook run is the consent — there is no enable toggle.
 - **Ordered after proof of replacement access.** `cur8s.ubuntu.lock_accounts`
   validates `ansible` and `sysadmin` SSH+sudo before this role touches
   anything — never lock the old door before the new ones are proven.
 - **Gate it on reboot validation.** Run the acceptance gate first
-  (RFC-008: Validation and Acceptance); for a provider bootstrap door,
+  (RFC-009: Validation and Acceptance); for a provider bootstrap door,
   recovery afterward is the provider console, not SSH.

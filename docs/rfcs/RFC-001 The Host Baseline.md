@@ -8,7 +8,7 @@ The Host Baseline is a known, hardened, reproducible starting state. Every host 
 
 ## Lifecycle
 
-A host is provisioned once and converged forever. Provisioning produces a reachable host that already conforms (RFC-006: Provisioning). Convergence re-asserts the declared state for the rest of the host's life, reverting drift (RFC-007: Convergence). Later RFCs use "converge" in this sense.
+A host is provisioned once and converged forever. Provisioning produces a reachable host that already conforms (RFC-006: Provisioning). Convergence re-asserts the declared state for the rest of the host's life, reverting drift (RFC-008: Convergence). Later RFCs use "converge" in this sense.
 
 ## The Baseline and Layers
 
@@ -32,12 +32,12 @@ The baseline does not build golden images, provision infrastructure with IaC too
 
 This RFC establishes the Host Baseline: its purpose, the baseline-and-layers model, the lifecycle vocabulary, and the composition tiers.
 
-It does not define what qualifies for the baseline (RFC-002: Baseline Doctrine), its contents (RFC-003: Baseline Contents), the lifecycle mechanics (RFC-006: Provisioning, RFC-007: Convergence), or how the baseline is packaged and distributed (RFC-009: Release and Versioning).
+It does not define what qualifies for the baseline (RFC-002: Baseline Doctrine), its contents (RFC-003: Baseline Contents), the lifecycle mechanics (RFC-006: Provisioning, RFC-008: Convergence), or how the baseline is packaged and distributed (RFC-010: Release and Versioning).
 
 ## Revisions
 
 Initial version.
 
-Rewritten concept-first as The Host Baseline; packaging moved to RFC-009 and repository orientation to the README.
+Rewritten concept-first as The Host Baseline; packaging moved to RFC-010 and repository orientation to the README.
 
 Adopted "baseline" as the term for the invariant tier, retiring "floor" except as an explanatory metaphor; the collection namespace moved from `baseline` to `cur8s` to free the word.

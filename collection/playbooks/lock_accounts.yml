@@ -68,7 +68,7 @@
     # Release Guard
     # ==========================================================================
     # Precondition, not verification (RFC-002): this series targets exactly
-    # one Ubuntu LTS (RFC-009).
+    # one Ubuntu LTS (RFC-010).
     - name: Gather distribution facts
       ansible.builtin.setup:
         gather_subset:
@@ -82,7 +82,7 @@
           - ansible_facts['distribution'] | default('') == 'Ubuntu'
           - ansible_facts['distribution_version'] | default('') == '24.04'
         fail_msg: >-
-          This baseline series targets Ubuntu 24.04 LTS only (RFC-009);
+          This baseline series targets Ubuntu 24.04 LTS only (RFC-010);
           found {{ ansible_facts['distribution'] | default('unknown') }}
           {{ ansible_facts['distribution_version'] | default('') }}.
 
