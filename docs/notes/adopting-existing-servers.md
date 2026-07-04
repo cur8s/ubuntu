@@ -3,7 +3,9 @@
 Status: Idea — a recorded design proposal, **not committed to be executed**.
 Nothing described here exists in the collection. Revisit when adoption
 becomes a priority; expect to re-validate the design against the code at
-that time.
+that time. Account-surface policy (doors, locking, reporting, ownership)
+is now normative in RFC-010: Account Strategy — where this note and that
+RFC differ (e.g. retirement as a converge mode), the RFC wins.
 
 Date: 2026-07-03
 

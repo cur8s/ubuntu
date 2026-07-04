@@ -26,9 +26,9 @@ The repository handles public keys only. Private keys live solely in the operato
 
 ## Bootstrap Retirement
 
-The baseline normalizes hosts: after first boot, every host looks identical regardless of provider. Once replacement access is validated — both named accounts proven over SSH with working sudo — converge retires the provider bootstrap identity: strips its authorized keys, removes its provisioning-time sudoers, and locks the account. The account is never deleted; deletion is provider-specific, and provider tooling may assume it exists.
+The baseline normalizes hosts: after first boot, every host looks identical regardless of provider. Once replacement access is validated — both named accounts proven over SSH with working sudo — the provider bootstrap identity is retired by locking it (RFC-010: Account Strategy): authorized keys stripped, provisioning-time sudoers removed, password locked, privileged group memberships removed. The account is never deleted; deletion is provider-specific, and provider tooling may assume it exists.
 
-Retirement is opt-in per environment and off by default: development environments keep the provider door as a debug path, production retires it. It runs only after the named-account validations have passed in the same converge, and only in environments that have passed reboot validation (RFC-007: Validation and Acceptance) — there is never a moment without a proven access path. After retirement, recovery is the provider console.
+Retirement is a deliberate, standalone invocation, never a converge side effect: development environments keep the provider door as a debug path, production closes it when ready. The lock operation itself re-proves both named accounts before closing anything, and retirement belongs only in environments that have passed reboot validation (RFC-007: Validation and Acceptance) — there is never a moment without a proven access path. After retirement, recovery is the provider console.
 
 ## Attribution
 
