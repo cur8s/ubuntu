@@ -8,7 +8,7 @@ Desired state is declared in git; converge enforces it. Drift — an out-of-band
 
 Convergence is agentless: Ansible pushes over standard SSH through the `ansible` account. No per-host agent, no self-healing daemon. Reconciliation is on demand — ad-hoc from an operator workstation or on a schedule from an environment repository — and it is the same playbook either way.
 
-Converge enforces; it never removes access. No routine run closes a door — not a leftover bootstrap account, not a foreign key (RFC-005: Accounts and Access). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
+Converge enforces; it never removes access. No routine run closes a door — not a leftover bootstrap account, not an unexpected key (RFC-005: Accounts and Access). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
 
 ## Steady State Is a No-Op
 

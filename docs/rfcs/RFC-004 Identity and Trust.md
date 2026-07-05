@@ -32,7 +32,7 @@ Keys are born and die inside the secrets manager. A replacement key is generated
 
 Rotation replaces one account's key per invocation, and always enters through the sibling account: rotating `ansible` connects as `sysadmin`, and vice versa, so the operation never depends on the credential it is replacing. This is the account pair doing the job it exists for (Why Two Named Accounts): there is always a proven door the rotation cannot break, which is also why the one-account-per-invocation constraint is deliberate rather than convenient.
 
-Host-side mechanics are the rotate verb (RFC-005: Accounts and Access): add the new key, prove it over SSH with working sudo, and only then reduce the account to exactly the new key — refusing outright if the account holds any key the baseline does not expect. Fleet completion is verified the usual way: a converge reporting zero changes and an access-surface report showing no foreign keys.
+Host-side mechanics are the rotate verb (RFC-005: Accounts and Access): add the new key, prove it over SSH with working sudo, and only then reduce the account to exactly the new key — refusing outright if the account holds any key the baseline does not expect. Fleet completion is verified the usual way: a converge reporting zero changes and an access-surface report showing no unexpected keys.
 
 ## Bootstrap Retirement
 

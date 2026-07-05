@@ -30,9 +30,9 @@ What violates the rule is the **unowned door**: the installer-created user nobod
 
 Removing access is the operation that can lose a host: close the wrong door, or close the right one before its replacement is proven, and what remains is the console. That risk is why the access surface gets five distinct verbs, each assigned to the hands whose mistakes are survivable:
 
-**Converge enforces** the two baseline accounts — and never removes access from anything: not the leftover bootstrap door, not even a foreign key found on a baseline account. This is structural, not configurable: routine convergence must be safe to run blind, on a schedule, forever (RFC-008: Convergence). Closing a door is never a side effect.
+**Converge enforces** the two baseline accounts — and never removes access from anything: not the leftover bootstrap door, not even an unexpected key found on a baseline account. This is structural, not configurable: routine convergence must be safe to run blind, on a schedule, forever (RFC-008: Convergence). Closing a door is never a side effect.
 
-**Reporting observes** — because no door can be judged owned or unowned until someone can see it. A read-only report lays out the access surface — every door, every privilege holder, the state of previously closed doors, foreign keys on the baseline accounts — and changes nothing. Observation is deliberate, never ambient (RFC-002: Baseline Doctrine): converge does not narrate, and the report does not enforce.
+**Reporting observes** — because no door can be judged owned or unowned until someone can see it. A read-only report lays out the access surface — every door, every privilege holder, the state of previously closed doors, unexpected keys on the baseline accounts — and changes nothing. Observation is deliberate, never ambient (RFC-002: Baseline Doctrine): converge does not narrate, and the report does not enforce.
 
 **Locking closes** doors named by a human: it strips the account's authorized keys, locks its password, and removes it from privileged groups and provisioning-time sudoers grants. It is a standalone, explicitly invoked operation — never part of converge — that refuses to target the baseline accounts or the account it is connected as, and proves both baseline doors open before closing anything. A second run changes nothing.
 

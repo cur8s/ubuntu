@@ -16,7 +16,7 @@ Adoption is two artifacts with a fixed division of labor.
 
 ## Squatting
 
-An `ansible` or `sysadmin` account that already exists with any key the baseline did not put there — even alongside correct baseline keys — is a hard failure. The tool never merges into, and never strips, an account whose ownership it cannot prove; the refusal names the foreign keys and a human resolves them. A stale key from an earlier rotation reads as foreign on purpose — an old key is still a door someone may hold; remove it, then re-assess. An account matching baseline shape exactly reports as already adopted: adopting twice, or adopting a baseline-born host, changes nothing.
+An `ansible` or `sysadmin` account that already exists with any key the baseline did not put there — even alongside correct baseline keys — is a hard failure. The tool never merges into, and never strips, an account whose ownership it cannot prove; the refusal names the unexpected keys and a human resolves them. A stale key from an earlier rotation reads as unexpected on purpose — an old key is still a door someone may hold; remove it, then re-assess. An account matching baseline shape exactly reports as already adopted: adopting twice, or adopting a baseline-born host, changes nothing.
 
 ## The Pre-Baseline Door
 
