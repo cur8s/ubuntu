@@ -21,8 +21,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}providers${R}
     ${C}qemu${R}    local QEMU VM ${D}(free, arm64 — the everyday lab)${R}
-    cloud providers are self-contained folders: ${C}test/integration/<provider>/${R}
-    ${D}(work inside one, or drive it with mise -C; same object grammar, no prefix)${R}
+    ${D}(cloud harnesses live with the operator's cloud custody — same grammar inside)${R}
 
   ${B}objects${R}
     ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
@@ -36,8 +35,6 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}workstation${R} ${D}(no provider — acts on this repo checkout)${R}
     ${C}clean${R}   destroy the local lab VM and wipe .generated ${D}(recover: re-run prep)${R}
-    ${C}test:integration:digital-ocean${R}  the full droplet lifecycle against real DigitalOcean
-                       ${D}(billable, attended; runs before every release)${R}
 
 ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
 
@@ -54,9 +51,8 @@ ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
   ${D}mise run${R} ${C}qemu:host:validate-reboot${R}   acceptance gate: reboot, re-verify access
   ${D}mise run${R} ${C}qemu:vm:destroy${R}       tear down; the cached image survives
 
-  ${B}Real DigitalOcean${R}: ${C}test/integration/digital-ocean/${R} is the operational
-  folder ${D}(cd in: mise run prep, up, host:lock-accounts, ...)${R} — and
-  ${C}test:integration:digital-ocean${R} drives its whole lifecycle as the integration test.
+  ${B}Real providers${R}: the release gate is the consumer-shaped DigitalOcean
+  harness in the operator's sandbox repo ${D}(developed here; history at b0ba5ff)${R}.
 
   ${D}The full task list:${R} ${C}mise tasks${R}
 EOF

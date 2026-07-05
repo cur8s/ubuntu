@@ -1,8 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Irreversible; asks for confirmation"
-#MISE confirm="Destroy the droplet? This cannot be undone."
-set -eu
-doctl compute droplet delete "$DROPLET_NAME" --force
-# The recorded host key dies with the machine: a recycled DigitalOcean IP
-# must not collide with the old entry.
-rm -f "$MISE_CONFIG_ROOT/.generated/known_hosts"

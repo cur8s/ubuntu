@@ -23,5 +23,5 @@ this page. The essentials:
   behavior, the developer guide for repo workflows, RFC-011 for any new
   contract surface. Pre-release, RFCs are edited in place with no
   revision-history noise.
-- **Never push, and never create billable cloud resources (the droplet),
+- **Never push, and never create billable cloud resources (cloud VMs),
   unless explicitly asked.**

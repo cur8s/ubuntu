@@ -5,9 +5,9 @@ Ubuntu host gets, regardless of what runs on top. Everything needed to
 develop, verify, release, and consume the collection is self-contained here:
 the installable collection lives in `collection/`, the how-to lives in
 `docs/guides/` (a user guide and a developer guide), runnable consumption
-examples live in `examples/`, and per-provider integration tests — each a
-self-contained folder that doubles as an operational starting point —
-live in `test/integration/`.
+examples live in `examples/`. Real-provider verification lives outside
+the repo, in consumer-shaped harnesses beside the operator's cloud
+custody (the DigitalOcean one was developed here; history at `b0ba5ff`).
 
 **To understand the system**, read the mental model below, then
 `docs/rfcs/RFC-001 The Host Baseline.md` and onward for depth. **To change
@@ -99,12 +99,11 @@ Acceptance test (opt-in; never part of routine converge):
 mise run qemu:host:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
-The same thread runs against real DigitalOcean from
-`test/integration/digital-ocean/` — a self-contained folder (1Password
-custody as the worked example, billable resources) that is also a
-copy-pastable operational starting point; `mise run test:integration:digital-ocean`
-drives its whole lifecycle, birth to locked-down, as the release-gate
-integration test (RFC-009: Validation and Acceptance).
+The same thread runs against real DigitalOcean as the release gate
+(RFC-009: Validation and Acceptance), from a consumer-shaped droplet
+harness that installs this collection from git — developed here as
+`test/integration/digital-ocean/` (repository history, `b0ba5ff`) and
+now living where the operator's cloud custody lives.
 
 Hosts that already exist — bare metal however installed, inherited
 servers — enter through adoption instead (RFC-007): a read-only
@@ -139,8 +138,8 @@ door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
 doors named in `LOCK_ACCOUNTS` (the `lock_account` role) after re-proving
 both baseline accounts — converge itself never removes access. The local
 scenario chain rehearses the whole arc (`qemu:test:scenarios`); on a real
-droplet the integration folder's `host:lock-accounts` closes the provider
-door (acceptance gate first).
+cloud host the same playbook closes the provider door (acceptance gate
+first).
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
@@ -151,10 +150,11 @@ same key files and sshd drop-in the roles own, which is what makes the first
 converge a no-op.
 
 `mise.toml` is contributor convenience only, and the root harness knows
-only the local QEMU lab. Provider and secret-manager wiring lives in the
-self-contained `test/integration/<provider>/` folders — which is also
-what makes each of them liftable into a real environment — and none of
-it ever moves into reusable collection roles.
+only the local QEMU lab. Provider and secret-manager wiring lives in
+self-contained harness folders outside the repo, beside the operator's
+cloud custody — which is also what makes each of them liftable into a
+real environment — and none of it ever moves into reusable collection
+roles.
 
 ## Versioning & releases
 

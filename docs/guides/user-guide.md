@@ -14,9 +14,11 @@ repository rather than using it, you want `docs/guides/developer-guide.md`.
   (RFC-004: Identity and Trust). Their public halves as files on disk;
   the private halves stay in the secrets manager and its SSH agent,
   always. (For a fully worked 1Password arrangement — vault items,
-  extraction, agent signing, rotation choreography — see
-  `test/integration/digital-ocean/README.md`: a self-contained,
-  copy-pastable operational folder built exactly this way.)
+  extraction, agent signing, rotation choreography — see the README of
+  the DigitalOcean harness developed in this repository's history:
+  `test/integration/digital-ocean/` at commit `b0ba5ff`, a
+  self-contained, copy-pastable operational folder built exactly this
+  way.)
 - Ubuntu 24.04 hosts, or a cloud account to create them. This series
   targets 24.04 only — every playbook that changes a host refuses any
   other release (RFC-010: Release and Versioning); `report_access` alone
@@ -100,9 +102,10 @@ The same rendered user-data serves any platform that speaks cloud-init —
 a KubeVirt VM consumes it as a NoCloud volume unchanged. Platforms with
 no cloud-init at all are not provisioned; they are adopted (§5).
 
-The executable version of this whole section, DigitalOcean edition, is
-`test/integration/digital-ocean/` in the collection repository — every
-step above as a runnable task, ready to copy into your environment.
+A fully worked DigitalOcean edition of this section — every step above
+as a runnable task, ready to copy into your environment — lives in the
+repository history at `test/integration/digital-ocean/` (commit
+`b0ba5ff`); copy it from there as a starting point.
 
 ## 5. Hosts that already exist (adoption)
 
@@ -260,8 +263,9 @@ sibling so the operation never depends on the key it replaces (RFC-004):
    completion.
 
    (The 1Password version of this choreography — second vault item,
-   retitle, archive-evicts-from-agent — is worked step by step in
-   `test/integration/digital-ocean/README.md`.)
+   retitle, archive-evicts-from-agent — is worked step by step in the
+   DigitalOcean harness README: repository history,
+   `test/integration/digital-ocean/` at `b0ba5ff`.)
 
 ## 7. Composing on top
 
@@ -279,7 +283,8 @@ if changing your mind about it would force a release of the artifact it
 lives in, it belongs elsewhere. A layer with a real contract of its own
 (a Kubernetes distribution, a database platform) earns its own
 repository, versioned and proven like this one, consuming the baseline
-the way `test/integration/digital-ocean/` does. Site policy — the
+from a pinned `requirements.yml` the way any consumer harness does.
+Site policy — the
 access network all *your* hosts join, security scanners, fleet
 configuration — lives in your environment repository, applied to
 inventory groups: "on all my hosts" means your inventory's `all` group,

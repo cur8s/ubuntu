@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="The provider bootstrap door (dead after lock-accounts)"
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-droplet_ssh root "$BOOTSTRAP_PUB_KEY"

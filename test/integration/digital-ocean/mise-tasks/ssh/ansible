@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="The automation account"
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-droplet_ssh ansible "$ANSIBLE_PUB_KEY"

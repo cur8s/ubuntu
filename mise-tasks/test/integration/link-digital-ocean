@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Symlink the working-tree collection into the digital-ocean folder (dev mode)"
-#MISE quiet=true
-#MISE hide=true
-set -eu
-target="$MISE_CONFIG_ROOT/test/integration/digital-ocean/.generated/collections/ansible_collections/cur8s"
-mkdir -p "$target"
-ln -sfn "$MISE_CONFIG_ROOT/collection" "$target/ubuntu"
-echo "Linked digital-ocean integration collection -> working tree"

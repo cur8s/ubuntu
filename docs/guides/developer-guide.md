@@ -57,23 +57,21 @@ them only when you run it.
 
 Bare `mise run` prints the cheat sheet — the golden path through the
 labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
-in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`,
-`test:integration:link-digital-ocean`) are hidden but runnable by name. The grammar:
+in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`) are
+hidden but runnable by name. The grammar:
 
 - provider `qemu` (local, arm64, free) is the root harness's only lab.
-  Cloud providers are self-contained child configs under
-  `test/integration/<provider>/` — the folder is the namespace, so
-  inside one the same grammar reads `<object>:<action>` with no prefix
-  (drive it from root with `mise -C`).
+  Cloud-provider harnesses are self-contained, consumer-shaped folders
+  that live with the operator's cloud custody (the sandbox, later the
+  environment repository) — the folder is the namespace, so inside one
+  the same grammar reads `<object>:<action>` with no prefix.
 - objects: `vm` (the machine, provider plane), `host` (baseline
   operations on the managed system — each task runs its `cur8s.ubuntu.*`
   playbook; `host:check` is converge in check mode, the drift alarm),
   `ssh` (a shell, by account), `test` (examples, and the scenario
   chain).
 - provider workflows with no object: `prep` (one-time groundwork), `up`
-  (provision + converge). Workstation-scoped: `clean`, `default`, and
-  the `test:integration:` family, which drives the integration folders
-  end to end (the task name mirrors the folder path it orchestrates).
+  (provision + converge). Workstation-scoped: `clean` and `default`.
 
 ## 4. The QEMU lab — the everyday loop
 
@@ -130,45 +128,34 @@ mise run qemu:host:lock-accounts # closes the scenario door (the default)
 (For the root-user scenario, set `ADOPT_USER=root` and
 `LOCK_ACCOUNTS=root` on the corresponding steps.)
 
-## 5. The DigitalOcean integration folder
+## 5. The real-provider release gate
 
-`test/integration/digital-ocean/` is a self-contained child mise config
-— its own tasks, helpers, env, and `.generated/` state — that runs the
-baseline against a real droplet. It is deliberately consumer-shaped: the
-collection resolves from its `requirements.yml`, custody defaults to
-1Password as the worked example (its README owns that story, rotation
-choreography included), and the whole directory is copy-pastable as an
-operational starting point. In-repo, `test:integration:link-digital-ocean` symlinks
-the working tree over the pin so integration runs test your edits.
+RFC-009's amd64/real-provider leg runs from a consumer-shaped
+DigitalOcean harness that installs the collection from git via its own
+`requirements.yml` — no dev link, so the gate proves exactly what
+consumers get. The harness began life in this repository as
+`test/integration/digital-ocean/` (history at `b0ba5ff`) and moved to
+the operator's sandbox repository, which owns the DigitalOcean account
+and 1Password custody. Its entry point, inside the folder:
 
 ```sh
-cd test/integration/digital-ocean
-mise trust && mise run prep     # once: custody keys + DO key + collection
-mise run up                     # create → wait out first boot → converge
-mise run vm:status              # stages done, next command
+mise run test    # prep -> create -> first boot -> converge x2 (changed=0)
+                 # -> validate-reboot -> lock root -> report (two doors)
+                 # -> destroy on success, keep on failure
 ```
 
-The droplet is billable — `vm:destroy` when done; recreating verified
-state is one `up`. Its provider bootstrap door is root;
-`host:lock-accounts` defaults to locking it (acceptance gate first). If
-your network's IPS drops SSH bursts, set `SSH_SPACING_SECONDS` in the
-folder's env (see `docs/notes/ucg-fibre-ips-ssh-blocking.md`).
-
-**`mise run test:integration:digital-ocean`** (root, attended, billable) drives the
-whole arc as the integration test: prep → create → first boot →
-converge ×2 asserting `changed=0` → validate-reboot → lock root →
-report asserting exactly two doors → destroy on success, keep on
-failure. It is the release gate (RFC-009), run ad hoc otherwise.
-`test:integration:digital-ocean-examples` runs the example suite against the
-folder's droplet — the amd64 leg of example coverage. Folder tasks must
-never lean on root `[env]` — when the directory is copied out, only its
-own config exists.
+Before tagging a release: run it against the release-candidate ref
+(pin the harness's `requirements.yml`), and run the three examples
+against a droplet from the same harness for the amd64 leg of example
+coverage (`ansible-playbook -i <droplet-ip>, examples/<name>/site.yml`
+with the key env vars exported). First proven from the sandbox against
+`b0ba5ff` on 2026-07-05.
 
 ## 6. Testing
 
 Each example has a local test task (`qemu:test:docker`, ... and
-`qemu:test:all` for the suite); `test:integration:digital-ocean-examples` runs the
-same suite against the integration droplet. Every one enforces the
+`qemu:test:all` for the suite); the amd64 leg runs the same playbooks
+against a droplet from the sandbox harness (§5). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
 drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. The hidden
@@ -202,15 +189,16 @@ runbook section.
 **An example**: a directory under `examples/` (site.yml + README) plus
 its `mise-tasks/qemu/test/<name>` wrapper — the suites glob `examples/`,
 so coverage is automatic either way. It must work on both architectures
-(the DigitalOcean examples suite is the amd64 leg).
+(the sandbox droplet run is the amd64 leg — §5).
 
-**A provider integration folder**: copy the shape of
-`test/integration/digital-ocean/` — self-contained child mise config,
-object-grammar tasks, its own helpers and state, custody wiring
-parameterized in `[env]` — plus a `test:integration:<provider>` orchestrator at
-root and a `mise trust` note in its README. The provider's bootstrap
-account becomes the default `LOCK_ACCOUNTS` target. Gate it on a real
-workload needing that provider (the TODO's multi-provider rule).
+**A provider harness**: copy the shape of the DigitalOcean harness
+(repo history, `test/integration/digital-ocean/` at `b0ba5ff`) — a
+self-contained mise config, object-grammar tasks, its own helpers and
+state, custody wiring parameterized in `[env]`, an in-folder `test`
+steel thread — living beside the operator's cloud custody, not in this
+repo. The provider's bootstrap account becomes the default
+`LOCK_ACCOUNTS` target. Gate it on a real workload needing that
+provider (the TODO's multi-provider rule).
 
 **An RFC**: next free number; keep the reading-order arc sensible (the
 numbers follow it); state `Accepted` when in force; end with the Scope /
@@ -220,8 +208,9 @@ numbers follow it); state `Accepted` when in force; end with the Scope /
 
 Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
-1. Pass the release gate (RFC-009): `mise run test:integration:digital-ocean` and
-   `mise run test:integration:digital-ocean-examples` against a real droplet, plus
+1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
+   `mise run test` against the release-candidate ref, the three examples
+   against a droplet from that harness (amd64 leg), plus
    `mise run qemu:test:all` and `mise run qemu:test:scenarios` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path

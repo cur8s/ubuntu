@@ -42,9 +42,11 @@ mise run qemu:test:all      # every example (skips tailscale without TAILSCALE_A
 
 Every `test:` task enforces the examples' contract: it runs the example
 twice and fails unless the second pass reports `changed=0` end to end
-(baseline no-op + idempotent layer). At release cadence the same suite
-runs on real amd64 via `mise run test:integration:digital-ocean-examples`
-(the DigitalOcean integration folder's droplet must be up).
+(baseline no-op + idempotent layer). At release cadence the same
+playbooks also run on real amd64, against a droplet from the operator's
+DigitalOcean harness: `ansible-playbook -i <droplet-ip>,
+<name>/site.yml` twice, with the key env vars exported — the second
+pass must report `changed=0`.
 
 ## Using from your own repository (consumers)
 

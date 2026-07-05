@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Print the droplet's public IPv4 address"
-#MISE quiet=true
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-droplet_ip

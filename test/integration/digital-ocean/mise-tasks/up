@@ -1,7 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="From zero: vm:create -> vm:wait -> host:converge"
-set -eu
-mise run vm:create
-mise run vm:wait
-mise run host:converge
-echo "The droplet is up and converged."
