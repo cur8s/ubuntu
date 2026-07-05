@@ -73,8 +73,12 @@ qemu_ansible_playbook() {
   qemu_keys_env
   # IdentityAgent is pinned explicitly: 1Password's ~/.ssh/config sets a
   # global IdentityAgent, which overrides SSH_AUTH_SOCK — without the pin,
-  # lab traffic would consult the 1Password agent and prompt.
-  ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
+  # lab traffic would consult the 1Password agent and prompt. The
+  # VALIDATE_SSH_IDENTITY_AGENT export makes the collection's validation
+  # probe pin the same lab agent (by default the probe follows the user's
+  # ssh config, which is right everywhere except this lab).
+  VALIDATE_SSH_IDENTITY_AGENT="$QEMU_KEYS_DIR/agent.sock" \
+    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 

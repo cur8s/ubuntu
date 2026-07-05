@@ -27,35 +27,33 @@
 # assurance belongs to the converge connection that just configured the
 # host. Pinning host keys here would hard-fail whenever an address is
 # reused (a local QEMU port forward, a recycled cloud IP).
+#
+# Agent selection: by default the probe behaves like plain ssh — the
+# user's ssh config decides which agent signs (a secrets manager's
+# global IdentityAgent included; that is the production path). A caller
+# that must NOT use that agent — the QEMU lab, whose throwaway keys live
+# in a dedicated agent — exports VALIDATE_SSH_IDENTITY_AGENT and the
+# probe pins to it; pinning to $SSH_AUTH_SOCK unconditionally would
+# bypass secrets-manager agents configured via ssh config.
 - name: Validate SSH and passwordless sudo for {{ user_name }} on {{ target_host }}
   ansible.builtin.command:
-    argv:
-      - ssh
-      - -o
-      - BatchMode=yes
-      - -o
-      - ConnectTimeout=10
-      - -o
-      - UserKnownHostsFile=/dev/null
-      - -o
-      - StrictHostKeyChecking=no
-      - -o
-      - IdentitiesOnly=yes
-      # Honor the caller's agent explicitly: a global IdentityAgent in
-      # ~/.ssh/config (1Password installs one) would otherwise override
-      # SSH_AUTH_SOCK. The literal token SSH_AUTH_SOCK is ssh's own
-      # "use the environment variable" spelling, so this is a no-op when
-      # no agent redirection is in play.
-      - -o
-      - "IdentityAgent={{ lookup('ansible.builtin.env', 'SSH_AUTH_SOCK') | default('SSH_AUTH_SOCK', true) }}"
-      - -i
-      - "{{ public_key_file }}"
-      - -p
-      - "{{ hostvars[inventory_hostname].ansible_port | default(22) }}"
-      - "{{ user_name }}@{{ target_host }}"
-      - sudo
-      - -n
-      - /usr/bin/true
+    argv: >-
+      {{
+        ['ssh',
+         '-o', 'BatchMode=yes',
+         '-o', 'ConnectTimeout=10',
+         '-o', 'UserKnownHostsFile=/dev/null',
+         '-o', 'StrictHostKeyChecking=no',
+         '-o', 'IdentitiesOnly=yes']
+        + (['-o', 'IdentityAgent=' ~ validate_identity_agent]
+           if validate_identity_agent | length > 0 else [])
+        + ['-i', public_key_file,
+           '-p', hostvars[inventory_hostname].ansible_port | default(22) | string,
+           user_name ~ '@' ~ target_host,
+           'sudo', '-n', '/usr/bin/true']
+      }}
+  vars:
+    validate_identity_agent: "{{ lookup('ansible.builtin.env', 'VALIDATE_SSH_IDENTITY_AGENT') | default('', true) }}"
   delegate_to: localhost
   become: false
   changed_when: false
