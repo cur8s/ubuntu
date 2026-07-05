@@ -67,8 +67,9 @@ in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`,
   (drive it from root with `mise -C`).
 - objects: `vm` (the machine, provider plane), `host` (baseline
   operations on the managed system — each task runs its `cur8s.ubuntu.*`
-  playbook), `ssh` (a shell, by account), `test` (examples, and the
-  scenario chain).
+  playbook; `host:check` is converge in check mode, the drift alarm),
+  `ssh` (a shell, by account), `test` (examples, and the scenario
+  chain).
 - provider workflows with no object: `prep` (one-time groundwork), `up`
   (provision + converge). Workstation-scoped: `clean`, `default`, and
   the `test:integration:` family, which drives the integration folders

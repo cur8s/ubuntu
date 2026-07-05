@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Is anything drifting? The converge report with nothing enforced"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+ssh_task_preamble
+
+droplet_playbook converge --check --diff

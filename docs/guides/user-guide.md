@@ -145,6 +145,53 @@ without enforcement, add `--check --diff`. If your network's IPS drops
 SSH bursts, space out SSH-heavy runs (the collection needs nothing
 special; pace them however your scheduler allows).
 
+**Keep it conformant** — nothing runs on your hosts and nothing runs by
+itself: the baseline holds because converge runs, and the recap is the
+health check. Ad hoc is the default posture:
+
+```sh
+ansible-playbook --check --diff -i inventory cur8s.ubuntu.converge  # drift alarm: names any drift, changes nothing
+ansible-playbook -i inventory cur8s.ubuntu.converge                 # enforce
+```
+
+The alarm has two volumes: ordinary drift shows as `changed!=0` with the
+diff naming it; drifted *SSH policy* fails the check run outright,
+because the effective-configuration assert verifies reality even in
+check mode. Either way the exit tells the story and nothing was
+touched.
+
+If you want the loop continuous, schedule converge in your environment
+repository's CI and alert on `changed!=0` — the automation key living in
+CI is exactly the exposure the two-account split was designed for
+(RFC-004: a CI compromise never costs break-glass access). A minimal
+GitHub Actions shape (a sketch — your environment repository owns the
+real one, including known_hosts and key handling):
+
+```yaml
+on:
+  schedule:
+    - cron: "17 6 * * *"
+jobs:
+  converge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ansible-galaxy collection install -r requirements.yml
+      - name: Converge; any change is the drift alarm
+        env:
+          ANSIBLE_PUB_KEY: keys/ubuntu-ansible.pub
+          SYSADMIN_PUB_KEY: keys/ubuntu-sysadmin.pub
+        run: |
+          eval "$(ssh-agent)" && ssh-add - <<< "${{ secrets.ANSIBLE_PRIVATE_KEY }}"
+          ansible-playbook -i inventory cur8s.ubuntu.converge | tee converge.log
+          ! grep -qE 'changed=[1-9]' converge.log
+```
+
+Deliberately unsupported: `ansible-pull`, where every host cron-pulls
+the repository and converges itself. That is an agent in a trench coat
+— git, credentials, and a schedule on every managed host — and it
+inverts the agentless trust model this collection is built on.
+
 **Patch** — deliberate full patching (the automatic baseline covers
 security updates only):
 
