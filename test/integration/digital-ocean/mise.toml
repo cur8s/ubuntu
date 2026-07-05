@@ -48,3 +48,5 @@ CLOUD_INIT_FILE = "{{config_root}}/.generated/cloud-init/user-data.yaml"
 # Seconds to pause before SSH-heavy tasks; set >0 (e.g. 120) behind an
 # IPS/rate-limiter that drops SSH bursts.
 SSH_SPACING_SECONDS = "0"
+# How long vm:wait rides out the first boot (dist-upgrade + reboot).
+CLOUD_INIT_WAIT_TIMEOUT_SECONDS = "1200"

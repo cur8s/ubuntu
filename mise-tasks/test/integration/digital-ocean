@@ -17,8 +17,6 @@ on_exit() {
   echo "  mise -C test/integration/digital-ocean run vm:status    # inspect" >&2
   echo "  mise -C test/integration/digital-ocean run vm:destroy   # when done" >&2
 }
-trap on_exit EXIT
-
 echo "==> preflight"
 doctl account get >/dev/null
 if [ -n "$(run vm:ip | tr -d '[:space:]')" ]; then
@@ -28,6 +26,9 @@ fi
 
 echo "==> prep (custody keys; expect a 1Password approval)"
 run prep
+
+# From here on a droplet may exist: arm keep-on-failure forensics.
+trap on_exit EXIT
 
 echo "==> provision: create, then ride out the first boot"
 run vm:create

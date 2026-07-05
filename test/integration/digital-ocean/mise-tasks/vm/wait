@@ -6,9 +6,10 @@ ssh_task_preamble
 
 # Resolve the address once; probing through droplet_ip would hit the
 # DigitalOcean API on every retry.
-droplet_address="$(droplet_ip)"
+droplet_address="$(droplet_ip_required)"
 droplet_probe() {
   ssh \
+    -o UserKnownHostsFile="$MISE_CONFIG_ROOT/.generated/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
     -o IdentitiesOnly=yes \
     -o ConnectTimeout=10 \

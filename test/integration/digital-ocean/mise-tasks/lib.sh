@@ -9,6 +9,19 @@ droplet_ip() {
   doctl compute droplet list "$DROPLET_NAME" --format PublicIPv4 --no-header
 }
 
+# droplet_ip, but fail loudly when no droplet exists. droplet_ip itself
+# stays empty-on-absent for the callers that want absence (vm:ip,
+# vm:status, the integration test's preflight); everything that is about
+# to SSH somewhere goes through this.
+droplet_ip_required() {
+  _required_addr="$(droplet_ip)"
+  if [ -z "$_required_addr" ]; then
+    echo "No droplet named $DROPLET_NAME exists (create one: mise run up)." >&2
+    exit 1
+  fi
+  printf '%s' "$_required_addr"
+}
+
 # Preamble for SSH-heavy tasks: optional IPS spacing + ansible temp dir.
 ssh_task_preamble() {
   sleep "${SSH_SPACING_SECONDS:-0}"
@@ -39,18 +52,23 @@ droplet_playbook() {
   _playbook="cur8s.ubuntu.$1"
   shift
   ensure_collection
-  ansible-playbook -i "$(droplet_ip)," "$_playbook" "$@"
+  # Assignment, not argument-position substitution: under set -e a failed
+  # substitution in an argument is masked; in an assignment it aborts.
+  _playbook_addr="$(droplet_ip_required)"
+  ansible-playbook -i "$_playbook_addr," "$_playbook" "$@"
 }
 
 # Interactive SSH to the droplet: droplet_ssh <user> <public-key-file>
 # The identity file is the PUBLIC key: ssh offers it and the vault's SSH
 # agent signs — the private half never touches disk.
 droplet_ssh() {
+  _ssh_addr="$(droplet_ip_required)"
   exec ssh \
+    -o UserKnownHostsFile="$MISE_CONFIG_ROOT/.generated/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
     -o IdentitiesOnly=yes \
     -i "$2" \
-    "$1@$(droplet_ip)"
+    "$1@$_ssh_addr"
 }
 
 # Block until cloud-init reports done, riding across the first-boot reboot.
@@ -63,6 +81,12 @@ wait_for_cloud_init() {
 
   _wait_until_done() {
     until "$_wait_probe" cloud-init status --wait >/dev/null 2>&1; do
+      # A reachable host whose cloud-init landed in the error state will
+      # never turn done: fail now instead of spinning out the deadline.
+      if "$_wait_probe" cloud-init status 2>/dev/null | grep -q 'status: error'; then
+        echo "cloud-init finished in the error state; inspect the host's /var/log/cloud-init.log." >&2
+        exit 1
+      fi
       if [ "$(date +%s)" -ge "$_wait_deadline" ]; then
         echo "Timed out waiting for cloud-init to finish." >&2
         exit 1

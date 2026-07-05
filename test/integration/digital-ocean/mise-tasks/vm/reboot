@@ -1,4 +1,9 @@
 #!/usr/bin/env sh
 #MISE description="Provider-level, no validation (prefer host:validate-reboot)"
 set -eu
-doctl compute droplet-action reboot "$(doctl compute droplet list "$DROPLET_NAME" --format ID --no-header)" --wait
+droplet_id="$(doctl compute droplet list "$DROPLET_NAME" --format ID --no-header)"
+if [ -z "$droplet_id" ]; then
+  echo "No droplet named $DROPLET_NAME exists (create one: mise run up)." >&2
+  exit 1
+fi
+doctl compute droplet-action reboot "$droplet_id" --wait

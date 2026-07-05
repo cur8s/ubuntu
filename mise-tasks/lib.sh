@@ -66,6 +66,10 @@ qemu_inventory() {
 # Exports the lab key env first, so playbooks that read *_PUB_KEY resolve
 # the throwaway lab keys, never the vault's.
 qemu_ansible_playbook() {
+  if [ ! -d "$QEMU_VM_DIR" ]; then
+    echo "No local QEMU VM exists (mise run qemu:up)." >&2
+    return 1
+  fi
   qemu_keys_env
   # IdentityAgent is pinned explicitly: 1Password's ~/.ssh/config sets a
   # global IdentityAgent, which overrides SSH_AUTH_SOCK — without the pin,
@@ -74,7 +78,7 @@ qemu_ansible_playbook() {
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 
-# Run one example against a target lab: example_run <example> <do|qemu>.
+# Run one example against a target: example_run <example> <do|qemu>.
 # The do target is the integration droplet; its address arrives via
 # INTEGRATION_DROPLET_ADDRESS (exported by the test:integration wrappers,
 # which also point the key env vars at the folder's extracted keys).
@@ -103,6 +107,12 @@ wait_for_cloud_init() {
 
   _wait_until_done() {
     until "$_wait_probe" cloud-init status --wait >/dev/null 2>&1; do
+      # A reachable VM whose cloud-init landed in the error state will
+      # never turn done: fail now instead of spinning out the deadline.
+      if "$_wait_probe" cloud-init status 2>/dev/null | grep -q 'status: error'; then
+        echo "cloud-init finished in the error state; inspect the console log." >&2
+        exit 1
+      fi
       if [ "$(date +%s)" -ge "$_wait_deadline" ]; then
         echo "Timed out waiting for cloud-init to finish." >&2
         exit 1
@@ -122,7 +132,7 @@ wait_for_cloud_init() {
   echo "cloud-init is done; the VM is ready."
 }
 
-# Test one example against a lab: example_test <name> <do|qemu>.
+# Test one example against a target: example_test <name> <do|qemu>.
 # The examples' contract: the second run is a full no-op. Second-run output
 # goes to a log so a clean pass stays quiet; recap lines are the only place
 # ansible prints "changed=N", so grepping the log for a non-zero count is
@@ -149,7 +159,7 @@ example_test() {
   grep -hA3 "PLAY RECAP" "$_second_log" | sed "s/^/    /"
 }
 
-# Test every example against a lab: example_test_all <do|qemu>. Coverage
+# Test every example against a target: example_test_all <do|qemu>. Coverage
 # comes from globbing examples/ — a missing per-example task wrapper can
 # never silently drop an example from the suite; it only earns a warning.
 example_test_all() {
