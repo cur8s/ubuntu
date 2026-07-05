@@ -6,7 +6,7 @@ The baseline is intentionally small. A host conforms to it when the following ho
 
 **Access accounts.** The fixed `ansible` and `sysadmin` accounts exist with locked passwords, their authorized ed25519 keys, and passwordless sudo, as defined by RFC-004: Identity and Trust.
 
-**OpenSSH policy.** The baseline sshd drop-in is in force: public-key authentication only, password and keyboard-interactive authentication disabled, no root password login, X11 forwarding disabled, idle-session keepalive. Root public-key login remains available only as the provider bootstrap path, until bootstrap retirement (RFC-004).
+**OpenSSH policy.** The baseline sshd drop-in is in force: public-key authentication only, password and keyboard-interactive authentication disabled, authorized keys read from `.ssh/authorized_keys` alone (the deprecated `authorized_keys2` fallback is disabled — one less place a door can hide), no root password login, X11 forwarding disabled, idle-session keepalive. Root public-key login remains available only as the provider bootstrap path, until bootstrap retirement (RFC-004).
 
 **Automatic security updates.** unattended-upgrades applies Ubuntu security updates automatically, and reboots are never automatic: a reboot is a deliberate operator or converge action, never a surprise from a background daemon. This pin is kept even though it currently matches the upstream default, because a silently flipped default here means unplanned production reboots — the one silent change with real blast radius.
 
