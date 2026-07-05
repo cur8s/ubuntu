@@ -3,7 +3,7 @@
 This folder runs the `cur8s.ubuntu` baseline on a real DigitalOcean
 droplet, end to end: provision a host born conformant, converge it,
 prove it survives a reboot, close the provider's bootstrap door, rotate
-keys. It is two things at once:
+keys. It is three things at once:
 
 - **This repository's integration test.** The root `test:integration:digital-ocean`
   task drives the tasks here against a real droplet and asserts the
@@ -14,6 +14,9 @@ keys. It is two things at once:
   own mise config, helpers, and state — so you can copy the directory
   into your own environment and have a working day-one operational
   surface. See "Copying this folder" below.
+- **A disposable-VM workflow.** The same tasks serve "spin up a real VM
+  for a few hours": create, converge, work, destroy. Nothing here
+  assumes the droplet exists only to be tested.
 
 Everything generated lands in the folder's own git-ignored `.generated/`.
 

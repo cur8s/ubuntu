@@ -15,7 +15,9 @@ and release binaries are selected through an architecture map (see
 The catalog is deliberately small: three examples that each demonstrate
 a distinct technique set, with no technique shown twice. Patterns the
 catalog does not demonstrate live in the user guide's "Installing deb
-packages" reference (docs/guides/user-guide.md).
+packages" reference (docs/guides/user-guide.md). A new example earns
+its place only by demonstrating a technique the catalog does not
+already show; anything else belongs in that reference.
 
 ## Index
 

@@ -32,3 +32,12 @@ the recovery mechanism when the Management Network is unavailable.
 Tailscale is an implementation choice rather than an architectural
 requirement. Any implementation is acceptable provided it preserves these
 properties.
+
+Interaction with the doors model (RFC-005: Accounts and Access):
+identity-aware SSH is a second access plane. `report_access` reports the
+OpenSSH doors — key material on the baseline accounts — and a management
+network's SSH, governed by tailnet ACLs, is invisible to it. That is by
+design: the second plane is a deliberate layer with its own control
+plane, joined and left as a standalone act, never touched by converge.
+While the Management Network is active, the honest access answer is the
+report plus the tailnet's access controls.

@@ -8,6 +8,7 @@ the words are validated against the system as it will actually ship.
 
 ## 1. Playbook review (code first, on purpose)
 - [ ] Read every collection playbook, shared task file, and role with fresh eyes; surface and resolve any concerns (structure, naming, failure modes, output readability). Code changes are unrestricted here — which is exactly why the code reviews precede the docs and RFC reads: what those describe will already be final.
+- [ ] Multi-host proof: run converge, report_access, and a rotation against one inventory holding both scenario VMs — every proof so far is N=1; the product claim is a fleet.
 - [ ] Deep-review findings queued for decision (all adversarially verified):
   - C17: locking any account deletes /etc/sudoers.d/90-cloud-init-users wholesale — on a host where that combined file grants several provisioning-time accounts, locking one removes sudo from all. Recommendation: strip only the named account's lines; delete the file only when empty.
   - C11/C18: `cur8s.ubuntu.patch` runs apt's safe upgrade (`upgrade: yes`), but RFC-011 and the docs promise "a full package upgrade." Recommendation: reword the promise to "package upgrade (never removes packages, never reboots)" rather than switching to dist-upgrade on running hosts.
@@ -26,6 +27,7 @@ the words are validated against the system as it will actually ship.
 ## 5. RFC review and approval round
 - [ ] Read all twelve RFCs (000–011) end to end and approve each. Check the reading-order arc holds, cross-references are right, statuses are honest, and nothing normative contradicts the code as built — which by this point is settled. Amendments land as part of this item.
 - [ ] Deep-review finding C3 (verified): RFC-007 says the first converge closes the pre-baseline door's password authentication, while RFC-005/008 state converge "never removes access" absolutely. Decide the wording refinement — recommendation: the never-removes guarantee is about accounts and their key material; enforcing the global sshd policy IS the baseline's own claim, and RFC-005/008 should say so explicitly.
+- [ ] Queued amendments from the 2026-07-05 ownership discussions (wording agreed, land as reviewed RFC commits here): RFC-002 — record the ownership doctrine: floors vs practices (hygiene churns, floors freeze), the version-pressure test (if changing your mind about X forces a release of Y, X does not belong in Y), and composition reaches only upward (the baseline never tests or promises a downstream layer). RFC-005 — boundary sentence: report_access reports the OpenSSH doors; other access planes (e.g. a management network's identity-aware SSH) are deliberate layers with their own control planes, outside the report's scope (consumer-facing versions already live in user-guide §7 and docs/notes/management-network.md).
 
 ## 6. First release (RFC-010; after the review pass)
 - [ ] Deep-review finding C14: `galaxy.yml` declares `license: []` and no LICENSE file exists anywhere — the first release would ship with no license grant. Choose the license before tagging.

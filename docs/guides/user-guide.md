@@ -96,6 +96,10 @@ On that first converge only the converge-only pins report `changed`
 (unattended-upgrades and journald); accounts and SSH policy are already
 no-ops because cloud-init applied them from the same sources.
 
+The same rendered user-data serves any platform that speaks cloud-init —
+a KubeVirt VM consumes it as a NoCloud volume unchanged. Platforms with
+no cloud-init at all are not provisioned; they are adopted (§5).
+
 The executable version of this whole section, DigitalOcean edition, is
 `test/integration/digital-ocean/` in the collection repository — every
 step above as a runnable task, ready to copy into your environment.
@@ -103,8 +107,12 @@ step above as a runnable task, ready to copy into your environment.
 ## 5. Hosts that already exist (adoption)
 
 Anything not born via cloud provisioning — bare metal however installed,
-inherited servers — enters through adoption (RFC-007), connected as
-whatever pre-baseline account the host has:
+inherited servers — enters through adoption (RFC-007). For physical
+machines this is the designed path, not a fallback: install Ubuntu
+Server by hand, then adopt. The baseline deliberately ships no
+bare-metal install automation — an install rare enough to do by hand
+does not earn permanent surface. Connect as whatever pre-baseline
+account the host has:
 
 ```sh
 # ANSIBLE_PUB_KEY and SYSADMIN_PUB_KEY must be exported, as in every
@@ -265,6 +273,20 @@ runnable demonstrations of the pattern — docker (vendor apt repo), zot
 join of an access network) — each a `site.yml` that composes the
 baseline with a purpose, ready to drop into an environment repository
 beside your inventory and `requirements.yml`.
+
+Where should a thing you build live? Apply the version-pressure test:
+if changing your mind about it would force a release of the artifact it
+lives in, it belongs elsewhere. A layer with a real contract of its own
+(a Kubernetes distribution, a database platform) earns its own
+repository, versioned and proven like this one, consuming the baseline
+the way `test/integration/digital-ocean/` does. Site policy — the
+access network all *your* hosts join, security scanners, fleet
+configuration — lives in your environment repository, applied to
+inventory groups: "on all my hosts" means your inventory's `all` group,
+not a wider collection. The baseline itself is a floor, not a practice;
+it releases when Ubuntu-level facts change, never because a layer above
+it changed its mind — and composition reaches only upward, so the
+baseline never tests or promises any particular layer.
 
 ## 8. Installing deb packages (reference)
 
