@@ -78,8 +78,8 @@ and Access).
 
 - `mise run host:converge` — enforce the baseline any time;
   `changed=0` means conformant.
-- `mise run host:update` — full package update; never reboots, reports
-  if one is pending.
+- `mise run host:patch` — apply every pending package upgrade; never
+  reboots, reports if one becomes pending.
 - `mise run ssh:ansible` / `ssh:sysadmin` — a shell, by account.
 
 ## Rotating a baseline key

@@ -55,7 +55,7 @@ always present, locked passwords, key-only SSH, passwordless sudo.
 | Playbook | Does |
 | --- | --- |
 | `cur8s.ubuntu.converge` | enforce the baseline; `changed=0` means conformant |
-| `cur8s.ubuntu.update` | full package update; never reboots |
+| `cur8s.ubuntu.patch` | full package upgrade; never reboots |
 | `cur8s.ubuntu.validate_reboot` | acceptance gate: reboot, re-verify everything |
 | `cur8s.ubuntu.report_access` | read-only access surface; always `changed=0` |
 | `cur8s.ubuntu.lock_accounts` | close named accounts' login doors |
@@ -141,11 +141,11 @@ side effect, so a scheduled converge can run blind. For detection
 without enforcement, add `--check --diff`. If your network drops SSH
 bursts, set `SSH_SPACING_SECONDS` to pause before SSH-heavy runs.
 
-**Update** — deliberate full patching (the automatic baseline covers
+**Patch** — deliberate full patching (the automatic baseline covers
 security updates only):
 
 ```sh
-ansible-playbook -i inventory cur8s.ubuntu.update
+ansible-playbook -i inventory cur8s.ubuntu.patch
 ```
 
 It never reboots; if a reboot becomes pending it says so and defers to
@@ -163,7 +163,7 @@ ansible-playbook -i inventory cur8s.ubuntu.report_access
 ```
 
 Read-only, always `changed=0`: every door (keys, unlocked passwords),
-every privilege holder, foreign keys on the baseline accounts. Doorless
+every privilege holder, unexpected keys on the baseline accounts. Doorless
 service accounts never appear — the report is filtered by doors, not
 accounts (RFC-005: Accounts and Access).
 

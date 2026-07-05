@@ -1,6 +1,6 @@
 ---
 # Read-only report of each host's access surface (RFC-005: Accounts and
-# Access): every door, every privilege holder, foreign keys on the baseline
+# Access): every door, every privilege holder, unexpected keys on the baseline
 # accounts. Observes, never enforces — always changed=0 — and deliberately
 # carries no release guard: observation refuses nothing (converge is where
 # the guard lives). Run it whenever the question is "who can get into this

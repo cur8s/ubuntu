@@ -7,7 +7,7 @@ This directory is the installable Ansible collection. Entry points:
 
 - `cur8s.ubuntu.converge` — enforce the baseline.
 - `cur8s.ubuntu.validate_reboot` — the reboot acceptance gate.
-- `cur8s.ubuntu.update` — operator-invoked full package update (never reboots).
+- `cur8s.ubuntu.patch` — operator-invoked patching: full package upgrade (never reboots).
 
 Everything else — architecture RFCs, the guides, consumption
 examples, and the contributor test harness — lives at the repository root:

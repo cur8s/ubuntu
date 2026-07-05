@@ -1,7 +1,7 @@
 ---
 # Renders one host's access surface (RFC-005: Accounts and Access): every
 # door (authorized_keys, unlocked passwords), every privilege holder, and
-# foreign keys on the baseline accounts. Read-only by contract — every task
+# unexpected keys on the baseline accounts. Read-only by contract — every task
 # reports changed=false — and filtered by doors, not accounts: a healthy
 # doorless service account never appears here.
 #
@@ -53,7 +53,7 @@
   register: report_sudoers_grants
 
 # ==========================================================================
-# Baseline accounts: foreign keys
+# Baseline accounts: unexpected keys
 # ==========================================================================
 - name: Read baseline account authorized_keys
   ansible.builtin.shell: |
@@ -68,8 +68,8 @@
 
 - name: Classify baseline account keys
   ansible.builtin.set_fact:
-    report_foreign_keys: >-
-      {{ report_foreign_keys | default({}) | combine({
+    report_unexpected_keys: >-
+      {{ report_unexpected_keys | default({}) | combine({
            item.report_account:
              item.stdout_lines
              | reject('match', '^\s*(#|$)')
@@ -104,6 +104,6 @@
          + ['sudoers.d grants:']
          + (report_sudoers_grants.stdout_lines | map('regex_replace', '^', '  ') | list
             or ['  (none)'])
-         + ['foreign keys on baseline accounts:']
-         + (['  ansible: ' ~ (report_foreign_keys['ansible'] | length),
-             '  sysadmin: ' ~ (report_foreign_keys['sysadmin'] | length)]) }}
+         + ['unexpected keys on baseline accounts:']
+         + (['  ansible: ' ~ (report_unexpected_keys['ansible'] | length),
+             '  sysadmin: ' ~ (report_unexpected_keys['sysadmin'] | length)]) }}

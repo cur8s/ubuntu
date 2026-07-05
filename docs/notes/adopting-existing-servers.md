@@ -49,7 +49,7 @@ Hard failures (not adoptable until a human acts):
   rules would be inert)
 - squatted baseline accounts: `ansible` or `sysadmin` exists with
   authorized_keys the baseline didn't put there — refuse and report the
-  foreign keys; never merge into or strip an unrecognized account. An
+  unexpected keys; never merge into or strip an unrecognized account. An
   account matching baseline shape reports as "already adopted".
 
 Warnings (adoptable; know what happens next):
@@ -86,7 +86,7 @@ proves the check catches what it claims.
 ## Deferred questions surfaced by this design
 
 - **Key-drift reversion on baseline accounts**: `authorized_key` is not
-  `exclusive`, so converge today does not remove foreign keys added to
+  `exclusive`, so converge today does not remove unexpected keys added to
   `ansible`/`sysadmin` after birth. Adoption-time squatting is handled by
   refusal (above); whether routine converge should enforce exclusive keys
   is a separate hardening decision.

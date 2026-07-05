@@ -21,5 +21,5 @@ Security-only update origins are already the distro default and are
 trusted, not pinned.
 
 Non-security updates are deliberately out of scope: apply them with the
-operator-invoked `cur8s.ubuntu.update` playbook, and activate pending
+operator-invoked `cur8s.ubuntu.patch` playbook, and activate pending
 kernels through the validating reboot path (`cur8s.ubuntu.validate_reboot`).

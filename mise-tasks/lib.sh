@@ -211,7 +211,7 @@ assert_changed_zero() {
 
 # Assert a captured report-access log shows an access surface of exactly
 # the two baseline doors — ssh-key doors ansible+sysadmin only, no
-# unlocked-password doors, no foreign keys: assert_two_doors <log>
+# unlocked-password doors, no unexpected keys: assert_two_doors <log>
 assert_two_doors() {
   _doors="$(awk '/doors, ssh keys/{f=1;next} /doors, unlocked passwords/{f=0} f' "$1" \
     | tr -d '",' | awk '{print $1}' | grep -v '^(none)$' | sort | paste -s -d' ' -)"
@@ -224,7 +224,7 @@ assert_two_doors() {
     exit 1
   fi
   if ! grep -q 'ansible: 0' "$1" || ! grep -q 'sysadmin: 0' "$1"; then
-    echo "FAIL: foreign keys on a baseline account." >&2
+    echo "FAIL: unexpected keys on a baseline account." >&2
     exit 1
   fi
   echo "Access surface: exactly ansible + sysadmin."

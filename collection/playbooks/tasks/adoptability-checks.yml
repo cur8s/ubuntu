@@ -93,18 +93,18 @@
     account_exists: "{{ item.stdout_lines[0] == 'EXISTS' }}"
     key_lines: "{{ item.stdout_lines[1:] | reject('match', '^\\s*(#|$)') | list }}"
     expected_prefix: "{{ (lookup('ansible.builtin.file', item.adopt_probe.key_file).split())[0:2] | join(' ') }}"
-    foreign_keys: "{{ key_lines | reject('search', expected_prefix | regex_escape) | list }}"
+    unexpected_keys: "{{ key_lines | reject('search', expected_prefix | regex_escape) | list }}"
     matching_keys: "{{ key_lines | select('search', expected_prefix | regex_escape) | list }}"
-    account_ok: "{{ (not account_exists) or (foreign_keys | length == 0 and matching_keys | length > 0) }}"
+    account_ok: "{{ (not account_exists) or (unexpected_keys | length == 0 and matching_keys | length > 0) }}"
     account_state: >-
       {{ 'absent — adopt will create it' if not account_exists
          else ('baseline shape — already adopted' if account_ok else 'SQUATTED') }}
     account_problem: >-
       squatted account {{ item.adopt_probe.name }}: exists with
-      {{ foreign_keys | length }} key(s) the baseline did not put there{{
+      {{ unexpected_keys | length }} key(s) the baseline did not put there{{
       ' and no baseline key' if matching_keys | length == 0 else '' }} —
       never merged into, never stripped; a human resolves this. A stale key
-      from an earlier rotation reads as foreign on purpose (RFC-007).
+      from an earlier rotation reads as unexpected on purpose (RFC-007).
   loop: "{{ adopt_account_probes.results }}"
   loop_control:
     label: "{{ item.adopt_probe.name }}"

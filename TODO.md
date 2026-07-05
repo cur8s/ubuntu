@@ -26,9 +26,6 @@ Completed work lives in git history and the RFC Revisions blocks.
 
 ## 6. Playbook review
 - [ ] Read every collection playbook, shared task file, and role with fresh eyes; surface and resolve any concerns (structure, naming, failure modes, output readability). Code changes are unrestricted here — that freedom is why this comes after docs.
-- [ ] Terminology fixes from the 2026-07-04 audit, landed here while renames are still free:
-  - **"foreign keys" → "unexpected keys"** (decided): the phrase collides with the dominant database meaning; the rotation refusal already says "any key the baseline does not expect." Sweep the report output, adoption verdicts, integration/scenario assert messages, and the RFC-005/007 prose.
-  - **`update` → `patch`?** (decide during review): `apt update` refreshes indexes and installs nothing, so `cur8s.ubuntu.update` running a full upgrade is ambiguous to platform-fluent humans and agents; ops-industry standard is "patch." If renamed: playbook FQCN, RFC-011, both play wrappers, guides. If kept: the description leads with "full apt upgrade."
 
 ## 7. mise harness review
 - [ ] Review the task grammar end to end: task names and descriptions, `lib.sh`, hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set. Includes the integration folder's child config (its no-root-`[env]` discipline especially).

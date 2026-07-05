@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-#MISE description="Full package update; never reboots, reports if one is pending"
+#MISE description="Apply every pending package upgrade; never reboots, reports if a reboot becomes pending"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
-droplet_playbook update
+droplet_playbook patch
