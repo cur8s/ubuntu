@@ -2,7 +2,7 @@
 # zot OCI registry from a GitHub release binary, run as a systemd service.
 #
 # Techniques demonstrated:
-#   - install a release binary (no package): arch mapping + get_url
+#   - install a release binary (no package): detected arch + get_url
 #   - dedicated system user/group and directory layout for a service
 #   - config file rendered from a structured var (to_nice_json)
 #   - hand-written systemd unit with resource limits + daemon_reload
@@ -30,9 +30,6 @@
     zot_log_dir: /var/log/zot
     zot_http_port: "5000"
     zot_registry_url: "http://127.0.0.1:{{ zot_http_port }}"
-    zot_architecture_map:
-      amd64: amd64
-      arm64: arm64
     zot_config:
       distSpecVersion: "1.0.1"
       storage:
@@ -50,14 +47,13 @@
         output: "{{ zot_log_dir }}/zot.log"
 
   tasks:
+    # zot names its release assets by dpkg architecture (amd64/arm64), so
+    # the detected value is used directly. Projects that name assets
+    # x86_64/aarch64 need a dpkg-arch -> asset-name mapping here.
     - name: Read dpkg architecture
       ansible.builtin.command: dpkg --print-architecture
       register: dpkg_architecture
       changed_when: false
-
-    - name: Select zot release architecture
-      ansible.builtin.set_fact:
-        zot_architecture: "{{ zot_architecture_map[dpkg_architecture.stdout] | default(dpkg_architecture.stdout) }}"
 
     - name: Ensure download dependencies are present
       ansible.builtin.apt:
@@ -105,7 +101,7 @@
 
     - name: Install zot release binary
       ansible.builtin.get_url:
-        url: "https://github.com/project-zot/zot/releases/download/v{{ zot_version }}/zot-linux-{{ zot_architecture }}"
+        url: "https://github.com/project-zot/zot/releases/download/v{{ zot_version }}/zot-linux-{{ dpkg_architecture.stdout }}"
         dest: "{{ zot_binary_path }}"
         owner: root
         group: root

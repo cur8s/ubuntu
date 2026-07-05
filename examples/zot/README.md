@@ -6,8 +6,9 @@ This is the "no package, just a binary" pattern.
 
 Techniques demonstrated:
 
-- **Release binary install** — `get_url` from a GitHub release, with a dpkg
-  architecture → release architecture mapping.
+- **Release binary install** — `get_url` from a GitHub release, selected by
+  the detected dpkg architecture (zot names assets `amd64`/`arm64`; projects
+  naming assets `x86_64`/`aarch64` need a mapping in between).
 - **Dedicated system user/group** (`nologin`, no home) and a service
   directory layout (config, data, logs) with correct ownership.
 - **Config rendered from a structured var** — the config lives as YAML in

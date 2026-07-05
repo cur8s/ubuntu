@@ -9,7 +9,7 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 
 Every example must work on both supported architectures, amd64 and arm64
 (RFC-010: Release and Versioning): repo lines declare both architectures,
-and release binaries are selected through an architecture map (see
+and release binaries are selected by the detected architecture (see
 `zot/`). Nothing may assume an architecture it did not detect.
 
 The catalog is deliberately small: three examples that each demonstrate
