@@ -3,9 +3,6 @@
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env
-
-qemu_probe() {
-  qemu_ssh ansible "$ANSIBLE_PUB_KEY" "$@"
-}
-
-wait_for_cloud_init qemu_probe
+# The lab's private keys sit beside their .pub files, so the harness can
+# probe with the file directly — no agent involved.
+qvm wait ansible "$QEMU_KEYS_DIR/ubuntu-ansible"

@@ -2,37 +2,5 @@
 #MISE description="Daemonized; serial output to console.log (next: vm:wait)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-if [ ! -d "$QEMU_VM_DIR" ]; then
-  echo "No local QEMU VM found (run mise run vm:create first)." >&2
-  exit 1
-fi
-if [ -f "$QEMU_VM_DIR/qemu.pid" ] && kill -0 "$(cat "$QEMU_VM_DIR/qemu.pid")" 2>/dev/null; then
-  echo "The local QEMU VM is already running (pid $(cat "$QEMU_VM_DIR/qemu.pid"))." >&2
-  exit 1
-fi
-
-# arm64 boots via EDK2 pflash; amd64 uses QEMU's default SeaBIOS.
-set --
-if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
-  set -- \
-    -drive if=pflash,format=raw,readonly=on,file="$QEMU_EFI_CODE" \
-    -drive if=pflash,format=raw,file="$QEMU_VM_DIR/efivars.fd"
-fi
-"$QEMU_SYSTEM_BIN" \
-  -machine "$QEMU_MACHINE" \
-  -accel "$QEMU_ACCEL" \
-  -cpu host \
-  -smp "$QEMU_CPUS" \
-  -m "$QEMU_MEMORY" \
-  "$@" \
-  -drive if=virtio,format=qcow2,file="$QEMU_VM_DIR/disk.qcow2" \
-  -drive if=virtio,format=raw,readonly=on,file="$QEMU_VM_DIR/seed.iso" \
-  -netdev "user,id=net0,hostfwd=tcp:127.0.0.1:${QEMU_SSH_PORT}-:22" \
-  -device virtio-net-pci,netdev=net0 \
-  -display none \
-  -daemonize \
-  -pidfile "$QEMU_VM_DIR/qemu.pid" \
-  -serial "file:$QEMU_VM_DIR/console.log"
-
-echo "VM booting: SSH forwarded to 127.0.0.1:$QEMU_SSH_PORT (console: mise run vm:console)"
+qvm boot
 echo "First boot dist-upgrades and reboots; mise run vm:wait blocks until it is ready."

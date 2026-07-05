@@ -8,6 +8,21 @@ ssh_task_preamble() {
   mkdir -p "$ANSIBLE_LOCAL_TEMP"
 }
 
+# Run the vendorable VM harness (scripts/qemu-vm.sh) with the lab's
+# QEMU_* settings mapped onto its QVM_* interface. QVM_NAME and
+# QVM_USER_DATA may be preset by the caller (scenario creates do).
+qvm() {
+  QVM_DIR="$QEMU_VM_DIR" \
+  QVM_CACHE_DIR="$QEMU_CACHE_DIR" \
+  QVM_NAME="${QVM_NAME:-$QEMU_VM_NAME}" \
+  QVM_SSH_PORT="$QEMU_SSH_PORT" \
+  QVM_CPUS="$QEMU_CPUS" \
+  QVM_MEMORY="$QEMU_MEMORY" \
+  QVM_DISK_SIZE="$QEMU_DISK_SIZE" \
+  QVM_WAIT_TIMEOUT_SECONDS="${CLOUD_INIT_WAIT_TIMEOUT_SECONDS:-1200}" \
+  sh "$MISE_CONFIG_ROOT/scripts/qemu-vm.sh" "$@"
+}
+
 # Point the key env vars at the QEMU lab's throwaway keypairs, generating
 # them on first use (RFC-004: ephemeral lab credentials — they open nothing
 # but a disposable VM on a loopback port, live git-ignored, and die with
@@ -97,41 +112,6 @@ example_run() {
         ;;
     esac
   )
-}
-
-# Block until cloud-init reports done, riding across the first-boot reboot.
-# $1 names a probe function that runs a remote command on the lab VM (the
-# remote command is appended as arguments). Timeout is
-# CLOUD_INIT_WAIT_TIMEOUT_SECONDS (default 1200).
-wait_for_cloud_init() {
-  _wait_probe="$1"
-  _wait_deadline=$(( $(date +%s) + ${CLOUD_INIT_WAIT_TIMEOUT_SECONDS:-1200} ))
-
-  _wait_until_done() {
-    until "$_wait_probe" cloud-init status --wait >/dev/null 2>&1; do
-      # A reachable VM whose cloud-init landed in the error state will
-      # never turn done: fail now instead of spinning out the deadline.
-      if "$_wait_probe" cloud-init status 2>/dev/null | grep -q 'status: error'; then
-        echo "cloud-init finished in the error state; inspect the console log." >&2
-        exit 1
-      fi
-      if [ "$(date +%s)" -ge "$_wait_deadline" ]; then
-        echo "Timed out waiting for cloud-init to finish." >&2
-        exit 1
-      fi
-      sleep 10
-    done
-  }
-
-  echo "Waiting for cloud-init to finish (first boot dist-upgrades; this takes minutes)..."
-  _wait_until_done
-  # The first-boot power_state reboot fires the moment cloud-init reports
-  # done, so a success here may be the pre-reboot instance. Let the reboot
-  # land, then require done again on the far side; on a settled VM the
-  # second pass returns immediately.
-  sleep 15
-  _wait_until_done
-  echo "cloud-init is done; the VM is ready."
 }
 
 # Test one example against a target: example_test <name> <do|qemu>.
@@ -242,52 +222,3 @@ assert_two_doors() {
   echo "Access surface: exactly ansible + sysadmin."
 }
 
-# Host-platform selection for the lab VM. The guest architecture follows
-# the host (hvf/KVM cannot cross architectures), acceleration follows the
-# OS: hvf on macOS, KVM on Linux (the CI runner). arm64 boots via EDK2
-# UEFI pflash; amd64 cloud images boot on QEMU's default SeaBIOS with no
-# firmware drives at all. QEMU_IMAGE_URL may be overridden from the
-# environment; by default it tracks the host architecture's image.
-qemu_platform_env() {
-  case "$(uname -m)" in
-    arm64|aarch64) QEMU_GUEST_ARCH="arm64" ;;
-    x86_64)        QEMU_GUEST_ARCH="amd64" ;;
-    *) echo "Unsupported host architecture for the QEMU lab: $(uname -m)" >&2; exit 1 ;;
-  esac
-  if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
-    QEMU_SYSTEM_BIN="qemu-system-aarch64"
-    QEMU_MACHINE="virt"
-    if [ "$(uname -s)" = "Darwin" ]; then
-      QEMU_EFI_CODE="$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd"
-      QEMU_EFI_VARS_TEMPLATE="$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd"
-    else
-      QEMU_EFI_CODE="/usr/share/AAVMF/AAVMF_CODE.fd"
-      QEMU_EFI_VARS_TEMPLATE="/usr/share/AAVMF/AAVMF_VARS.fd"
-    fi
-  else
-    QEMU_SYSTEM_BIN="qemu-system-x86_64"
-    QEMU_MACHINE="q35"
-    QEMU_EFI_CODE=""
-    QEMU_EFI_VARS_TEMPLATE=""
-  fi
-  case "$(uname -s)" in
-    Darwin) QEMU_ACCEL="hvf" ;;
-    *)      QEMU_ACCEL="kvm" ;;
-  esac
-  QEMU_IMAGE_URL="${QEMU_IMAGE_URL:-https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-$QEMU_GUEST_ARCH.img}"
-}
-
-# Build the NoCloud seed ISO (volume label cidata) from a directory:
-# make_seed_iso <seed_dir> <iso_path>. hdiutil on macOS; genisoimage on
-# Linux (the CI workflow installs it).
-make_seed_iso() {
-  if command -v hdiutil >/dev/null 2>&1; then
-    hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
-      -o "$2" "$1"
-  else
-    genisoimage -quiet -output "$2" -volid cidata -joliet -rock "$1"
-  fi
-}
-
-# Every task that sources this library gets the platform selection.
-qemu_platform_env

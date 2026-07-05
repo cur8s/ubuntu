@@ -25,16 +25,15 @@ SSH_SPACING_SECONDS = "0"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 
-# Local QEMU lab (mise-tasks/): Ubuntu cloud image for the host
-# architecture (lib.sh picks image, binary, and acceleration — hvf on
-# macOS, KVM on Linux/CI), first-boot config via a NoCloud seed ISO built
-# from the same rendered cloud-init a cloud host uses.
+# Local QEMU lab: the VM mechanics live in scripts/qemu-vm.sh (a single
+# vendorable file — image, binary, and acceleration follow the host: hvf
+# on macOS, KVM on Linux/CI); the mise tasks wrap it with these settings
+# and the same rendered cloud-init a cloud host uses.
 QEMU_VM_NAME = "ubuntu-qemu-lab"
 QEMU_SSH_PORT = "2222"
 QEMU_CPUS = "4"
 QEMU_MEMORY = "4G"
 QEMU_DISK_SIZE = "20G"
-QEMU_SHA256SUMS_URL = "https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
 QEMU_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
 QEMU_VM_DIR = "{{config_root}}/.generated/qemu/vm"
 # The QEMU lab uses throwaway keypairs generated on the workstation

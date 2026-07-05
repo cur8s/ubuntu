@@ -5,38 +5,12 @@
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"
-if [ -e "$QEMU_VM_DIR" ]; then
-  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run vm:destroy first)." >&2
-  exit 1
-fi
 
 # Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
-# into the lab's own output file — the DigitalOcean integration folder
-# renders its own user-data separately and is never touched.
+# into the lab's own output file; the VM mechanics live in the vendorable
+# scripts/qemu-vm.sh.
 qemu_keys_env
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 
-mkdir -p "$QEMU_VM_DIR"
-
-# Copy-on-write overlay: the cached base image stays pristine, cloud-init's
-# growpart expands the filesystem to the larger virtual size on first boot.
-base_image="$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")"
-qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
-  "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
-
-# NoCloud seed: an ISO labeled "cidata" holding the unchanged rendered
-# user-data plus a minimal meta-data (hdiutil on macOS, genisoimage on
-# Linux -- lib.sh picks).
-seed_dir="$QEMU_VM_DIR/seed"
-mkdir -p "$seed_dir"
-cp "$CLOUD_INIT_FILE" "$seed_dir/user-data"
-printf 'instance-id: %s\nlocal-hostname: %s\n' "$QEMU_VM_NAME" "$QEMU_VM_NAME" \
-  > "$seed_dir/meta-data"
-make_seed_iso "$seed_dir" "$QEMU_VM_DIR/seed.iso"
-
-# Writable UEFI variable store (arm64 only; amd64 boots via SeaBIOS).
-if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
-  cp "$QEMU_EFI_VARS_TEMPLATE" "$QEMU_VM_DIR/efivars.fd"
-fi
-
-echo "VM prepared in $QEMU_VM_DIR (start it with: mise run vm:boot)"
+QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" qvm create
+echo "Next: mise run vm:boot"
