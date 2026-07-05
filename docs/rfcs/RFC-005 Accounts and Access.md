@@ -20,7 +20,7 @@ The baseline owns exactly two doors: `ansible` and `sysadmin` (RFC-004: Identity
 
 ## Every Door Has an Owner
 
-Converge makes the two baseline accounts right; that is the easy half of conformance. The hard half is everyone else: an adopted server arrives with whatever accounts its history left behind, and even a born-conformant fleet accumulates access over the years — a deploy key here, a departed colleague's account there. Judging those needs a rule, and "nothing but the two" cannot be it: that would condemn every healthy service account and outlaw the access layers the baseline deliberately leaves room for (RFC-004: Attribution).
+Converge makes the two baseline accounts right; that is the easy half of conformance. The hard half is everyone else: an adopted server arrives with whatever accounts its history left behind, and even a born-conformant fleet accumulates access over the years — a deploy key here, a departed colleague's account there. Judging those needs a rule, and "nothing but the two" cannot be it: that would condemn every healthy service account and outlaw the access layers the baseline deliberately leaves room for (RFC-004: Identity and Trust, Why Two Named Accounts).
 
 The rule is ownership. A conformant host has the two baseline accounts to specification, and every other element of its access surface is deliberate and owned — by an access layer above the baseline, or by an operator who can say why it exists.
 
