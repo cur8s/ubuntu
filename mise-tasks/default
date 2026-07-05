@@ -18,14 +18,14 @@ cat <<EOF
 ${B}cur8s.ubuntu harness${R} ${D}— full details: docs/guides/developer-guide.md${R}
 
 ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything here acts on the local
-          QEMU lab (free, arm64, the everyday proof machine); cloud harnesses
+          QEMU lab (free, host-arch; CI runs it on amd64); cloud harnesses
           live with the operator's cloud custody, same grammar inside${R}
 
   ${B}objects${R}
     ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
     ${C}host${R}    the managed system       ${D}converge, adopt, validate-reboot, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
-    ${C}test${R}    an example, or a suite   ${D}docker, ..., all; scenarios (adoption rehearsals)${R}
+    ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all; scenarios${R}
 
   ${B}workflows${R} ${D}(no object — the lab itself is the object)${R}
     ${C}prep${R}    one-time groundwork

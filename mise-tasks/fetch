@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
-#MISE description="Fetch and checksum-verify the Ubuntu 24.04 arm64 cloud image (no-op if cached)"
+#MISE description="Fetch and checksum-verify the Ubuntu 24.04 cloud image for the host architecture (no-op if cached)"
 #MISE hide=true
 set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 image_name="$(basename "$QEMU_IMAGE_URL")"
 image="$QEMU_CACHE_DIR/$image_name"
 
@@ -19,7 +20,11 @@ if [ -z "$expected" ]; then
   echo "$image_name not found in $QEMU_SHA256SUMS_URL" >&2
   exit 1
 fi
-actual="$(shasum -a 256 "$image.partial" | awk '{print $1}')"
+if command -v shasum >/dev/null 2>&1; then
+  actual="$(shasum -a 256 "$image.partial" | awk '{print $1}')"
+else
+  actual="$(sha256sum "$image.partial" | awk '{print $1}')"
+fi
 if [ "$expected" != "$actual" ]; then
   echo "Checksum mismatch for $image_name: expected $expected, got $actual" >&2
   exit 1

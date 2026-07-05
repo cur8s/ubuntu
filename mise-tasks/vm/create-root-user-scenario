@@ -36,10 +36,11 @@ mkdir -p "$seed_dir"
 } > "$seed_dir/user-data"
 printf 'instance-id: %s\nlocal-hostname: %s\n' "ubuntu-qemu-root-user" "ubuntu-qemu-root-user" \
   > "$seed_dir/meta-data"
-hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
-  -o "$QEMU_VM_DIR/seed.iso" "$seed_dir"
+make_seed_iso "$seed_dir" "$QEMU_VM_DIR/seed.iso"
 
-cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
+if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
+  cp "$QEMU_EFI_VARS_TEMPLATE" "$QEMU_VM_DIR/efivars.fd"
+fi
 
 echo "root-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
 echo "Next: mise run vm:boot, then ADOPT_USER=root mise run host:adoptable"

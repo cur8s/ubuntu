@@ -25,18 +25,18 @@ qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
   "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
 
 # NoCloud seed: an ISO labeled "cidata" holding the unchanged rendered
-# user-data plus a minimal meta-data. hdiutil is the macOS-native ISO
-# builder, so no cloud-localds/genisoimage dependency.
+# user-data plus a minimal meta-data (hdiutil on macOS, genisoimage on
+# Linux -- lib.sh picks).
 seed_dir="$QEMU_VM_DIR/seed"
 mkdir -p "$seed_dir"
 cp "$CLOUD_INIT_FILE" "$seed_dir/user-data"
 printf 'instance-id: %s\nlocal-hostname: %s\n' "$QEMU_VM_NAME" "$QEMU_VM_NAME" \
   > "$seed_dir/meta-data"
-hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
-  -o "$QEMU_VM_DIR/seed.iso" "$seed_dir"
+make_seed_iso "$seed_dir" "$QEMU_VM_DIR/seed.iso"
 
-# Writable UEFI variable store; edk2-arm-vars.fd is QEMU's empty varstore
-# template for the aarch64 code firmware.
-cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
+# Writable UEFI variable store (arm64 only; amd64 boots via SeaBIOS).
+if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
+  cp "$QEMU_EFI_VARS_TEMPLATE" "$QEMU_VM_DIR/efivars.fd"
+fi
 
 echo "VM prepared in $QEMU_VM_DIR (start it with: mise run vm:boot)"

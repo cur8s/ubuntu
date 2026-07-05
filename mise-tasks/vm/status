@@ -2,6 +2,7 @@
 #MISE description="Stages done so far, and the next command"
 #MISE quiet=true
 set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 next=""
 
 if [ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" ] && [ -s "$QEMU_KEYS_DIR/ubuntu-sysadmin.pub" ] \

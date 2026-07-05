@@ -60,7 +60,8 @@ labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
 in as dependencies (`keys`, `fetch`, `example:link`) are
 hidden but runnable by name. The grammar:
 
-- provider `qemu` (local, arm64, free) is the root harness's only lab.
+- the local QEMU lab (free; guest arch follows the host — arm64 on
+  Apple silicon, amd64 in CI) is the root harness's only lab.
   Cloud-provider harnesses are self-contained, consumer-shaped folders
   that live with the operator's cloud custody (the sandbox, later the
   environment repository) — the folder is the namespace, so inside one
@@ -145,28 +146,30 @@ mise run test    # prep -> create -> first boot -> converge x2 (changed=0)
 ```
 
 Before tagging a release: run it against the release-candidate ref
-(pin the harness's `requirements.yml`), and run the three examples
-against a droplet from the same harness for the amd64 leg of example
-coverage (`ansible-playbook -i <droplet-ip>, examples/<name>/site.yml`
-with the key env vars exported). First proven from the sandbox against
-`b0ba5ff` on 2026-07-05.
+(pin the harness's `requirements.yml`). First proven from the sandbox
+against `b0ba5ff` on 2026-07-05. The gate covers what no lab can — the
+real provider datasource and image quirks; the amd64 architecture leg
+is already covered continuously by CI (§6).
 
 ## 6. Testing
 
 Each example has a local test task (`test:docker`, ... and
-`test:all` for the suite); the amd64 leg runs the same playbooks
-against a droplet from the sandbox harness (§5). Every one enforces the
+`test:all` for the suite). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
 drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. The hidden
 `example:link` task symlinks the working tree into
 `.generated/collections/`, so examples resolve your live edits — no
-reinstall between iterations. Architecture coverage splits as: QEMU
-arm64 every day, real amd64 via the DigitalOcean integration test at
-release cadence
-(RFC-009, RFC-010); nothing may assume an architecture it did not
-detect. `test:scenarios` is the third leg: both adoption
-rehearsals, each asserted end to end (§4).
+reinstall between iterations. `test:scenarios` is the second suite:
+both adoption rehearsals, each asserted end to end (§4).
+
+Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
+the host, so the same tasks prove arm64 on Apple silicon and amd64 in
+CI — `.github/workflows/ci.yml` runs `prep`, `up`, and `test:all` on
+every push and pull request on an amd64 KVM runner (no secrets, no
+billable resources), plus `test:scenarios` on pushes to main. The
+sandbox DigitalOcean harness stays the real-provider leg at release
+cadence (§5). Nothing may assume an architecture it did not detect.
 
 ## 7. Adding things
 
@@ -187,9 +190,9 @@ wrapper in the qemu family and the integration folders, and a user-guide
 runbook section.
 
 **An example**: a directory under `examples/` (site.yml + README) plus
-its `mise-tasks/qemu/test/<name>` wrapper — the suites glob `examples/`,
+its `mise-tasks/test/<name>` wrapper — the suites glob `examples/`,
 so coverage is automatic either way. It must work on both architectures
-(the sandbox droplet run is the amd64 leg — §5).
+(CI is the amd64 leg — §6).
 
 **A provider harness**: copy the shape of the DigitalOcean harness
 (repo history, `test/integration/digital-ocean/` at `b0ba5ff`) — a
@@ -209,9 +212,9 @@ numbers follow it); state `Accepted` when in force; end with the Scope /
 Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
-   `mise run test` against the release-candidate ref, the three examples
-   against a droplet from that harness (amd64 leg), plus
-   `mise run test:all` and `mise run test:scenarios` locally.
+   `mise run test` against the release-candidate ref (the real-provider
+   leg), plus green CI and `mise run test:all` and
+   `mise run test:scenarios` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.

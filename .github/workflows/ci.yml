@@ -1,0 +1,70 @@
+name: ci
+
+# The QEMU lab on an amd64 runner: GitHub's standard Linux runners expose
+# KVM, so the same tasks that prove the baseline on the arm64 lab locally
+# prove it on amd64 here — continuously, with no secrets and no billable
+# resources. The real-provider leg (datasource, provider image quirks)
+# stays with the operator's DigitalOcean harness (RFC-009).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lab:
+    name: baseline + examples on the amd64 lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open /dev/kvm to the runner user
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install QEMU and seed tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            qemu-system-x86 qemu-utils genisoimage
+
+      - name: Install ansible-core
+        run: pipx install ansible-core
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Cache the Ubuntu cloud image
+        uses: actions/cache@v4
+        with:
+          path: .generated/qemu/cache
+          key: qemu-image-noble-amd64-v1
+
+      - name: prep — lab keys + image cache
+        run: mise run prep
+
+      - name: up — create, boot, ride out first boot, converge
+        run: mise run up
+
+      - name: test:all — every example twice, second pass changed=0
+        run: mise run test:all
+
+      - name: test:scenarios — both adoption rehearsals (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:scenarios
+
+      - name: Console log on failure
+        if: failure()
+        run: tail -n 200 .generated/qemu/vm/console.log 2>/dev/null || true

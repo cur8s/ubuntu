@@ -42,11 +42,10 @@ mise run test:all      # every example (skips tailscale without TAILSCALE_AUTHKE
 
 Every `test:` task enforces the examples' contract: it runs the example
 twice and fails unless the second pass reports `changed=0` end to end
-(baseline no-op + idempotent layer). At release cadence the same
-playbooks also run on real amd64, against a droplet from the operator's
-DigitalOcean harness: `ansible-playbook -i <droplet-ip>,
-<name>/site.yml` twice, with the key env vars exported — the second
-pass must report `changed=0`.
+(baseline no-op + idempotent layer). The same suite runs on amd64 in CI
+on every push (`.github/workflows/ci.yml` — the lab's guest arch
+follows the host), so both promised architectures are proven
+continuously.
 
 ## Using from your own repository (consumers)
 

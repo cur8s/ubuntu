@@ -241,3 +241,53 @@ assert_two_doors() {
   fi
   echo "Access surface: exactly ansible + sysadmin."
 }
+
+# Host-platform selection for the lab VM. The guest architecture follows
+# the host (hvf/KVM cannot cross architectures), acceleration follows the
+# OS: hvf on macOS, KVM on Linux (the CI runner). arm64 boots via EDK2
+# UEFI pflash; amd64 cloud images boot on QEMU's default SeaBIOS with no
+# firmware drives at all. QEMU_IMAGE_URL may be overridden from the
+# environment; by default it tracks the host architecture's image.
+qemu_platform_env() {
+  case "$(uname -m)" in
+    arm64|aarch64) QEMU_GUEST_ARCH="arm64" ;;
+    x86_64)        QEMU_GUEST_ARCH="amd64" ;;
+    *) echo "Unsupported host architecture for the QEMU lab: $(uname -m)" >&2; exit 1 ;;
+  esac
+  if [ "$QEMU_GUEST_ARCH" = "arm64" ]; then
+    QEMU_SYSTEM_BIN="qemu-system-aarch64"
+    QEMU_MACHINE="virt"
+    if [ "$(uname -s)" = "Darwin" ]; then
+      QEMU_EFI_CODE="$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd"
+      QEMU_EFI_VARS_TEMPLATE="$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd"
+    else
+      QEMU_EFI_CODE="/usr/share/AAVMF/AAVMF_CODE.fd"
+      QEMU_EFI_VARS_TEMPLATE="/usr/share/AAVMF/AAVMF_VARS.fd"
+    fi
+  else
+    QEMU_SYSTEM_BIN="qemu-system-x86_64"
+    QEMU_MACHINE="q35"
+    QEMU_EFI_CODE=""
+    QEMU_EFI_VARS_TEMPLATE=""
+  fi
+  case "$(uname -s)" in
+    Darwin) QEMU_ACCEL="hvf" ;;
+    *)      QEMU_ACCEL="kvm" ;;
+  esac
+  QEMU_IMAGE_URL="${QEMU_IMAGE_URL:-https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-$QEMU_GUEST_ARCH.img}"
+}
+
+# Build the NoCloud seed ISO (volume label cidata) from a directory:
+# make_seed_iso <seed_dir> <iso_path>. hdiutil on macOS; genisoimage on
+# Linux (the CI workflow installs it).
+make_seed_iso() {
+  if command -v hdiutil >/dev/null 2>&1; then
+    hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
+      -o "$2" "$1"
+  else
+    genisoimage -quiet -output "$2" -volid cidata -joliet -rock "$1"
+  fi
+}
+
+# Every task that sources this library gets the platform selection.
+qemu_platform_env
