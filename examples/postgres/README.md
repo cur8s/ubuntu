@@ -13,13 +13,14 @@ Techniques demonstrated:
   reason to use it over Ubuntu's archive.
 - **Service enable/start with in-play validation.**
 
-Run against the lab VM (droplet must exist — see the developer guide):
+Run against the local lab VM (`mise run qemu:up` first — see the
+developer guide):
 
 ```sh
-mise run do:test:postgres
+mise run qemu:test:postgres
 ```
 
-The first play re-asserts the baseline (RFC-001); the second installs
+The first play enforces the baseline (RFC-001); the second installs
 PostgreSQL. Run it twice: the second run should report `changed=0` end to
 end. Change `postgres_version` at the top of `site.yml` to select a
 different major.

@@ -15,13 +15,14 @@ Techniques demonstrated:
 - **A package with no service** — Lynis is a tool you run, not a daemon;
   nothing to enable or start.
 
-Run against the lab VM (droplet must exist — see the developer guide):
+Run against the local lab VM (`mise run qemu:up` first — see the
+developer guide):
 
 ```sh
-mise run do:test:lynis
+mise run qemu:test:lynis
 ```
 
 Then audit by hand: `mise run ssh:sysadmin`, `sudo lynis audit system`.
 
-The first play re-asserts the baseline (RFC-001); the second installs
+The first play enforces the baseline (RFC-001); the second installs
 Lynis. Run it twice: the second run should report `changed=0` end to end.

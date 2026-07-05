@@ -13,12 +13,13 @@ Techniques demonstrated:
 - **Service enable/start with in-play validation** — layers may verify
   outcomes in-play (unlike baseline roles; see RFC-002: Baseline Doctrine).
 
-Run against the lab VM (droplet must exist — see the developer guide):
+Run against the local lab VM (`mise run qemu:up` first — see the
+developer guide):
 
 ```sh
-mise run do:test:docker
+mise run qemu:test:docker
 ```
 
-The first play re-asserts the baseline (the composition pattern every layer
+The first play enforces the baseline (the composition pattern every layer
 follows — RFC-001); the second installs Docker. Run it twice: the second run
 should report `changed=0` end to end.

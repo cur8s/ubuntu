@@ -1,7 +1,7 @@
 # Examples
 
 Runnable, copy-paste-able examples of consuming `cur8s.ubuntu`. Each example
-is a self-contained directory: a `site.yml` that re-asserts the baseline
+is a self-contained directory: a `site.yml` that enforces the baseline
 first (the composition pattern every layer follows — RFC-001: The Host
 Baseline) and then applies its layer, plus a README naming the techniques it
 demonstrates. Examples are layers, so unlike baseline roles they may verify
@@ -15,34 +15,34 @@ preferred. Nothing may assume an architecture it did not detect.
 
 ## Index
 
-| Example | Theme | Techniques demonstrated | Status |
-| --- | --- | --- | --- |
-| `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays | ported |
-| `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation | ported |
-| `postgres/` | database | versioned vendor package from PGDG, deb822 repo | ported |
-| `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers | ported |
-| `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service | ported |
-| `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) | ported |
-| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join | ported |
-| `k3s/` | kubernetes | vendor installer piped to `sh` made idempotent (channel resolve + version gate), env-var installer params, declarative `config.yaml`, node-Ready wait | ported |
+| Example | Theme | Techniques demonstrated |
+| --- | --- | --- |
+| `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays |
+| `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation |
+| `postgres/` | database | versioned vendor package from PGDG, deb822 repo |
+| `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers |
+| `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service |
+| `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) |
+| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join |
+| `k3s/` | kubernetes | vendor installer piped to `sh` made idempotent (channel resolve + version gate), env-var installer params, declarative `config.yaml`, node-Ready wait |
 
-## Running against a lab VM (contributors)
+## Running the examples (contributors)
 
-The target lab must exist — the droplet or the local QEMU VM (see
+The local QEMU lab must exist (`mise run qemu:up`; see
 `docs/guides/developer-guide.md`). Examples resolve `cur8s.ubuntu` from the
 working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run do:test:docker     # against the droplet
-mise run qemu:test:docker   # against the local QEMU VM
+mise run qemu:test:docker   # one example, on the local lab
+mise run qemu:test:all      # every example (skips tailscale without TAILSCALE_AUTHKEY)
 ```
 
 Every `test:` task enforces the examples' contract: it runs the example
 twice and fails unless the second pass reports `changed=0` end to end
-(baseline no-op + idempotent layer). `do:test:all` and
-`qemu:test:all` do the same across every example (skipping `tailscale`
-unless `TAILSCALE_AUTHKEY` is set).
+(baseline no-op + idempotent layer). At release cadence the same suite
+runs on real amd64 via `mise run test:integration:digital-ocean-examples`
+(the DigitalOcean integration folder's droplet must be up).
 
 ## Using from your own repository (consumers)
 

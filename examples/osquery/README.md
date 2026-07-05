@@ -14,14 +14,15 @@ Techniques demonstrated:
   `signed-by=` `.list` repo (see the lynis example for the annotated
   version).
 
-Run against the lab VM (droplet must exist — see the developer guide):
+Run against the local lab VM (`mise run qemu:up` first — see the
+developer guide):
 
 ```sh
-mise run do:test:osquery
+mise run qemu:test:osquery
 ```
 
 Then inspect interactively: `mise run ssh:sysadmin`, then e.g.
 `osqueryi "select * from listening_ports;"`.
 
-The first play re-asserts the baseline (RFC-001); the second installs
+The first play enforces the baseline (RFC-001); the second installs
 osquery. Run it twice: the second run should report `changed=0` end to end.
