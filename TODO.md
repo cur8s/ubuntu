@@ -23,9 +23,15 @@ Completed work lives in git history and the RFC Revisions blocks.
 
 ## 5. RFC review and approval round
 - [ ] Read all twelve RFCs (000–011) end to end and approve each. Check the reading-order arc holds, cross-references are right, statuses are honest, and nothing normative contradicts the code as built. Amendments land as part of this item.
+- [ ] Deep-review finding C3 (verified): RFC-007 says the first converge closes the pre-baseline door's password authentication, while RFC-005/008 state converge "never removes access" absolutely. Decide the wording refinement — recommendation: the never-removes guarantee is about accounts and their key material; enforcing the global sshd policy IS the baseline's own claim, and RFC-005/008 should say so explicitly.
 
 ## 6. Playbook review
 - [ ] Read every collection playbook, shared task file, and role with fresh eyes; surface and resolve any concerns (structure, naming, failure modes, output readability). Code changes are unrestricted here — that freedom is why this comes after docs.
+- [ ] Deep-review findings queued for decision (all adversarially verified):
+  - C17: locking any account deletes /etc/sudoers.d/90-cloud-init-users wholesale — on a host where that combined file grants several provisioning-time accounts, locking one removes sudo from all. Recommendation: strip only the named account's lines; delete the file only when empty.
+  - C11/C18: `cur8s.ubuntu.patch` runs apt's safe upgrade (`upgrade: yes`), but RFC-011 and the docs promise "a full package upgrade." Recommendation: reword the promise to "package upgrade (never removes packages, never reboots)" rather than switching to dist-upgrade on running hosts.
+  - T8: rotate_key's input policy checks live only in the localhost play, which `--limit` can skip — a typo'd ROTATE_ACCOUNT would then reach the remote play unvalidated. Recommendation: duplicate the two critical asserts into the remote play.
+  - T11 (finder claim rejected by our own lab evidence): a reviewer called the "pubs must be 0600" note wrong; our recorded discovery is that ssh -i with a world-readable pub file does fail. Re-verify once, then keep or fix the folder README's phrasing.
 
 ## 7. mise harness review
 - [ ] Review the task grammar end to end: task names and descriptions, `lib.sh`, hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set. Includes the integration folder's child config (its no-root-`[env]` discipline especially).
@@ -34,6 +40,7 @@ Completed work lives in git history and the RFC Revisions blocks.
 - [ ] Review how the lab does images, seeds, boot, wait, and teardown — cross-checked against the explore-qemu learnings — and confirm the scenario flows read as clearly as the baseline flow.
 
 ## 9. First release (RFC-010; after the review pass)
+- [ ] Deep-review finding C14: `galaxy.yml` declares `license: []` and no LICENSE file exists anywhere — the first release would ship with no license grant. Choose the license before tagging.
 - [ ] Cut `v24.4.0`: bump nothing (version already `24.4.0`), tag, `git push origin main --tags`, then pin the tag in the install snippets. Hygiene first: the docs reference `examples/requirements.yml` files that do not exist (examples resolve via the dev link) — either add per-example requirements files to pin, or fix the references; and pin `test/integration/digital-ocean/requirements.yml` to the tag.
 
 ## 10. Multi-provider verification (post-release; gated on actual need)
