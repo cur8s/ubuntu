@@ -1,13 +1,14 @@
 # DigitalOcean integration — a self-contained operational skeleton for
 # running the cur8s.ubuntu baseline on a DigitalOcean droplet. It is two
 # things at once: this repository's integration-test surface (driven by the
-# root e2e:digital-ocean task) and a starting point you can copy into your
+# root test:integration:digital-ocean task) and a starting point you can copy into your
 # own environment — the folder reaches nothing outside itself except the
 # installed collection (requirements.yml) and your CLIs.
 #
 # Task grammar: <object>:<action> — the directory is the provider
-# namespace. Objects: vm (droplet lifecycle), play (collection playbooks,
-# 1:1 with cur8s.ubuntu.* FQCNs), ssh (a shell, by account), key (custody
+# namespace. Objects: vm (the droplet, provider plane), host (baseline
+# operations on the managed system, 1:1 with cur8s.ubuntu.* FQCNs), ssh
+# (a shell, by account), key (custody
 # and the provider bootstrap key). Workflows with no object: prep
 # (one-time groundwork), up (provision + converge).
 #
@@ -37,7 +38,7 @@ SYSADMIN_PUB_KEY = "{{config_root}}/.generated/ssh/ubuntu-sysadmin.pub"
 # Ansible wiring. The collection resolves from this folder's own
 # .generated/collections — populated by `ansible-galaxy collection install
 # -r requirements.yml -p .generated/collections`. (Inside the cur8s/ubuntu
-# repository the root e2e tasks symlink the working tree there instead, so
+# repository the root test:integration tasks symlink the working tree there, so
 # integration runs test your edits, not a pinned release.)
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_COLLECTIONS_PATH = "{{config_root}}/.generated/collections"

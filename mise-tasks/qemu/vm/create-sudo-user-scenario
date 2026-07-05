@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: qemu:vm:boot, then qemu:play:adoptable"
+#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: qemu:vm:boot, then qemu:host:adoptable"
 #MISE quiet=true
 #MISE depends=["qemu:fetch"]
 set -eu
@@ -47,4 +47,4 @@ hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
 cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
 
 echo "sudo-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
-echo "Next: mise run qemu:vm:boot, then mise run qemu:play:adoptable"
+echo "Next: mise run qemu:vm:boot, then mise run qemu:host:adoptable"

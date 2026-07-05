@@ -27,7 +27,7 @@ below it.
 cloud-init — rendered from the very same files the Ansible roles own —
 creates the access accounts, applies the SSH policy, patches everything,
 and reboots (which doubles as a smoke test: if the box doesn't come back,
-nothing else proceeds). From then on, *converge* re-asserts the declared
+nothing else proceeds). From then on, *converge* enforces the declared
 state over plain SSH, forever. Git is the source of truth: an out-of-band
 change by a person or an AI agent is drift, and the next converge reverts
 it. On a healthy host every converge reports zero changes, so a non-zero
@@ -39,7 +39,7 @@ defaults.** It pins only what must be guaranteed: two fixed accounts
 (`ansible` for automation, `sysadmin` for human break-glass), key-only
 SSH, automatic security updates that never reboot on their own, and logs
 that survive reboots. Everything a default already guarantees is trusted,
-not asserted — nothing declared means nothing to maintain. It refuses, on
+not enforced — nothing declared means nothing to maintain. It refuses, on
 purpose, to own time sync, auditd, firewalls, or kernel tuning: those
 belong to the layers above, and a baseline that fought them would be a
 bug factory.
@@ -61,10 +61,10 @@ dangerous (like retiring the bootstrap door) requires that gate first, and
 the collection's only reboot path is the one that validates.
 
 **Everything composes upward.** Purpose layers (a k3s node, a database
-host) re-assert the baseline first, then add their own state — see
+host) enforce the baseline first, then add their own state — see
 `examples/` for eight runnable demonstrations of the pattern. Environment
 repositories sit on top, holding the inventory, keys, and schedule.
-Because every tier re-asserts the baseline, it holds on every host, on
+Because every tier enforces the baseline, it holds on every host, on
 every converge.
 
 **It ships as git, versioned by the Ubuntu it targets.** No registry:
@@ -96,13 +96,13 @@ mise run qemu:up     # create → wait out first boot → converge
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run qemu:play:validate-reboot   # reboot → re-verify access + baseline services
+mise run qemu:host:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
 The same thread runs against real DigitalOcean from
 `test/integration/digital-ocean/` — a self-contained folder (1Password
 custody as the worked example, billable resources) that is also a
-copy-pastable operational starting point; `mise run e2e:digital-ocean`
+copy-pastable operational starting point; `mise run test:integration:digital-ocean`
 drives its whole lifecycle, birth to locked-down, as the release-gate
 integration test (RFC-009: Validation and Acceptance).
 
@@ -136,15 +136,15 @@ The baseline roles, applied by `collection/playbooks/converge.yml`:
 Outside converge, two standalone playbooks act on the access surface
 (RFC-005: Accounts and Access): `cur8s.ubuntu.report_access` renders every
 door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
-doors named in `LOCK_ACCOUNTS` (the `account_lock` role) after re-proving
+doors named in `LOCK_ACCOUNTS` (the `lock_account` role) after re-proving
 both baseline accounts — converge itself never removes access. The local
 scenario chain rehearses the whole arc (`qemu:test:scenarios`); on a real
-droplet the integration folder's `play:lock-accounts` closes the provider
+droplet the integration folder's `host:lock-accounts` closes the provider
 door (acceptance gate first).
 
 The baseline stays as close to distro defaults as possible: roles pin only
 off-default invariants; anything a default already guarantees is trusted, not
-asserted (see each role's README for what was deliberately left out).
+enforced (see each role's README for what was deliberately left out).
 
 `collection/scripts/render-cloud-init.sh` generates the first-boot user-data from the
 same key files and sshd drop-in the roles own, which is what makes the first

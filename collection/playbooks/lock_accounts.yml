@@ -138,9 +138,9 @@
     # ==========================================================================
     - name: Lock account
       ansible.builtin.include_role:
-        name: account_lock
+        name: lock_account
       vars:
-        account_lock_name: "{{ lock_target }}"
+        lock_account_name: "{{ lock_target }}"
       loop: "{{ lock_accounts_list }}"
       loop_control:
         loop_var: lock_target

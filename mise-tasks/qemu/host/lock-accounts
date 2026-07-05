@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Close doors (default: ubuntu, the sudo-user scenario's); run qemu:play:validate-reboot first"
+#MISE description="Close doors (default: ubuntu, the sudo-user scenario's); run qemu:host:validate-reboot first"
 #MISE confirm="Lock these accounts' doors on the QEMU VM?"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"

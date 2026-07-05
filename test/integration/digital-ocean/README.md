@@ -5,7 +5,7 @@ droplet, end to end: provision a host born conformant, converge it,
 prove it survives a reboot, close the provider's bootstrap door, rotate
 keys. It is two things at once:
 
-- **This repository's integration test.** The root `e2e:digital-ocean`
+- **This repository's integration test.** The root `test:integration:digital-ocean`
   task drives the tasks here against a real droplet and asserts the
   contract (second converge `changed=0`, reboot survived, access surface
   reduced to exactly the two baseline doors). It runs ad hoc and before
@@ -57,10 +57,10 @@ mise trust               # once per copy of this folder
 mise run prep            # custody keys + DO bootstrap key + the collection
 mise run up              # create -> first boot (upgrade + reboot) -> converge
 mise run vm:status       # where am I? stages done, next command
-mise run play:report-access      # observe every door before closing any
-mise run play:validate-reboot    # acceptance gate (required before locking)
-mise run play:lock-accounts      # close the provider's root door (the default)
-mise run play:report-access      # confirm: exactly two doors remain
+mise run host:report-access      # observe every door before closing any
+mise run host:validate-reboot    # acceptance gate (required before locking)
+mise run host:lock-accounts      # close the provider's root door (the default)
+mise run host:report-access      # confirm: exactly two doors remain
 ```
 
 The droplet is born conformant: cloud-init applies the same accounts,
@@ -76,9 +76,9 @@ and Access).
 
 ## Day two
 
-- `mise run play:converge` — re-assert the baseline any time;
+- `mise run host:converge` — enforce the baseline any time;
   `changed=0` means conformant.
-- `mise run play:update` — full package update; never reboots, reports
+- `mise run host:update` — full package update; never reboots, reports
   if one is pending.
 - `mise run ssh:ansible` / `ssh:sysadmin` — a shell, by account.
 
@@ -96,7 +96,7 @@ the sibling account, so it never depends on the key being replaced
    op read --force --out-file /tmp/ubuntu-ansible-new.pub \
      "op://devops/ubuntu-ansible-new/public key"
    ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY=/tmp/ubuntu-ansible-new.pub \
-     mise run play:rotate-key
+     mise run host:rotate-key
    ```
 
    The playbook adds the new key, proves it over SSH with sudo, and only
@@ -108,14 +108,14 @@ the sibling account, so it never depends on the key being replaced
    operationally kills the old credential — and the vault archive is the
    audit trail.
 4. Re-extract (`mise run key:prep`) so `.generated/ssh` matches the vault
-   again, then `mise run play:converge` and expect `changed=0`.
+   again, then `mise run host:converge` and expect `changed=0`.
 
 ## Copying this folder
 
 1. Copy the directory anywhere; run `mise trust` inside it.
 2. Edit `mise.toml`: droplet name/size/region, your vault references.
 3. `requirements.yml` installs the collection from git — pin the release
-   tag. (Inside the cur8s/ubuntu repo, the root `e2e:link:digital-ocean`
+   tag. (Inside the cur8s/ubuntu repo, the root `test:integration:link-digital-ocean`
    task symlinks the working tree instead; a copy has no such link and
    always uses the pin.)
 4. One folder describes one droplet. More hosts: copy per host, or grow

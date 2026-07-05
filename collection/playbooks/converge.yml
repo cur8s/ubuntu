@@ -97,6 +97,6 @@
         # against the delegate instead of this host.
         target_host: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
 
-    # Converge asserts; it never removes access (RFC-008: Convergence).
+    # Converge enforces; it never removes access (RFC-008: Convergence).
     # Closing doors — the old bootstrap path included — is the standalone
     # cur8s.ubuntu.lock_accounts invocation, never a converge side effect.

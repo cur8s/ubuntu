@@ -16,7 +16,7 @@ ssh_task_preamble() {
 }
 
 # Where the installed collection lives (see requirements.yml; inside the
-# cur8s/ubuntu repository the root e2e tasks symlink the working tree here).
+# cur8s/ubuntu repository the root test:integration tasks symlink the working tree here).
 collection_dir() {
   printf '%s' "$ANSIBLE_COLLECTIONS_PATH/ansible_collections/cur8s/ubuntu"
 }
@@ -29,7 +29,7 @@ ensure_collection() {
     ansible-galaxy collection install -r "$MISE_CONFIG_ROOT/requirements.yml" \
       -p "$ANSIBLE_COLLECTIONS_PATH"
     echo "Installed the pinned collection. (Developing cur8s.ubuntu itself?"
-    echo "Run 'mise run e2e:link-digital-ocean' at the repo root to use the working tree.)"
+    echo "Run 'mise run test:integration:link-digital-ocean' at the repo root to use the working tree.)"
   fi
 }
 

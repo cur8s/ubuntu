@@ -76,14 +76,14 @@ qemu_ansible_playbook() {
 
 # Run one example against a target lab: example_run <example> <do|qemu>.
 # The do target is the integration droplet; its address arrives via
-# E2E_DROPLET_ADDRESS (exported by the e2e wrappers, which also point the
-# key env vars at the folder's extracted keys).
+# INTEGRATION_DROPLET_ADDRESS (exported by the test:integration wrappers,
+# which also point the key env vars at the folder's extracted keys).
 example_run() {
   _example_playbook="$MISE_CONFIG_ROOT/examples/$1/site.yml"
   (
     export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
     case "$2" in
-      do) ansible-playbook -i "${E2E_DROPLET_ADDRESS:?run this via the e2e wrappers}," "$_example_playbook" ;;
+      do) ansible-playbook -i "${INTEGRATION_DROPLET_ADDRESS:?run this via the test:integration wrappers}," "$_example_playbook" ;;
       qemu) qemu_ansible_playbook "$_example_playbook" ;;
       *)
         echo "Unknown example target '$2' (expected do or qemu)." >&2

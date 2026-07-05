@@ -19,15 +19,15 @@ run_scenario() {
   mise run "qemu:vm:create-$_scn_name-scenario"
   mise run qemu:vm:boot
 
-  ADOPT_USER="$_scn_user" mise run qemu:play:adoptable
-  ADOPT_USER="$_scn_user" mise run qemu:play:adopt
+  ADOPT_USER="$_scn_user" mise run qemu:host:adoptable
+  ADOPT_USER="$_scn_user" mise run qemu:host:adopt
 
   echo "--- converge #1 (the delta the verdict predicted)"
-  mise run qemu:play:converge
+  mise run qemu:host:converge
 
   echo "--- converge #2 (the contract: changed=0)"
   _scn_log="$log_dir/$_scn_name-converge2.log"
-  if ! mise run qemu:play:converge > "$_scn_log" 2>&1; then
+  if ! mise run qemu:host:converge > "$_scn_log" 2>&1; then
     cat "$_scn_log"
     echo "FAIL scenario $_scn_name: second converge failed." >&2
     exit 1
@@ -35,14 +35,14 @@ run_scenario() {
   assert_changed_zero "$_scn_log" "scenario $_scn_name"
 
   echo "--- acceptance gate: validate-reboot"
-  mise run qemu:play:validate-reboot
+  mise run qemu:host:validate-reboot
 
   echo "--- lock the scenario door ($_scn_user)"
-  LOCK_ACCOUNTS="$_scn_user" MISE_YES=1 mise run qemu:play:lock-accounts
+  LOCK_ACCOUNTS="$_scn_user" MISE_YES=1 mise run qemu:host:lock-accounts
 
   echo "--- report: assert exactly the two baseline doors"
   _scn_report="$log_dir/$_scn_name-report.log"
-  if ! mise run qemu:play:report-access > "$_scn_report" 2>&1; then
+  if ! mise run qemu:host:report-access > "$_scn_report" 2>&1; then
     cat "$_scn_report"
     exit 1
   fi

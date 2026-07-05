@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Close doors (default: root, the provider door); run play:validate-reboot first"
+#MISE description="Close doors (default: root, the provider door); run host:validate-reboot first"
 #MISE confirm="Lock these accounts' doors? For root, SSH stops working and recovery is the provider console."
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"

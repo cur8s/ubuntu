@@ -12,23 +12,23 @@
 - name: Check lock target inputs
   ansible.builtin.assert:
     that:
-      - account_lock_name | default('') | length > 0
-      - account_lock_name not in ['ansible', 'sysadmin']
+      - lock_account_name | default('') | length > 0
+      - lock_account_name not in ['ansible', 'sysadmin']
     fail_msg: >-
-      Set account_lock_name to the account whose doors should close —
+      Set lock_account_name to the account whose doors should close —
       never a baseline account (RFC-005: Accounts and Access).
 
-- name: Read account {{ account_lock_name }}
+- name: Read account {{ lock_account_name }}
   ansible.builtin.getent:
     database: passwd
-    key: "{{ account_lock_name }}"
+    key: "{{ lock_account_name }}"
 
 # ==========================================================================
 # Remove the SSH door
 # ==========================================================================
-- name: Remove authorized_keys for {{ account_lock_name }}
+- name: Remove authorized_keys for {{ lock_account_name }}
   ansible.builtin.file:
-    path: "{{ getent_passwd[account_lock_name][4] }}/.ssh/authorized_keys"
+    path: "{{ getent_passwd[lock_account_name][4] }}/.ssh/authorized_keys"
     state: absent
 
 # ==========================================================================
@@ -50,12 +50,12 @@
   ansible.builtin.getent:
     database: group
 
-- name: Remove {{ account_lock_name }} from privileged groups
+- name: Remove {{ lock_account_name }} from privileged groups
   ansible.builtin.command:
-    argv: ["gpasswd", "--delete", "{{ account_lock_name }}", "{{ item }}"]
+    argv: ["gpasswd", "--delete", "{{ lock_account_name }}", "{{ item }}"]
   when:
     - getent_group[item] is defined
-    - account_lock_name in (getent_group[item][2] | split(','))
+    - lock_account_name in (getent_group[item][2] | split(','))
   changed_when: true
   loop:
     - sudo
@@ -64,7 +64,7 @@
 # ==========================================================================
 # Lock the password
 # ==========================================================================
-- name: Lock password for {{ account_lock_name }}
+- name: Lock password for {{ lock_account_name }}
   ansible.builtin.user:
-    name: "{{ account_lock_name }}"
+    name: "{{ lock_account_name }}"
     password_lock: true

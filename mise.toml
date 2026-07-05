@@ -8,9 +8,10 @@
 # <provider>:<object>:<action> — qemu is the local lab provider; cloud
 # providers are self-contained child configs under test/integration/
 # (the folder is the namespace: work inside it, or drive it with mise -C).
-# Objects are vm (machine lifecycle), play (collection playbooks), ssh
-# (shell access, by user), test (examples). The e2e: family orchestrates
-# the integration folders end to end. Workflows where the provider itself
+# Objects are vm (the machine, provider plane), host (baseline
+# operations on the managed system, via the collection playbooks), ssh
+# (shell access, by user), test (examples). The test:integration: family
+# drives the integration folders end to end. Workflows where the provider itself
 # is the object (prep, up) take no object segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently
 # ignores them; shared helpers live in mise-tasks/lib.sh.

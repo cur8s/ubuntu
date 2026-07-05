@@ -26,7 +26,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}objects${R}
     ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
-    ${C}play${R}    a collection playbook    ${D}converge, update, validate-reboot, ...${R}
+    ${C}host${R}    the managed system       ${D}converge, adopt, validate-reboot, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or all       ${D}docker, k3s, zot, ..., all${R}
 
@@ -36,26 +36,26 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<provider>:<object>:<action>${R}
 
   ${B}workstation${R} ${D}(no provider — acts on this repo checkout)${R}
     ${C}clean${R}   destroy the local lab VM and wipe .generated ${D}(recover: re-run prep)${R}
-    ${C}e2e:digital-ocean${R}  the full droplet lifecycle against real DigitalOcean
+    ${C}test:integration:digital-ocean${R}  the full droplet lifecycle against real DigitalOcean
                        ${D}(billable, attended; runs before every release)${R}
 
 ${B}A SESSION, START TO FINISH${R} ${D}(local provider shown)${R}
 
   ${D}mise run${R} ${C}qemu:prep${R}             once: throwaway lab keys + cloud image cache ${D}(~600MB)${R}
   ${D}mise run${R} ${C}qemu:up${R}               stand up the lab, unattended
-                                 ${D}(= vm:create -> vm:boot -> vm:wait -> play:converge)${R}
+                                 ${D}(= vm:create -> vm:boot -> vm:wait -> host:converge)${R}
   ${D}mise run${R} ${C}qemu:vm:status${R}        where am I? stages done, and the next command
   ${D}mise run${R} ${C}qemu:ssh:ansible${R}      inspect by hand ${D}(boot problems: qemu:vm:console)${R}
-  ${D}mise run${R} ${C}qemu:play:converge${R}    daily re-assert; changed=0 means conformant
+  ${D}mise run${R} ${C}qemu:host:converge${R}    daily enforcement; changed=0 means conformant
   ${D}mise run${R} ${C}qemu:test:docker${R}      test one example: runs it twice,
                                  second pass must report changed=0
   ${D}mise run${R} ${C}qemu:test:all${R}         every example, same contract
-  ${D}mise run${R} ${C}qemu:play:validate-reboot${R}   acceptance gate: reboot, re-verify access
+  ${D}mise run${R} ${C}qemu:host:validate-reboot${R}   acceptance gate: reboot, re-verify access
   ${D}mise run${R} ${C}qemu:vm:destroy${R}       tear down; the cached image survives
 
   ${B}Real DigitalOcean${R}: ${C}test/integration/digital-ocean/${R} is the operational
-  folder ${D}(cd in: mise run prep, up, play:lock-accounts, ...)${R} — and
-  ${C}e2e:digital-ocean${R} drives its whole lifecycle as the integration test.
+  folder ${D}(cd in: mise run prep, up, host:lock-accounts, ...)${R} — and
+  ${C}test:integration:digital-ocean${R} drives its whole lifecycle as the integration test.
 
   ${D}The full task list:${R} ${C}mise tasks${R}
 EOF

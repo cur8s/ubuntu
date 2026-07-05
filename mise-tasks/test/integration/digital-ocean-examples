@@ -1,18 +1,18 @@
 #!/usr/bin/env sh
 #MISE description="Every example twice on the integration droplet (amd64); changed=0 contract"
-#MISE depends=["e2e:link-digital-ocean", "example:link"]
+#MISE depends=["test:integration:link-digital-ocean", "example:link"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble
 
 folder="$MISE_CONFIG_ROOT/test/integration/digital-ocean"
 
-E2E_DROPLET_ADDRESS="$(mise -C "$folder" run vm:ip | tr -d '[:space:]')"
-if [ -z "$E2E_DROPLET_ADDRESS" ]; then
+INTEGRATION_DROPLET_ADDRESS="$(mise -C "$folder" run vm:ip | tr -d '[:space:]')"
+if [ -z "$INTEGRATION_DROPLET_ADDRESS" ]; then
   echo "No droplet is up (mise -C test/integration/digital-ocean run up)." >&2
   exit 1
 fi
-export E2E_DROPLET_ADDRESS
+export INTEGRATION_DROPLET_ADDRESS
 
 # Examples authenticate as ansible with the folder's extracted keys.
 export ANSIBLE_PUB_KEY="$folder/.generated/ssh/ubuntu-ansible.pub"

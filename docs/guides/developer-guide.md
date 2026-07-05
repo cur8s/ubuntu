@@ -58,20 +58,21 @@ them only when you run it.
 Bare `mise run` prints the cheat sheet — the golden path through the
 labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
 in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`,
-`e2e:link-digital-ocean`) are hidden but runnable by name. The grammar:
+`test:integration:link-digital-ocean`) are hidden but runnable by name. The grammar:
 
 - provider `qemu` (local, arm64, free) is the root harness's only lab.
   Cloud providers are self-contained child configs under
   `test/integration/<provider>/` — the folder is the namespace, so
   inside one the same grammar reads `<object>:<action>` with no prefix
   (drive it from root with `mise -C`).
-- objects: `vm` (machine lifecycle), `play` (collection playbooks, 1:1
-  with `cur8s.ubuntu.*` FQCNs), `ssh` (a shell, by account), `test`
-  (examples, and the scenario chain).
+- objects: `vm` (the machine, provider plane), `host` (baseline
+  operations on the managed system — each task runs its `cur8s.ubuntu.*`
+  playbook), `ssh` (a shell, by account), `test` (examples, and the
+  scenario chain).
 - provider workflows with no object: `prep` (one-time groundwork), `up`
   (provision + converge). Workstation-scoped: `clean`, `default`, and
-  the `e2e:` family, which orchestrates the integration folders end to
-  end.
+  the `test:integration:` family, which drives the integration folders
+  end to end (the task name mirrors the folder path it orchestrates).
 
 ## 4. The QEMU lab — the everyday loop
 
@@ -118,11 +119,11 @@ Or walk one by hand:
 
 ```sh
 mise run qemu:vm:create-sudo-user-scenario && mise run qemu:vm:boot
-mise run qemu:play:adoptable     # verdict; ADOPT_USER defaults to ubuntu
-mise run qemu:play:adopt
-mise run qemu:play:converge      # the delta the verdict predicted, then 0
-mise run qemu:play:validate-reboot
-mise run qemu:play:lock-accounts # closes the scenario door (the default)
+mise run qemu:host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
+mise run qemu:host:adopt
+mise run qemu:host:converge      # the delta the verdict predicted, then 0
+mise run qemu:host:validate-reboot
+mise run qemu:host:lock-accounts # closes the scenario door (the default)
 ```
 
 (For the root-user scenario, set `ADOPT_USER=root` and
@@ -136,7 +137,7 @@ baseline against a real droplet. It is deliberately consumer-shaped: the
 collection resolves from its `requirements.yml`, custody defaults to
 1Password as the worked example (its README owns that story, rotation
 choreography included), and the whole directory is copy-pastable as an
-operational starting point. In-repo, `e2e:link-digital-ocean` symlinks
+operational starting point. In-repo, `test:integration:link-digital-ocean` symlinks
 the working tree over the pin so integration runs test your edits.
 
 ```sh
@@ -148,16 +149,16 @@ mise run vm:status              # stages done, next command
 
 The droplet is billable — `vm:destroy` when done; recreating verified
 state is one `up`. Its provider bootstrap door is root;
-`play:lock-accounts` defaults to locking it (acceptance gate first). If
+`host:lock-accounts` defaults to locking it (acceptance gate first). If
 your network's IPS drops SSH bursts, set `SSH_SPACING_SECONDS` in the
 folder's env (see `docs/notes/ucg-fibre-ips-ssh-blocking.md`).
 
-**`mise run e2e:digital-ocean`** (root, attended, billable) drives the
+**`mise run test:integration:digital-ocean`** (root, attended, billable) drives the
 whole arc as the integration test: prep → create → first boot →
 converge ×2 asserting `changed=0` → validate-reboot → lock root →
 report asserting exactly two doors → destroy on success, keep on
 failure. It is the release gate (RFC-009), run ad hoc otherwise.
-`e2e:digital-ocean-examples` runs the example suite against the
+`test:integration:digital-ocean-examples` runs the example suite against the
 folder's droplet — the amd64 leg of example coverage. Folder tasks must
 never lean on root `[env]` — when the directory is copied out, only its
 own config exists.
@@ -165,7 +166,7 @@ own config exists.
 ## 6. Testing
 
 Each example has a local test task (`qemu:test:docker`, ... and
-`qemu:test:all` for the suite); `e2e:digital-ocean-examples` runs the
+`qemu:test:all` for the suite); `test:integration:digital-ocean-examples` runs the
 same suite against the integration droplet. Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
@@ -173,7 +174,8 @@ drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. The hidden
 `example:link` task symlinks the working tree into
 `.generated/collections/`, so examples resolve your live edits — no
 reinstall between iterations. Architecture coverage splits as: QEMU
-arm64 every day, real amd64 via the DigitalOcean e2e at release cadence
+arm64 every day, real amd64 via the DigitalOcean integration test at
+release cadence
 (RFC-009, RFC-010); nothing may assume an architecture it did not
 detect. `qemu:test:scenarios` is the third leg: both adoption
 rehearsals, each asserted end to end (§4).
@@ -181,7 +183,10 @@ rehearsals, each asserted end to end (§4).
 ## 7. Adding things
 
 **A role**: pins only off-default invariants — no verification-only code
-(RFC-002); its README records what was deliberately left out. If it owns
+(RFC-002); its README records what was deliberately left out. Naming:
+roles that enforce state are nouns (`users`, `ssh`, `journald`); a role
+that performs a deliberate act is a verb, singular (`lock_account`, the
+primitive under the plural playbook `lock_accounts`). If it owns
 a file cloud-init also lays down, keep the render in lockstep
 (`collection/scripts/render-cloud-init.sh` — the one-source-two-moments
 discipline, RFC-006).
@@ -189,8 +194,9 @@ discipline, RFC-006).
 **A playbook**: follow the house patterns — release guard in pre_tasks,
 input validation on localhost first, the shared
 `validate-ssh-sudo-access` tasks for access proofs, refusals that name
-what a human must decide. Add its FQCN and inputs to RFC-011, a `play:`
-wrapper per provider, and a user-guide runbook section.
+what a human must decide. Add its FQCN and inputs to RFC-011, a `host:`
+wrapper in the qemu family and the integration folders, and a user-guide
+runbook section.
 
 **An example**: a directory under `examples/` (site.yml + README +
 requirements.yml) plus its two `mise-tasks/<provider>/test/<name>`
@@ -199,7 +205,7 @@ wrappers. It must work on both architectures.
 **A provider integration folder**: copy the shape of
 `test/integration/digital-ocean/` — self-contained child mise config,
 object-grammar tasks, its own helpers and state, custody wiring
-parameterized in `[env]` — plus an `e2e:<provider>` orchestrator at
+parameterized in `[env]` — plus a `test:integration:<provider>` orchestrator at
 root and a `mise trust` note in its README. The provider's bootstrap
 account becomes the default `LOCK_ACCOUNTS` target. Gate it on a real
 workload needing that provider (TODO item 8's rule).
@@ -212,8 +218,8 @@ numbers follow it); state `Accepted` when in force; end with the Scope /
 
 Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
-1. Pass the release gate (RFC-009): `mise run e2e:digital-ocean` and
-   `mise run e2e:digital-ocean-examples` against a real droplet, plus
+1. Pass the release gate (RFC-009): `mise run test:integration:digital-ocean` and
+   `mise run test:integration:digital-ocean-examples` against a real droplet, plus
    `mise run qemu:test:all` and `mise run qemu:test:scenarios` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path

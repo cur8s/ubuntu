@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Rides out the first boot (next: play:converge)"
+#MISE description="Rides out the first boot (next: host:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble

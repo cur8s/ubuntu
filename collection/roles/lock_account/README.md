@@ -1,4 +1,4 @@
-# account_lock role
+# lock_account role
 
 Closes one account's login doors (RFC-005: Accounts and Access): strips its
 `authorized_keys`, removes the cloud-init combined sudoers file
@@ -8,13 +8,13 @@ account is locked, never deleted: it still runs processes and owns files,
 and a console can reverse the lock. Deletion is a human decision, outside
 the collection.
 
-Input: `account_lock_name` — the single account to lock. The role refuses
+Input: `lock_account_name` — the single account to lock. The role refuses
 the baseline accounts by name. `cur8s.ubuntu.lock_accounts` is the intended
 caller and loops it over `LOCK_ACCOUNTS`.
 
 Safety model (RFC-005: Accounts and Access; RFC-004: Identity and Trust):
 
-- **Never part of converge.** Converge asserts and never removes access
+- **Never part of converge.** Converge enforces and never removes access
   (RFC-008: Convergence). Locking is a deliberate, standalone invocation:
   the playbook run is the consent — there is no enable toggle.
 - **Ordered after proof of replacement access.** `cur8s.ubuntu.lock_accounts`

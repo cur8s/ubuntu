@@ -5,7 +5,7 @@ gets, regardless of what runs on top.
 
 This directory is the installable Ansible collection. Entry points:
 
-- `cur8s.ubuntu.converge` — apply and re-assert the baseline.
+- `cur8s.ubuntu.converge` — enforce the baseline.
 - `cur8s.ubuntu.validate_reboot` — the reboot acceptance gate.
 - `cur8s.ubuntu.update` — operator-invoked full package update (never reboots).
 

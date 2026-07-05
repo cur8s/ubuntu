@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Additively add the baseline accounts to the scenario VM (next: qemu:play:converge)"
+#MISE description="Additively add the baseline accounts to the scenario VM (next: qemu:host:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 ssh_task_preamble

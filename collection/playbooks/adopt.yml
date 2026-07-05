@@ -1,7 +1,7 @@
 ---
 # Adopt an existing host (RFC-007: Adoption): purely additive. Re-runs the
 # adoptability checks and refuses on any hard failure, then creates the two
-# baseline accounts from the same role converge asserts, and proves both
+# baseline accounts from the same role converge enforces, and proves both
 # over SSH with working sudo. It edits nothing that exists, removes
 # nothing, restarts nothing — the pre-baseline door survives until the
 # operator closes it deliberately (cur8s.ubuntu.lock_accounts), after
@@ -54,7 +54,7 @@
 
   tasks:
     # ==========================================================================
-    # Add the Baseline Accounts (additive; same role converge asserts)
+    # Add the Baseline Accounts (additive; same role converge enforces)
     # ==========================================================================
     - name: Create the baseline accounts
       ansible.builtin.include_role:

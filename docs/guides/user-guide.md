@@ -54,7 +54,7 @@ always present, locked passwords, key-only SSH, passwordless sudo.
 
 | Playbook | Does |
 | --- | --- |
-| `cur8s.ubuntu.converge` | assert the baseline; `changed=0` means conformant |
+| `cur8s.ubuntu.converge` | enforce the baseline; `changed=0` means conformant |
 | `cur8s.ubuntu.update` | full package update; never reboots |
 | `cur8s.ubuntu.validate_reboot` | acceptance gate: reboot, re-verify everything |
 | `cur8s.ubuntu.report_access` | read-only access surface; always `changed=0` |
@@ -135,7 +135,7 @@ ansible-playbook -i inventory cur8s.ubuntu.converge
 ```
 
 On a healthy steady-state host every run reports `changed=0`; a non-zero
-count is a drift report — read it, don't rerun past it. Converge asserts
+count is a drift report — read it, don't rerun past it. Converge enforces
 and never removes access (RFC-008: Convergence): no door closes as a
 side effect, so a scheduled converge can run blind. For detection
 without enforcement, add `--check --diff`. If your network drops SSH
@@ -208,7 +208,7 @@ sibling so the operation never depends on the key it replaces (RFC-004):
 
 Purpose layers (a k3s node, a database host) import
 `cur8s.ubuntu.converge` first, then apply their own state — every tier
-re-asserts the baseline (RFC-001). The `examples/` directory holds eight
+enforces the baseline (RFC-001). The `examples/` directory holds eight
 runnable demonstrations of the pattern, shaped like a consumer
 environment repository: inventory, `requirements.yml`, a `site.yml` that
 composes the baseline with a purpose.
