@@ -68,6 +68,7 @@
   ansible.builtin.assert:
     that:
       - "'passwordauthentication no' in ubuntu_ssh_effective_config.stdout_lines"
+      - "'authorizedkeysfile .ssh/authorized_keys' in ubuntu_ssh_effective_config.stdout_lines"
       - "'kbdinteractiveauthentication no' in ubuntu_ssh_effective_config.stdout_lines"
       - "'pubkeyauthentication yes' in ubuntu_ssh_effective_config.stdout_lines"
       - >-

@@ -19,6 +19,12 @@ converge is a no-op for SSH policy.
 Fixed policy (`files/10-ubuntu-baseline.conf`):
 
 - password authentication disabled
+- authorized keys read from `.ssh/authorized_keys` only — the legacy
+  `authorized_keys2` fallback (deprecated since 2001, honored by stock
+  sshd ever since) is disabled, so key material outside the one known
+  file opens nothing on a conformant host. The access-surface report and
+  the lock still watch and clear both paths: adoption meets hosts this
+  pin does not govern yet, and key material outlives configuration.
 - keyboard-interactive authentication disabled
 - public key authentication enabled
 - root password login disabled; root public-key login remains available as

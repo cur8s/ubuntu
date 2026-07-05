@@ -15,7 +15,11 @@
 # Doors: SSH keys
 # ==========================================================================
 # Both files: stock sshd's AuthorizedKeysFile default honors
-# .ssh/authorized_keys AND .ssh/authorized_keys2.
+# .ssh/authorized_keys AND .ssh/authorized_keys2. The baseline drop-in
+# pins sshd to the first file, but the report deliberately keeps
+# watching both: adoption meets hosts the pin does not govern, and key
+# material outlives configuration — a loaded keys2 file is worth seeing
+# even where the pin currently neutralizes it.
 - name: Find accounts with authorized keys
   ansible.builtin.shell: |
     set -eu
