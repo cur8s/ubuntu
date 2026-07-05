@@ -172,4 +172,4 @@ Concrete follow-up work, to be reviewed before implementation:
 
 - `playbooks/initialize.yml` — the current three-play SSH bootstrap being replaced.
 - `roles/ssh/tasks/main.yml` — the baseline `sshd_config.d` drop-in reproduced in cloud-init.
-- `docs/rfcs/RFC-000 SSH Key Strategy.md` — the three-key strategy the cloud-config keys map to.
+- the prototype-era RFC "SSH Key Strategy" (that series is retired; key policy now lives in RFC-004: Identity and Trust) — the three-key strategy the cloud-config keys map to.

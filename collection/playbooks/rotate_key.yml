@@ -182,6 +182,7 @@
       ansible.builtin.debug:
         msg: >-
           Rotated {{ rotate_account }} to the new key (entered as
-          {{ rotate_sibling }}). When the fleet is done: retitle and
-          archive the old vault item, re-run key:prep, and converge —
-          changed=0 confirms the world agrees (RFC-004).
+          {{ rotate_sibling }}). When the fleet is done: archive the old
+          key in your secrets manager, point the key file environment
+          variables at the new public key, and converge — changed=0
+          confirms the world agrees (RFC-004).

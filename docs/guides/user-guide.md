@@ -18,8 +18,9 @@ repository rather than using it, you want `docs/guides/developer-guide.md`.
   `test/integration/digital-ocean/README.md`: a self-contained,
   copy-pastable operational folder built exactly this way.)
 - Ubuntu 24.04 hosts, or a cloud account to create them. This series
-  targets 24.04 only — every playbook refuses anything else (RFC-010:
-  Release and Versioning).
+  targets 24.04 only — every playbook that changes a host refuses any
+  other release (RFC-010: Release and Versioning); `report_access` alone
+  runs anywhere, because observing a surface is never the wrong move.
 
 ## 2. Install the collection
 
@@ -106,6 +107,8 @@ inherited servers — enters through adoption (RFC-007), connected as
 whatever pre-baseline account the host has:
 
 ```sh
+# ANSIBLE_PUB_KEY and SYSADMIN_PUB_KEY must be exported, as in every
+# runbook (§1): adoption validates them before touching the host.
 ADOPT_USER=olduser ansible-playbook -i <host>, cur8s.ubuntu.adoptable
 ADOPT_USER=olduser ansible-playbook -i <host>, cur8s.ubuntu.adopt
 ```
@@ -138,8 +141,9 @@ On a healthy steady-state host every run reports `changed=0`; a non-zero
 count is a drift report — read it, don't rerun past it. Converge enforces
 and never removes access (RFC-008: Convergence): no door closes as a
 side effect, so a scheduled converge can run blind. For detection
-without enforcement, add `--check --diff`. If your network drops SSH
-bursts, set `SSH_SPACING_SECONDS` to pause before SSH-heavy runs.
+without enforcement, add `--check --diff`. If your network's IPS drops
+SSH bursts, space out SSH-heavy runs (the collection needs nothing
+special; pace them however your scheduler allows).
 
 **Patch** — deliberate full patching (the automatic baseline covers
 security updates only):
@@ -209,9 +213,9 @@ sibling so the operation never depends on the key it replaces (RFC-004):
 Purpose layers (a k3s node, a database host) import
 `cur8s.ubuntu.converge` first, then apply their own state — every tier
 enforces the baseline (RFC-001). The `examples/` directory holds eight
-runnable demonstrations of the pattern, shaped like a consumer
-environment repository: inventory, `requirements.yml`, a `site.yml` that
-composes the baseline with a purpose.
+runnable demonstrations of the pattern, each a `site.yml` that
+composes the baseline with a purpose, ready to drop into an environment
+repository beside your inventory and `requirements.yml`.
 
 ## 8. Going deeper
 

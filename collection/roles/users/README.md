@@ -1,6 +1,6 @@
 # users
 
-Creates the fixed baseline Ubuntu users `ansible` and `sysadmin` with locked passwords, one `ssh-ed25519` authorized key each, and passwordless sudo.
+Creates the fixed baseline Ubuntu users `ansible` and `sysadmin` with locked passwords, the one declared `ssh-ed25519` authorized key installed on each, and passwordless sudo. The key is installed additively: converge never removes keys (RFC-008), so an unexpected key survives until the report surfaces it and rotation or a human removes it.
 
 This role intentionally does not know about 1Password, DigitalOcean, or any other provider. Callers pass public keys as role variables.
 

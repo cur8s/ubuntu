@@ -47,7 +47,8 @@ worked example of that arrangement:
 
 **Swapping the vault**: edit `key/prep` (three lines — replace `op read`
 with your secret manager's equivalent) and make sure your manager's SSH
-agent serves the same keys. Nothing else in the folder knows 1Password
+agent serves the same keys, and update the `OP_*_KEY_REF` entries in
+`mise.toml`. Nothing else in the folder knows 1Password
 exists.
 
 ## The first host, start to finish

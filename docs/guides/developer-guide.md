@@ -198,9 +198,10 @@ what a human must decide. Add its FQCN and inputs to RFC-011, a `host:`
 wrapper in the qemu family and the integration folders, and a user-guide
 runbook section.
 
-**An example**: a directory under `examples/` (site.yml + README +
-requirements.yml) plus its two `mise-tasks/<provider>/test/<name>`
-wrappers. It must work on both architectures.
+**An example**: a directory under `examples/` (site.yml + README) plus
+its `mise-tasks/qemu/test/<name>` wrapper — the suites glob `examples/`,
+so coverage is automatic either way. It must work on both architectures
+(the DigitalOcean examples suite is the amd64 leg).
 
 **A provider integration folder**: copy the shape of
 `test/integration/digital-ocean/` — self-contained child mise config,
@@ -208,7 +209,7 @@ object-grammar tasks, its own helpers and state, custody wiring
 parameterized in `[env]` — plus a `test:integration:<provider>` orchestrator at
 root and a `mise trust` note in its README. The provider's bootstrap
 account becomes the default `LOCK_ACCOUNTS` target. Gate it on a real
-workload needing that provider (TODO item 8's rule).
+workload needing that provider (the TODO's multi-provider rule).
 
 **An RFC**: next free number; keep the reading-order arc sensible (the
 numbers follow it); state `Accepted` when in force; end with the Scope /
