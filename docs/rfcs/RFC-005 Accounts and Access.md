@@ -16,7 +16,7 @@ Privilege — membership in `sudo` or `admin`, a sudoers grant — is not a door
 
 ## What the Baseline Claims
 
-The baseline owns exactly two doors: `ansible` and `sysadmin` (RFC-004: Identity and Trust). It asserts their full specification — ed25519 keys, locked passwords, passwordless sudo — and asserts nothing about the existence of any other account. Service accounts are the purpose layers' business: the baseline never creates one, never locks one, never deletes one, and never mistakes a doorless account for a problem.
+The baseline owns exactly two doors: `ansible` and `sysadmin` (RFC-004: Identity and Trust). It enforces their full specification — ed25519 keys, locked passwords, passwordless sudo — and claims nothing about the existence of any other account. Service accounts are the purpose layers' business: the baseline never creates one, never locks one, never deletes one, and never mistakes a doorless account for a problem.
 
 ## Every Door Has an Owner
 
@@ -30,7 +30,7 @@ What violates the rule is the **unowned door**: the installer-created user nobod
 
 Removing access is the operation that can lose a host: close the wrong door, or close the right one before its replacement is proven, and what remains is the console. That risk is why the access surface gets five distinct verbs, each assigned to the hands whose mistakes are survivable:
 
-**Converge asserts** the two baseline accounts — and never removes access from anything: not the leftover bootstrap door, not even a foreign key found on a baseline account. This is structural, not configurable: routine convergence must be safe to run blind, on a schedule, forever (RFC-008: Convergence). Closing a door is never a side effect.
+**Converge enforces** the two baseline accounts — and never removes access from anything: not the leftover bootstrap door, not even a foreign key found on a baseline account. This is structural, not configurable: routine convergence must be safe to run blind, on a schedule, forever (RFC-008: Convergence). Closing a door is never a side effect.
 
 **Reporting observes** — because no door can be judged owned or unowned until someone can see it. A read-only report lays out the access surface — every door, every privilege holder, the state of previously closed doors, foreign keys on the baseline accounts — and changes nothing. Observation is deliberate, never ambient (RFC-002: Baseline Doctrine): converge does not narrate, and the report does not enforce.
 
@@ -48,7 +48,7 @@ Locking is also reversible from a console, where deletion is not. Ending access 
 
 ## Scope
 
-This RFC defines the account taxonomy, the doors model of the access surface, the baseline's claim of exactly two owned doors, the door-ownership conformance rule, and the division of verbs — assert, observe, lock, rotate, delete — among converge, reporting, explicit invocation, and humans.
+This RFC defines the account taxonomy, the doors model of the access surface, the baseline's claim of exactly two owned doors, the door-ownership conformance rule, and the division of verbs — enforce, observe, lock, rotate, delete — among converge, reporting, explicit invocation, and humans.
 
 It does not define the identity roles, key policy, or bootstrap lifecycle (RFC-004: Identity and Trust), convergence semantics (RFC-008: Convergence), where verification lives (RFC-002: Baseline Doctrine, RFC-009: Validation and Acceptance), or the operational runbooks (the user guide).
 

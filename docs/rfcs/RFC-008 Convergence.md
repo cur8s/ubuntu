@@ -4,11 +4,11 @@ Status: Accepted
 
 A provisioned host is only reachable; converge is what makes and keeps it conformant.
 
-Desired state is declared in git; converge re-asserts it. Drift — an out-of-band change by a person or an AI agent — is reverted on the next converge. Only declared, in-git changes stick. This makes every change attributable: the git commit is the who and why, the converge run is the what and when.
+Desired state is declared in git; converge enforces it. Drift — an out-of-band change by a person or an AI agent — is reverted on the next converge. Only declared, in-git changes stick. This makes every change attributable: the git commit is the who and why, the converge run is the what and when.
 
 Convergence is agentless: Ansible pushes over standard SSH through the `ansible` account. No per-host agent, no self-healing daemon. Reconciliation is on demand — ad-hoc from an operator workstation or on a schedule from an environment repository — and it is the same playbook either way.
 
-Converge asserts; it never removes access. No routine run closes a door — not a leftover bootstrap account, not a foreign key (RFC-005: Accounts and Access). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
+Converge enforces; it never removes access. No routine run closes a door — not a leftover bootstrap account, not a foreign key (RFC-005: Accounts and Access). Closing doors is a deliberate, standalone operation, which is what keeps a scheduled converge safe to run blind, forever.
 
 ## Steady State Is a No-Op
 
@@ -18,7 +18,7 @@ Detection and enforcement are one playbook and one flag: check mode reports what
 
 ## Composition
 
-A purpose layer's converge imports the baseline converge first, then applies its own purpose. Every tier re-asserts the baseline (RFC-001: The Host Baseline).
+A purpose layer's converge imports the baseline converge first, then applies its own purpose. Every tier enforces the baseline (RFC-001: The Host Baseline).
 
 ## Ansible Is an Implementation Choice
 
@@ -28,7 +28,7 @@ Ansible was selected because it operates over standard SSH, requires no host-sid
 
 This RFC defines convergence semantics: the source of truth, the drift model, idempotency, detection, and the guarantee that converge never removes access.
 
-It does not define what converge asserts (RFC-003: Baseline Contents), provisioning (RFC-006: Provisioning), or acceptance testing (RFC-009: Validation and Acceptance).
+It does not define what converge enforces (RFC-003: Baseline Contents), provisioning (RFC-006: Provisioning), or acceptance testing (RFC-009: Validation and Acceptance).
 
 ## Revisions
 

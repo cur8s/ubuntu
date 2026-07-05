@@ -8,19 +8,19 @@ The Host Baseline is a known, hardened, reproducible starting state. Every host 
 
 ## Lifecycle
 
-A host is provisioned once and converged forever. Provisioning produces a reachable host that already conforms (RFC-006: Provisioning). Convergence re-asserts the declared state for the rest of the host's life, reverting drift (RFC-008: Convergence). Later RFCs use "converge" in this sense.
+A host is provisioned once and converged forever. Provisioning produces a reachable host that already conforms (RFC-006: Provisioning). Convergence enforces the declared state for the rest of the host's life, reverting drift (RFC-008: Convergence). Later RFCs use "converge" in this sense.
 
 ## The Baseline and Layers
 
-The model has two tiers. The baseline is a fixed set of invariants: always enforced, never turned off, re-asserted on every converge on every host. Layers are everything optional or overridable — workload software, network posture, access systems. Being disable-able is what makes something a layer. Layers add posture; the baseline is minimal.
+The model has two tiers. The baseline is a fixed set of invariants: always enforced, never turned off, enforced anew on every converge on every host. Layers are everything optional or overridable — workload software, network posture, access systems. Being disable-able is what makes something a layer. Layers add posture; the baseline is minimal.
 
 The baseline is a floor: layers build above it, and nothing ever goes below it.
 
 ## Composition
 
-Purposes stack on the baseline in three tiers. The baseline is the generic bottom tier: it holds no secrets, no inventory, and no schedule. Purpose layers — a Kubernetes node, a database host — build on the baseline, and their convergence re-asserts the baseline before applying their own purpose. Deployments are the top tier: they own the inventory, host specifics, and keys, and run convergence ad-hoc or on a schedule.
+Purposes stack on the baseline in three tiers. The baseline is the generic bottom tier: it holds no secrets, no inventory, and no schedule. Purpose layers — a Kubernetes node, a database host — build on the baseline, and their convergence enforces the baseline before applying their own purpose. Deployments are the top tier: they own the inventory, host specifics, and keys, and run convergence ad-hoc or on a schedule.
 
-Because every tier re-asserts it, the baseline is guaranteed on every host, on every converge.
+Because every tier enforces it, the baseline is guaranteed on every host, on every converge.
 
 Access layers follow the same pattern. An identity-aware management network is an opt-in layer, never baked into the baseline, which must stay access-agnostic and work without one. A design sketch is held in `docs/notes/management-network.md`, and a runnable technique demo in `examples/tailscale/`.
 

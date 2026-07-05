@@ -16,7 +16,7 @@ Expanding the baseline requires architectural justification recorded in RFC-003:
 
 ## Pins, Not Checks
 
-The baseline stays as close to distro defaults as possible. A baseline role declares only what must be pinned: a setting that diverges from the default, or a default that must hold unconditionally where the distro leaves it conditional. Anything the default already guarantees is trusted, not asserted.
+The baseline stays as close to distro defaults as possible. A baseline role declares only what must be pinned: a setting that diverges from the default, or a default that must hold unconditionally where the distro leaves it conditional. Anything the default already guarantees is trusted, not enforced.
 
 Declared configuration is a maintenance liability: every pin must track upstream changes for as long as it exists. Nothing declared means nothing to maintain — and a default can always be pinned later, when evidence demands it.
 
