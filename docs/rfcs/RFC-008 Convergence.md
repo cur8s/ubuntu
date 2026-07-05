@@ -4,7 +4,7 @@ Status: Accepted
 
 A provisioned host is only reachable; converge is what makes and keeps it conformant.
 
-Desired state is declared in git; converge enforces it. Drift — an out-of-band change by a person or an AI agent — is reverted on the next converge. Only declared, in-git changes stick. This makes every change attributable: the git commit is the who and why, the converge run is the what and when.
+Desired state is declared in git; converge enforces it. Nothing on a host converges itself: convergence happens when the deployment tier runs it — a human ad hoc, or an environment repository's CI on a schedule (RFC-001: The Host Baseline). Drift — an out-of-band change by a person or an AI agent — is reverted on the next converge. Only declared, in-git changes stick. This makes every change attributable: the git commit is the who and why, the converge run is the what and when.
 
 Convergence is agentless: Ansible pushes over standard SSH through the `ansible` account. No per-host agent, no self-healing daemon. Reconciliation is on demand — ad-hoc from an operator workstation or on a schedule from an environment repository — and it is the same playbook either way.
 
