@@ -87,8 +87,8 @@ The steel thread:
 Run it locally — free, unattended, throwaway lab keys, no vault:
 
 ```sh
-mise run qemu:prep   # once: lab keys + cloud image cache
-mise run qemu:up     # create → wait out first boot → converge
+mise run prep   # once: lab keys + cloud image cache
+mise run up     # create → wait out first boot → converge
 ```
 
 (Bare `mise run` prints the workflow cheat sheet.)
@@ -96,7 +96,7 @@ mise run qemu:up     # create → wait out first boot → converge
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run qemu:host:validate-reboot   # reboot → re-verify access + baseline services
+mise run host:validate-reboot   # reboot → re-verify access + baseline services
 ```
 
 The same thread runs against real DigitalOcean as the release gate
@@ -110,13 +110,13 @@ servers — enter through adoption instead (RFC-007): a read-only
 assessment, an additive adopt that creates the two accounts, then the
 same converge; the old access path is closed deliberately at the end.
 Both door shapes the clouds hand you are rehearsed locally by
-`mise run qemu:test:scenarios` (root-user and sudo-user scenarios).
+`mise run test:scenarios` (root-user and sudo-user scenarios).
 
 SSH shortcuts (local lab):
 
 ```sh
-mise run qemu:ssh:ansible
-mise run qemu:ssh:sysadmin
+mise run ssh:ansible
+mise run ssh:sysadmin
 ```
 
 ## Ansible Shape
@@ -137,7 +137,7 @@ Outside converge, two standalone playbooks act on the access surface
 door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
 doors named in `LOCK_ACCOUNTS` (the `lock_account` role) after re-proving
 both baseline accounts — converge itself never removes access. The local
-scenario chain rehearses the whole arc (`qemu:test:scenarios`); on a real
+scenario chain rehearses the whole arc (`test:scenarios`); on a real
 cloud host the same playbook closes the provider door (acceptance gate
 first).
 

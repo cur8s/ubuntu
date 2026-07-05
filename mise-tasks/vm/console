@@ -2,7 +2,7 @@
 #MISE description="Follow it live — the debug window when SSH is down"
 set -eu
 if [ ! -f "$QEMU_VM_DIR/console.log" ]; then
-  echo "No console log yet (mise run qemu:up creates and boots the VM)." >&2
+  echo "No console log yet (mise run up creates and boots the VM)." >&2
   exit 1
 fi
 exec tail -n 100 -F "$QEMU_VM_DIR/console.log"

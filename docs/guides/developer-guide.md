@@ -51,13 +51,13 @@ them only when you run it.
 - Everything generated lands in git-ignored `.generated/` (the
   integration folders keep their own, inside themselves); `mise run
   clean` destroys the local VM and wipes the root one. Recover with
-  `qemu:prep`.
+  `prep`.
 
 ## 3. The task surface
 
 Bare `mise run` prints the cheat sheet — the golden path through the
 labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
-in as dependencies (`qemu:keys`, `qemu:fetch`, `example:link`) are
+in as dependencies (`keys`, `fetch`, `example:link`) are
 hidden but runnable by name. The grammar:
 
 - provider `qemu` (local, arm64, free) is the root harness's only lab.
@@ -76,8 +76,8 @@ hidden but runnable by name. The grammar:
 ## 4. The QEMU lab — the everyday loop
 
 ```sh
-mise run qemu:prep   # once: throwaway lab keys + cloud image (~600MB)
-mise run qemu:up     # create → boot (127.0.0.1:2222) → wait → converge
+mise run prep   # once: throwaway lab keys + cloud image (~600MB)
+mise run up     # create → boot (127.0.0.1:2222) → wait → converge
 ```
 
 Mechanics worth knowing when debugging:
@@ -96,10 +96,10 @@ Mechanics worth knowing when debugging:
   named `127.0.0.1` is treated by Ansible as a localhost alias, so the
   lab inventory names the host `ubuntu-qemu-lab` with
   `ansible_host=127.0.0.1`.
-- **Consoles and state**: `qemu:vm:console` follows the serial log — the
-  debug window when SSH is down. `qemu:vm:status` reports stages done and
+- **Consoles and state**: `vm:console` follows the serial log — the
+  debug window when SSH is down. `vm:status` reports stages done and
   the next command. Per-VM `known_hosts` lives in the VM dir and dies
-  with it. `qemu:vm:destroy` keeps the image cache: destroy → up is an
+  with it. `vm:destroy` keeps the image cache: destroy → up is an
   offline few-minute loop.
 
 **The adoption rehearsals** — faithful "existing servers", one per door
@@ -111,18 +111,18 @@ and that is what the parameter proves). One command runs both stories
 sequentially, each asserted and destroyed on its own:
 
 ```sh
-mise run qemu:test:scenarios
+mise run test:scenarios
 ```
 
 Or walk one by hand:
 
 ```sh
-mise run qemu:vm:create-sudo-user-scenario && mise run qemu:vm:boot
-mise run qemu:host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
-mise run qemu:host:adopt
-mise run qemu:host:converge      # the delta the verdict predicted, then 0
-mise run qemu:host:validate-reboot
-mise run qemu:host:lock-accounts # closes the scenario door (the default)
+mise run vm:create-sudo-user-scenario && mise run vm:boot
+mise run host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
+mise run host:adopt
+mise run host:converge      # the delta the verdict predicted, then 0
+mise run host:validate-reboot
+mise run host:lock-accounts # closes the scenario door (the default)
 ```
 
 (For the root-user scenario, set `ADOPT_USER=root` and
@@ -153,8 +153,8 @@ with the key env vars exported). First proven from the sandbox against
 
 ## 6. Testing
 
-Each example has a local test task (`qemu:test:docker`, ... and
-`qemu:test:all` for the suite); the amd64 leg runs the same playbooks
+Each example has a local test task (`test:docker`, ... and
+`test:all` for the suite); the amd64 leg runs the same playbooks
 against a droplet from the sandbox harness (§5). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
@@ -165,7 +165,7 @@ reinstall between iterations. Architecture coverage splits as: QEMU
 arm64 every day, real amd64 via the DigitalOcean integration test at
 release cadence
 (RFC-009, RFC-010); nothing may assume an architecture it did not
-detect. `qemu:test:scenarios` is the third leg: both adoption
+detect. `test:scenarios` is the third leg: both adoption
 rehearsals, each asserted end to end (§4).
 
 ## 7. Adding things
@@ -211,7 +211,7 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
    `mise run test` against the release-candidate ref, the three examples
    against a droplet from that harness (amd64 leg), plus
-   `mise run qemu:test:all` and `mise run qemu:test:scenarios` locally.
+   `mise run test:all` and `mise run test:scenarios` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.

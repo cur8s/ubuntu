@@ -67,7 +67,7 @@ qemu_inventory() {
 # the throwaway lab keys, never the vault's.
 qemu_ansible_playbook() {
   if [ ! -d "$QEMU_VM_DIR" ]; then
-    echo "No local QEMU VM exists (mise run qemu:up)." >&2
+    echo "No local QEMU VM exists (mise run up)." >&2
     return 1
   fi
   qemu_keys_env

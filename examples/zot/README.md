@@ -19,11 +19,11 @@ Techniques demonstrated:
 - **Handler-driven restarts** on binary/config/unit change, config `verify`
   before enable, and an API smoke test (`/v2/`) with retries.
 
-Run against the local lab VM (`mise run qemu:up` first — see the
+Run against the local lab VM (`mise run up` first — see the
 developer guide):
 
 ```sh
-mise run qemu:test:zot
+mise run test:zot
 ```
 
 The first play enforces the baseline (RFC-001); the second installs zot.

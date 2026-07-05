@@ -1,19 +1,19 @@
 #!/usr/bin/env sh
-#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: qemu:vm:boot, then qemu:host:adoptable"
+#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: vm:boot, then host:adoptable"
 #MISE quiet=true
-#MISE depends=["qemu:fetch"]
+#MISE depends=["fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env
 scenario_user="${SCENARIO_USER:-ubuntu}"
 echo "Creating the sudo-user scenario VM (door on: $scenario_user)"
 if [ -e "$QEMU_VM_DIR" ]; then
-  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2
+  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run vm:destroy first)." >&2
   exit 1
 fi
 mkdir -p "$QEMU_VM_DIR"
 
-# Copy-on-write overlay, exactly as qemu:vm:create.
+# Copy-on-write overlay, exactly as vm:create.
 base_image="$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")"
 qemu-img create -q -f qcow2 -b "$base_image" -F qcow2 \
   "$QEMU_VM_DIR/disk.qcow2" "$QEMU_DISK_SIZE"
@@ -47,4 +47,4 @@ hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
 cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
 
 echo "sudo-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
-echo "Next: mise run qemu:vm:boot, then mise run qemu:host:adoptable"
+echo "Next: mise run vm:boot, then mise run host:adoptable"

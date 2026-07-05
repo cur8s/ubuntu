@@ -9,7 +9,7 @@ this page. The essentials:
   approves designs — and RFC changes land as their own reviewed commit —
   before implementation starts.
 - **Prove before commit.** Demonstrate every change live on the QEMU lab
-  (`mise run qemu:up` — fully unattended, no 1Password). The idempotency
+  (`mise run up` — fully unattended, no 1Password). The idempotency
   contract: run it twice, the second pass must report `changed=0`. Put
   the recap evidence in the commit message.
 - **Names are the interface.** Task grammar is

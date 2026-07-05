@@ -5,14 +5,15 @@
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
 # mise-tasks/qemu/vm/create -> qemu:vm:create). Grammar:
-# <provider>:<object>:<action> — qemu is the local lab provider; cloud
-# harnesses are self-contained consumer-shaped folders that live with
-# the operator's cloud custody (the folder is the namespace; the
-# DigitalOcean one is in repo history at b0ba5ff). Objects are vm (the
-# machine, provider plane), host (baseline operations on the managed
-# system, via the collection playbooks), ssh (shell access, by user),
-# test (examples). Workflows where the provider itself
-# is the object (prep, up) take no object segment. A namespace must have
+# <object>:<action> — every task here acts on the local QEMU lab, the
+# repo's only proof plane; cloud harnesses are self-contained
+# consumer-shaped folders that live with the operator's cloud custody
+# (the folder is the namespace; the DigitalOcean one is in repo history
+# at b0ba5ff). Objects are vm (the machine, provider plane), host
+# (baseline operations on the managed system, via the collection
+# playbooks), ssh (shell access, by user), test (examples). Workflows
+# where the lab itself is the object (prep, up, clean) take no object
+# segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently
 # ignores them; shared helpers live in mise-tasks/lib.sh.
 

@@ -8,20 +8,20 @@ if [ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" ] && [ -s "$QEMU_KEYS_DIR/ubuntu-sys
   && [ -f "$QEMU_CACHE_DIR/$(basename "$QEMU_IMAGE_URL")" ]; then
   echo "1 prep      done     lab keys generated, image cached"
 else
-  echo "1 prep      todo     run: mise run qemu:prep"
-  next="qemu:prep"
+  echo "1 prep      todo     run: mise run prep"
+  next="prep"
 fi
 
 if [ -f "$QEMU_VM_DIR/qemu.pid" ] && kill -0 "$(cat "$QEMU_VM_DIR/qemu.pid")" 2>/dev/null; then
   echo "2 vm        running  pid $(cat "$QEMU_VM_DIR/qemu.pid"), ssh 127.0.0.1:$QEMU_SSH_PORT"
 elif [ -d "$QEMU_VM_DIR" ]; then
-  echo "2 vm        stopped  run: mise run qemu:vm:boot"
-  next="${next:-qemu:vm:boot}"
+  echo "2 vm        stopped  run: mise run vm:boot"
+  next="${next:-vm:boot}"
 else
-  echo "2 vm        absent   run: mise run qemu:vm:create (or qemu:up for the whole thread)"
-  next="${next:-qemu:up}"
+  echo "2 vm        absent   run: mise run vm:create (or up for the whole thread)"
+  next="${next:-up}"
 fi
 
 echo "3 converge  ?        converge is the check: changed=0 means conformant"
 echo
-echo "next: mise run ${next:-qemu:host:converge}"
+echo "next: mise run ${next:-host:converge}"

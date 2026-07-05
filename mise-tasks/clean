@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #MISE description="Destroy the local lab VM and delete .generated/"
-#MISE depends=["qemu:vm:destroy"]
+#MISE depends=["vm:destroy"]
 set -eu
 # The lab ssh-agent outlives its socket file; kill it before wiping state
 # so clean/prep cycles do not leak one orphaned agent per cycle.

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Rides out the first boot (next: qemu:host:converge)"
+#MISE description="Rides out the first boot (next: host:converge)"
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env

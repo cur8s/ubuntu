@@ -30,14 +30,14 @@ already show; anything else belongs in that reference.
 
 ## Running the examples (contributors)
 
-The local QEMU lab must exist (`mise run qemu:up`; see
+The local QEMU lab must exist (`mise run up`; see
 `docs/guides/developer-guide.md`). Examples resolve `cur8s.ubuntu` from the
 working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run qemu:test:docker   # one example, on the local lab
-mise run qemu:test:all      # every example (skips tailscale without TAILSCALE_AUTHKEY)
+mise run test:docker   # one example, on the local lab
+mise run test:all      # every example (skips tailscale without TAILSCALE_AUTHKEY)
 ```
 
 Every `test:` task enforces the examples' contract: it runs the example

@@ -13,11 +13,11 @@ Techniques demonstrated:
 - **Service enable/start with in-play validation** — layers may verify
   outcomes in-play (unlike baseline roles; see RFC-002: Baseline Doctrine).
 
-Run against the local lab VM (`mise run qemu:up` first — see the
+Run against the local lab VM (`mise run up` first — see the
 developer guide):
 
 ```sh
-mise run qemu:test:docker
+mise run test:docker
 ```
 
 The first play enforces the baseline (the composition pattern every layer

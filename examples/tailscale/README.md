@@ -19,16 +19,16 @@ Techniques demonstrated:
   (join, or enable SSH on an already-joined host), then assert the outcome.
 - `--accept-dns=false` keeps the example from rewriting the lab VM's DNS.
 
-Run against the local lab VM (`mise run qemu:up` first — see the
+Run against the local lab VM (`mise run up` first — see the
 developer guide):
 
 ```sh
 TAILSCALE_AUTHKEY="$(op read 'op://devops/ubuntu-tailscale-auth-key/password')" \
-  mise run qemu:test:tailscale
+  mise run test:tailscale
 ```
 
 Re-runs need no auth key once the host is joined (`mise run
-qemu:test:tailscale` alone reports `changed=0`).
+test:tailscale` alone reports `changed=0`).
 
 Cleanup note: deleting the droplet does not remove its node from the
 tailnet. Remove it in the Tailscale admin console unless the auth key was

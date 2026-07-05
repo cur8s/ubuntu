@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
-#MISE description="Overlay disk + NoCloud seed from rendered cloud-init (next: qemu:vm:boot)"
+#MISE description="Overlay disk + NoCloud seed from rendered cloud-init (next: vm:boot)"
 #MISE quiet=true
-#MISE depends=["qemu:fetch"]
+#MISE depends=["fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 if [ -e "$QEMU_VM_DIR" ]; then
-  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run qemu:vm:destroy first)." >&2
+  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run vm:destroy first)." >&2
   exit 1
 fi
 
@@ -39,4 +39,4 @@ hdiutil makehybrid -quiet -iso -joliet -default-volume-name cidata \
 # template for the aarch64 code firmware.
 cp "$(brew --prefix qemu)/share/qemu/edk2-arm-vars.fd" "$QEMU_VM_DIR/efivars.fd"
 
-echo "VM prepared in $QEMU_VM_DIR (start it with: mise run qemu:vm:boot)"
+echo "VM prepared in $QEMU_VM_DIR (start it with: mise run vm:boot)"
