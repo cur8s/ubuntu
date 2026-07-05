@@ -7,13 +7,11 @@
 # sudoers, and the sshd drop-in -- from the *same sources*, so the first converge
 # is a no-op for users and SSH hardening (RFC-006: Provisioning).
 #
-# Reads the extracted public keys under .generated/ssh (produced by
-# `mise run key:prep`) and the role-owned sshd drop-in; writes the
-# cloud-config to CLOUD_INIT_FILE. Depends only on files in the repo and under
-# .generated, never on 1Password.
-#
-# Required environment (supplied by mise): ANSIBLE_PUB_KEY, SYSADMIN_PUB_KEY,
-# CLOUD_INIT_FILE. Run via `mise run cloud-init:render`.
+# Reads the two public key files named by ANSIBLE_PUB_KEY and
+# SYSADMIN_PUB_KEY plus the role-owned sshd drop-in; writes the
+# cloud-config to CLOUD_INIT_FILE. Depends on nothing but those three
+# environment variables and the collection's own files — no secrets
+# manager, no harness (RFC-011: Conventions Contract).
 set -eu
 
 if [ ! -s "$ANSIBLE_PUB_KEY" ] || [ ! -s "$SYSADMIN_PUB_KEY" ]; then
@@ -28,6 +26,18 @@ if [ ! -s "$sshd_dropin" ]; then
   echo "Missing sshd drop-in source: $sshd_dropin" >&2
   exit 1
 fi
+
+# The key contents are interpolated into double-quoted YAML scalars in
+# the heredoc below: refuse anything that is not a plain single-line
+# ssh-ed25519 public key, so a wrong or corrupted input cannot poison
+# the rendered document (RFC-004: ed25519 only).
+for baseline_pub_key in "$ANSIBLE_PUB_KEY" "$SYSADMIN_PUB_KEY"; do
+  if [ "$(LC_ALL=C grep -c '' "$baseline_pub_key")" -gt 1 ] \
+    || ! LC_ALL=C grep -Eq '^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( [A-Za-z0-9 @._:+-]*)?$' "$baseline_pub_key"; then
+    echo "Refusing to render: $baseline_pub_key is not a single-line ssh-ed25519 public key." >&2
+    exit 1
+  fi
+done
 
 ansible_pubkey="$(cat "$ANSIBLE_PUB_KEY")"
 sysadmin_pubkey="$(cat "$SYSADMIN_PUB_KEY")"
@@ -103,7 +113,7 @@ $(sed 's/^/      /' "$sshd_dropin")
 # unconditionally. The reboot activates the new kernel AND is a smoke test --
 # converge can only connect afterward if the host came back with working SSH,
 # so a successful first converge proves the box survives a reboot. (The fuller
-# reboot-survivability acceptance test lives in the roles, per RFC-009: Validation and Acceptance.)
+# reboot-survivability acceptance test is cur8s.ubuntu.validate_reboot, per RFC-009: Validation and Acceptance.)
 # No runcmd: the drop-in is static and role-validated, and the reboot re-reads
 # it, so an sshd -t diagnostic / reload here would add nothing.
 package_update: true

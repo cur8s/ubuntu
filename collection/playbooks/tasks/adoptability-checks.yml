@@ -72,7 +72,7 @@
     if entry="$(getent passwd {{ adopt_probe.name }})"; then
       home="$(printf '%s' "$entry" | cut -d: -f6)"
       echo "EXISTS"
-      cat "$home/.ssh/authorized_keys" 2>/dev/null || true
+      cat "$home/.ssh/authorized_keys" "$home/.ssh/authorized_keys2" 2>/dev/null || true
     else
       echo "ABSENT"
     fi

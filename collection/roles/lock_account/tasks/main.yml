@@ -26,10 +26,18 @@
 # ==========================================================================
 # Remove the SSH door
 # ==========================================================================
-- name: Remove authorized_keys for {{ lock_account_name }}
+# Both paths: stock sshd's AuthorizedKeysFile default honors
+# .ssh/authorized_keys AND .ssh/authorized_keys2 — a door in the second
+# file is exactly the kind a lock must not miss.
+- name: Remove authorized keys for {{ lock_account_name }}
   ansible.builtin.file:
-    path: "{{ getent_passwd[lock_account_name][4] }}/.ssh/authorized_keys"
+    path: "{{ getent_passwd[lock_account_name][4] }}/.ssh/{{ lock_key_file }}"
     state: absent
+  loop:
+    - authorized_keys
+    - authorized_keys2
+  loop_control:
+    loop_var: lock_key_file
 
 # ==========================================================================
 # Remove provisioning-time sudoers

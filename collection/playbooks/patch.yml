@@ -1,6 +1,6 @@
 ---
-# Operator-invoked patching (RFC-003's automatic floor covers security
-# updates only; this applies everything else, deliberately).
+# Operator-invoked patching (RFC-003's automatic security updates cover
+# only security; this applies everything else, deliberately).
 #
 # This play NEVER reboots. If patching leaves a reboot pending (a new
 # kernel, typically), it says so and defers to cur8s.ubuntu.validate_reboot —
@@ -16,6 +16,26 @@
   vars:
     ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'ANSIBLE_PUB_KEY') }}"
 
+  pre_tasks:
+    # ==========================================================================
+    # Release Guard
+    # ==========================================================================
+    - name: Gather distribution facts
+      ansible.builtin.setup:
+        gather_subset:
+          - "!all"
+          - "!min"
+          - distribution
+
+    - name: Require the supported Ubuntu release
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] | default('') == 'Ubuntu'
+          - ansible_facts['distribution_version'] | default('') == '24.04'
+        fail_msg: >-
+          This baseline series targets Ubuntu 24.04 LTS only (RFC-010);
+          found {{ ansible_facts['distribution'] | default('unknown') }}
+          {{ ansible_facts['distribution_version'] | default('unknown') }}.
   tasks:
     - name: Update apt package cache
       ansible.builtin.apt:

@@ -14,13 +14,20 @@
 # ==========================================================================
 # Doors: SSH keys
 # ==========================================================================
-- name: Find accounts with authorized_keys
+# Both files: stock sshd's AuthorizedKeysFile default honors
+# .ssh/authorized_keys AND .ssh/authorized_keys2.
+- name: Find accounts with authorized keys
   ansible.builtin.shell: |
     set -eu
     awk -F: '$6 != "" {print $1" "$6}' /etc/passwd | while read -r user home; do
-      f="$home/.ssh/authorized_keys"
-      if [ -s "$f" ]; then
-        printf '%s %s\n' "$user" "$(grep -c -E '^[^#[:space:]]' "$f" || true)"
+      count=0
+      for f in "$home/.ssh/authorized_keys" "$home/.ssh/authorized_keys2"; do
+        if [ -s "$f" ]; then
+          count=$((count + $(grep -c -E '^[^#[:space:]]' "$f" || true)))
+        fi
+      done
+      if [ "$count" -gt 0 ]; then
+        printf '%s %s\n' "$user" "$count"
       fi
     done
   changed_when: false
@@ -57,7 +64,8 @@
 # ==========================================================================
 - name: Read baseline account authorized_keys
   ansible.builtin.shell: |
-    cat "/home/{{ report_account }}/.ssh/authorized_keys" 2>/dev/null || true
+    cat "/home/{{ report_account }}/.ssh/authorized_keys" \
+        "/home/{{ report_account }}/.ssh/authorized_keys2" 2>/dev/null || true
   changed_when: false
   register: report_baseline_keys
   loop:
