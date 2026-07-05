@@ -9,9 +9,13 @@ their own outcomes in-play (RFC-002: Baseline Doctrine).
 
 Every example must work on both supported architectures, amd64 and arm64
 (RFC-010: Release and Versioning): repo lines declare both architectures,
-release binaries are selected through an architecture map (see `zot/`), and
-installers that detect the architecture themselves (see `k3s/`) are
-preferred. Nothing may assume an architecture it did not detect.
+and release binaries are selected through an architecture map (see
+`zot/`). Nothing may assume an architecture it did not detect.
+
+The catalog is deliberately small: three examples that each demonstrate
+a distinct technique set, with no technique shown twice. Patterns the
+catalog does not demonstrate live in the user guide's "Installing deb
+packages" reference (docs/guides/user-guide.md).
 
 ## Index
 
@@ -19,12 +23,8 @@ preferred. Nothing may assume an architecture it did not detect.
 | --- | --- | --- |
 | `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays |
 | `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation |
-| `postgres/` | database | versioned vendor package from PGDG, deb822 repo |
 | `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers |
-| `lynis/` | security | ASCII key → `gpg --dearmor` keyring → classic `.list` repo; package with no service |
-| `osquery/` | security | install a package but keep its daemon deliberately off (interactive-only tooling) |
 | `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join |
-| `k3s/` | kubernetes | vendor installer piped to `sh` made idempotent (channel resolve + version gate), env-var installer params, declarative `config.yaml`, node-Ready wait |
 
 ## Running the examples (contributors)
 

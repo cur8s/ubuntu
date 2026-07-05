@@ -259,12 +259,124 @@ sibling so the operation never depends on the key it replaces (RFC-004):
 
 Purpose layers (a k3s node, a database host) import
 `cur8s.ubuntu.converge` first, then apply their own state — every tier
-enforces the baseline (RFC-001). The `examples/` directory holds eight
-runnable demonstrations of the pattern, each a `site.yml` that
-composes the baseline with a purpose, ready to drop into an environment
-repository beside your inventory and `requirements.yml`.
+enforces the baseline (RFC-001). The `examples/` directory holds three
+runnable demonstrations of the pattern — docker (vendor apt repo), zot
+(release binary run as a service you define), tailscale (secret-gated
+join of an access network) — each a `site.yml` that composes the
+baseline with a purpose, ready to drop into an environment repository
+beside your inventory and `requirements.yml`.
 
-## 8. Going deeper
+## 8. Installing deb packages (reference)
+
+Every purpose layer starts by getting software onto the host. These are
+the patterns, from basic to full, ready to lift into a layer playbook.
+Whatever the pattern, end with validation: run the tool's version
+command and, for services, `systemctl is-active`, as in-play proof the
+install worked.
+
+**Stock Ubuntu archive.** Nothing to trust, nothing to add:
+
+```yaml
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+```
+
+**Vendor apt repository, modern form (deb822).** One `.sources` file
+carries the repo and its trust anchor; `Signed-By` points at the
+vendor's key fetched to a root-owned path (an ASCII `.asc` works
+directly — no dearmoring). Detect the architecture, never assume it:
+
+```yaml
+- name: Read dpkg architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: dpkg_architecture
+  changed_when: false
+
+- name: Trust packages signed by the vendor
+  ansible.builtin.get_url:
+    url: https://example.com/vendor.asc
+    dest: /etc/apt/keyrings/vendor.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Add the vendor apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/vendor.sources
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: https://example.com/apt
+      Suites: noble
+      Components: stable
+      Architectures: {{ dpkg_architecture.stdout }}
+      Signed-By: /etc/apt/keyrings/vendor.asc
+
+- name: Install the vendor package
+  ansible.builtin.apt:
+    name: vendor-package
+    state: present
+    update_cache: true
+```
+
+The `examples/docker/` playbook is this pattern live.
+
+**Vendor publishes ready-made keyring and list files.** Some vendors
+(Tailscale) host both a binary keyring and a matching `.list`; fetch
+the pair verbatim instead of authoring anything — see
+`examples/tailscale/`.
+
+**Legacy: ASCII key that must be dearmored.** Older vendor docs
+(osquery, CISOfy/lynis) publish an ASCII-armored key referenced from a
+one-line `.list`, which needs converting once. Keep it idempotent by
+keying the conversion on the download's change plus the keyring's
+existence:
+
+```yaml
+- name: Download vendor signing key
+  ansible.builtin.get_url:
+    url: https://example.com/pubkey.gpg
+    dest: /tmp/vendor-key.pub
+  register: vendor_signing_key
+
+- name: Check vendor keyring
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/vendor-archive-keyring.gpg
+  register: vendor_keyring
+
+- name: Trust packages signed by the vendor
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor --yes --output
+      /usr/share/keyrings/vendor-archive-keyring.gpg
+      /tmp/vendor-key.pub
+  changed_when: vendor_signing_key.changed or not vendor_keyring.stat.exists
+
+- name: Add the vendor apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/vendor.list
+    content: |
+      deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/vendor-archive-keyring.gpg] https://example.com/deb stable main
+```
+
+Prefer the deb822 form whenever the vendor's key can be fetched
+directly; this dance exists only for repos documented the old way.
+
+**Pinning a major version.** Vendors that ship parallel major versions
+(PGDG, others) encode the version in the package name — install
+`postgresql-18`, not `postgresql`, and upgrades within the major flow
+through `cur8s.ubuntu.patch` while the major stays put.
+
+**A package whose daemon you do not want.** Installing for the CLI
+only (osquery's `osqueryi`): install the package, then keep its service
+down — `systemd_service` with `enabled: false, state: stopped` — and
+assert it stays down via `service_facts`.
+
+## 9. Going deeper
 
 The RFCs read in order — RFC-000 through RFC-011 — and are the normative
 contract behind everything above. Start with RFC-001: The Host Baseline
