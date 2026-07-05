@@ -8,8 +8,12 @@
 # amd64 on QEMU's default SeaBIOS. Networking is QEMU user-mode with one
 # forwarded SSH port — no root, no bridges, no daemons.
 #
-# Copy this file into any repository that needs a quick VM. It has no
-# dependencies on the repository it came from (github.com/cur8s/ubuntu).
+# Upstream: https://github.com/cur8s/qemu        Version: 0.1.0
+# This file is designed to be vendored: copy it into any repository that
+# needs a quick VM and keep this header. Refresh a vendored copy with:
+#   gh api -H "Accept: application/vnd.github.raw" \
+#     "repos/cur8s/qemu/contents/qemu-vm.sh?ref=vX.Y.Z" > qemu-vm.sh
+# Patches go upstream, never into vendored copies.
 #
 # Requirements:
 #   macOS:  brew install qemu           (hdiutil builds the seed ISO)

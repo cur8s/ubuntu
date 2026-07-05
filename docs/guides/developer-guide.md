@@ -76,12 +76,14 @@ hidden but runnable by name. The grammar:
 
 ## 4. The QEMU lab — the everyday loop
 
-The VM mechanics live in `scripts/qemu-vm.sh` — one vendorable POSIX
-file (fetch / create / boot / wait / ssh / status / console / destroy,
-configured by `QVM_*` env vars, guest arch following the host) with no
-dependency on this repository. The mise tasks are thin wrappers handing
-it the lab's paths and rendered user-data; any repository that needs a
-disposable Ubuntu VM copies the one file (its header is the manual).
+The VM mechanics live in `scripts/qemu-vm.sh` — a vendored copy of
+the `cur8s/qemu` product (one POSIX file: fetch / create / boot / wait
+/ ssh / status / console / destroy, `QVM_*` env config, guest arch
+following the host). It was developed here, then extracted; this repo
+is now its first consumer. The mise tasks are thin wrappers handing it
+the lab's paths and rendered user-data. Do not edit the file here —
+patches go upstream, and its header carries the pinned refresh
+command.
 
 ```sh
 mise run prep   # once: throwaway lab keys + cloud image (~600MB)
