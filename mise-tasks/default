@@ -22,7 +22,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
           live with the operator's cloud custody, same grammar inside${R}
 
   ${B}objects${R}
-    ${C}vm${R}      the machine itself       ${D}create, boot, wait, status, destroy, ...${R}
+    ${C}vm${R}      the machine itself       ${D}build, start, wait-until-ready, status, destroy, ...${R}
     ${C}host${R}    the managed system       ${D}converge, adopt, validate-reboot, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all; scenarios${R}
@@ -36,9 +36,9 @@ ${B}A SESSION, START TO FINISH${R}
 
   ${D}mise run${R} ${C}prep${R}                   once: throwaway lab keys + image cache ${D}(~600MB)${R}
   ${D}mise run${R} ${C}up${R}                     stand up the lab, unattended
-                                ${D}(= vm:create -> vm:boot -> vm:wait -> host:converge)${R}
+                                ${D}(= vm:build -> vm:start -> vm:wait-until-ready -> host:converge)${R}
   ${D}mise run${R} ${C}vm:status${R}              where am I? stages done, and the next command
-  ${D}mise run${R} ${C}ssh:ansible${R}            inspect by hand ${D}(boot problems: vm:console)${R}
+  ${D}mise run${R} ${C}ssh:ansible${R}            inspect by hand ${D}(boot problems: vm:show-boot-log)${R}
   ${D}mise run${R} ${C}host:check${R}             drift alarm: the converge report, nothing enforced
   ${D}mise run${R} ${C}host:converge${R}          daily enforcement; changed=0 means conformant
   ${D}mise run${R} ${C}test:docker${R}            test one example: runs it twice,

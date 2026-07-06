@@ -8,11 +8,12 @@ ssh_task_preamble() {
   mkdir -p "$ANSIBLE_LOCAL_TEMP"
 }
 
-# The vendorable VM harness. Its QVM_* interface is fed straight from
-# the mise env; callers may override per invocation (scenario creates
-# set QVM_NAME and QVM_USER_DATA).
+# The vendored VM harness. Its QVM_* interface is fed straight from
+# the mise env; callers may override per invocation (scenario builds
+# set QVM_NAME and QVM_USER_DATA). Invoked directly — no `sh` prefix —
+# so its own shebang (bash) governs.
 qvm() {
-  sh "$MISE_CONFIG_ROOT/scripts/qemu-vm.sh" "$@"
+  "$MISE_CONFIG_ROOT/vendor/qemu-vm.sh" "$@"
 }
 
 # Point the key env vars at the QEMU lab's throwaway keypairs, generating

@@ -6,7 +6,7 @@ set -eu
 next=""
 
 if [ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" ] && [ -s "$QEMU_KEYS_DIR/ubuntu-sysadmin.pub" ] \
-  && [ -f "$(qvm image-path)" ]; then
+  && qvm status | grep -q '^image  *cached'; then
   echo "1 prep      done     lab keys generated, image cached"
 else
   echo "1 prep      todo     run: mise run prep"
@@ -16,10 +16,10 @@ fi
 if [ -f "$QVM_DIR/qemu.pid" ] && kill -0 "$(cat "$QVM_DIR/qemu.pid")" 2>/dev/null; then
   echo "2 vm        running  pid $(cat "$QVM_DIR/qemu.pid"), ssh 127.0.0.1:$QVM_SSH_PORT"
 elif [ -d "$QVM_DIR" ]; then
-  echo "2 vm        stopped  run: mise run vm:boot"
-  next="${next:-vm:boot}"
+  echo "2 vm        stopped  run: mise run vm:start"
+  next="${next:-vm:start}"
 else
-  echo "2 vm        absent   run: mise run vm:create (or up for the whole thread)"
+  echo "2 vm        absent   run: mise run vm:build (or up for the whole thread)"
   next="${next:-up}"
 fi
 

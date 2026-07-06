@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: vm:boot, then host:adoptable"
+#MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: vm:start, then host:adoptable"
 #MISE quiet=true
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
@@ -31,7 +31,7 @@ mkdir -p "$(dirname "$user_data")"
   printf '    ssh_authorized_keys:\n'
   printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
 } > "$user_data"
-QVM_NAME="ubuntu-qemu-sudo-user" QVM_USER_DATA="$user_data" qvm create
+QVM_NAME="ubuntu-qemu-sudo-user" QVM_USER_DATA="$user_data" qvm build-vm
 
 echo "sudo-user scenario VM prepared in $QVM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
-echo "Next: mise run vm:boot, then mise run host:adoptable"
+echo "Next: mise run vm:start, then mise run host:adoptable"

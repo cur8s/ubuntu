@@ -3,4 +3,4 @@
 #MISE confirm="Destroy the local QEMU VM and delete its state directory? This cannot be undone."
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-qvm destroy
+qvm destroy-vm

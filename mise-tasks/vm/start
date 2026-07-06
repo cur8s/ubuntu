@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Start the built VM, daemonized; serial output to console.log (next: vm:wait-until-ready)"
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qvm start-vm
+echo "First boot dist-upgrades and reboots; mise run vm:wait-until-ready blocks until it is ready."

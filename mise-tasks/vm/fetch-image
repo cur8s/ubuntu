@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Download and checksum-verify the cloud image into the cache (no-op if cached)"
+#MISE hide=true
+set -eu
+. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+qvm fetch-image

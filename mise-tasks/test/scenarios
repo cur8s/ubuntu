@@ -16,8 +16,8 @@ run_scenario() {
   if [ -d "$QVM_DIR" ]; then
     MISE_YES=1 mise run vm:destroy
   fi
-  mise run "vm:create-$_scn_name-scenario"
-  mise run vm:boot
+  mise run "vm:build-$_scn_name-scenario"
+  mise run vm:start
 
   ADOPT_USER="$_scn_user" mise run host:adoptable
   ADOPT_USER="$_scn_user" mise run host:adopt

@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Fetch and checksum-verify the Ubuntu 24.04 cloud image for the host architecture (no-op if cached)"
-#MISE hide=true
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-qvm fetch

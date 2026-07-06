@@ -57,7 +57,7 @@ them only when you run it.
 
 Bare `mise run` prints the cheat sheet — the golden path through the
 labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
-in as dependencies (`keys`, `fetch`, `example:link`) are
+in as dependencies (`keys`, `vm:fetch-image`, `example:link`) are
 hidden but runnable by name. The grammar:
 
 - the local QEMU lab (free; guest arch follows the host — arm64 on
@@ -76,9 +76,10 @@ hidden but runnable by name. The grammar:
 
 ## 4. The QEMU lab — the everyday loop
 
-The VM mechanics live in `scripts/qemu-vm.sh` — a vendored copy of
-the `cur8s/qemu` product (one POSIX file: fetch / create / boot / wait
-/ ssh / status / console / destroy, `QVM_*` env config, guest arch
+The VM mechanics live in `vendor/qemu-vm.sh` — a vendored copy of
+the `cur8s/qemu` product (one bash file: fetch-image / build-vm / start-vm
+/ wait-until-ready / ssh / status / show-boot-log / destroy-vm /
+help, `QVM_*` env config, guest arch
 following the host). It was developed here, then extracted; this repo
 is now its first consumer. The mise tasks are thin wrappers handing it
 the lab's paths and rendered user-data. Do not edit the file here —
@@ -106,11 +107,14 @@ Mechanics worth knowing when debugging:
   named `127.0.0.1` is treated by Ansible as a localhost alias, so the
   lab inventory names the host `ubuntu-qemu-lab` with
   `ansible_host=127.0.0.1`.
-- **Consoles and state**: `vm:console` follows the serial log — the
+- **Consoles and state**: `vm:show-boot-log` follows the boot log — the
   debug window when SSH is down. `vm:status` reports stages done and
   the next command. Per-VM `known_hosts` lives in the VM dir and dies
   with it. `vm:destroy` keeps the image cache: destroy → up is an
   offline few-minute loop.
+- **Confirm-guarded tasks need a yes**: `vm:destroy` and
+  `host:lock-accounts` prompt before acting. Without a terminal mise
+  aborts instead of asking, so unattended runs set `MISE_YES=1`.
 
 **The adoption rehearsals** — faithful "existing servers", one per door
 shape the clouds hand you (RFC-007). Two scenarios: `root-user` (the
@@ -127,7 +131,7 @@ mise run test:scenarios
 Or walk one by hand:
 
 ```sh
-mise run vm:create-sudo-user-scenario && mise run vm:boot
+mise run vm:build-sudo-user-scenario && mise run vm:start
 mise run host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
 mise run host:adopt
 mise run host:converge      # the delta the verdict predicted, then 0

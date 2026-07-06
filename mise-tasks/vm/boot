@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-#MISE description="Daemonized; serial output to console.log (next: vm:wait)"
-set -eu
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-qvm boot
-echo "First boot dist-upgrades and reboots; mise run vm:wait blocks until it is ready."

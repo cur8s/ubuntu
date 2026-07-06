@@ -5,4 +5,4 @@ set -eu
 qemu_keys_env
 # The lab's private keys sit beside their .pub files, so the harness can
 # probe with the file directly — no agent involved.
-qvm wait ansible "$QEMU_KEYS_DIR/ubuntu-ansible"
+qvm wait-until-ready ansible "$QEMU_KEYS_DIR/ubuntu-ansible"
