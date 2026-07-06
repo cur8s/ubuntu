@@ -96,7 +96,10 @@ Mechanics worth knowing when debugging:
 
 - **Keys and agent**: `export_lab_credentials` (in `mise-tasks/lib.sh`) generates
   three ed25519 keypairs into `.generated/qemu/keys/` and keeps a
-  dedicated `ssh-agent` on `agent.sock` holding them. Every lab SSH pins
+  dedicated `ssh-agent` on `agent.sock` holding them. The agent is
+  load-bearing: the collection connects pub-as-identity, and OpenSSH
+  resolves a `.pub` identity only through an agent — it is the lab's
+  stand-in for the secrets manager's signer. Every lab SSH pins
   `-o IdentityAgent=` to that socket — necessary because 1Password's
   `~/.ssh/config` installs a global `IdentityAgent` that overrides
   `SSH_AUTH_SOCK`. Public keys are 0600: ssh tries identity files as

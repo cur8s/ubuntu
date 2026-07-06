@@ -32,10 +32,15 @@ qvm() {
 # keypairs, ensure the lab's promptless ssh-agent is up, and export the
 # env vars the playbooks and render script read. Ephemeral lab
 # credentials open nothing but a disposable VM on a loopback port, live
-# git-ignored, and die with `clean`. Private keys sit next to their
-# .pub, so every existing `-i <pubfile>` mechanic works without the
-# 1Password agent: ssh uses the adjacent private file. The DigitalOcean
-# integration never calls this and keeps the vault-held keys.
+# git-ignored, and die with `clean`. The agent is load-bearing, not
+# ceremony: the collection connects pub-as-identity (converge pins the
+# connection key to the .pub), and OpenSSH resolves a .pub identity
+# only through an agent — 1Password in production, this one in the
+# lab; without it ssh tries the .pub as a private key and fails
+# ("invalid format"). The private halves beside the .pubs serve only
+# the flows that hand ssh a private file directly (the vendored
+# script's wait probe). The DigitalOcean integration never calls this
+# and keeps the vault-held keys.
 export_lab_credentials() {
   local key
   for key in ubuntu-bootstrap ubuntu-ansible ubuntu-sysadmin; do
