@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Re-key one baseline account via its sibling (set ROTATE_ACCOUNT + ROTATE_NEW_PUB_KEY)"
+#MISE description="Re-key one baseline account via its sibling (ROTATE_ACCOUNT + ROTATE_NEW_PUB_KEY)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 

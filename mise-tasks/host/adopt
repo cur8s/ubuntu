@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Additively add the baseline accounts to the scenario VM (next: host:converge)"
+#MISE description="Add the baseline accounts via the ADOPT_USER door (next: host:converge)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Optional pre-warm: the ~600MB cloud image, checksum-verified (no-op if cached; up fetches on demand)"
+#MISE description="Optional pre-warm: the ~600MB image, checksum-verified; no-op if cached"
 set -euo pipefail
 bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" fetch-image
 echo "Image ready in $QVM_CACHE_DIR."

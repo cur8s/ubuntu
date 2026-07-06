@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Print the boot log and follow it — the debug window when SSH is down"
+#MISE description="The whole log, then follow — the debug window when SSH is down"
 set -euo pipefail
 if [ ! -f "$QVM_DIR/console.log" ]; then
   echo "No console log yet (mise run up builds and starts the VM)." >&2

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Is anything drifting? The converge report with nothing enforced"
+#MISE description="Is anything drifting? Converge in check mode, nothing enforced"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 

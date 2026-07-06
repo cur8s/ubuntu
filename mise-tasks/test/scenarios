@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Both adoption rehearsals, one VM at a time: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> two doors)"
+#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> two doors)"
 set -euo pipefail
 
 log_dir="$MISE_CONFIG_ROOT/.generated/scenarios"

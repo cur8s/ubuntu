@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Destroy the local lab VM and delete .generated/"
+#MISE description="Destroy the lab VM and wipe .generated/ (recover: mise run up)"
 #MISE depends=["vm:destroy"]
 set -euo pipefail
 # The lab ssh-agent outlives its socket file; kill it before wiping state

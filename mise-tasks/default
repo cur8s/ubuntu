@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Show the workflow cheat sheet (what bare 'mise run' prints)"
+#MISE description="The workflow cheat sheet (what bare 'mise run' prints)"
 #MISE quiet=true
 set -euo pipefail
 
