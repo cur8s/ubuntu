@@ -12,10 +12,11 @@ this page. The essentials:
   (`mise run up` — fully unattended, no 1Password). The idempotency
   contract: run it twice, the second pass must report `changed=0`. Put
   the recap evidence in the commit message.
-- **Names are the interface.** Task grammar is
-  `<provider>:<object>:<action>` (the `mise.toml` header is
-  authoritative); names read as sentences; descriptions say only what the
-  name cannot. "Confusing" is a defect — rename until it reads plainly.
+- **Names are the interface.** Task grammar is `<object>:<action>`
+  (the `mise.toml` header is authoritative; cloud harnesses are
+  folder-namespaced, same grammar inside); names read as sentences;
+  descriptions say only what the name cannot. "Confusing" is a defect —
+  rename until it reads plainly.
 - **Converge never removes access.** Closing doors, rotating keys — every
   access removal is a standalone deliberate playbook (RFC-005: Accounts
   and Access), never a converge side effect.

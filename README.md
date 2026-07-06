@@ -87,8 +87,8 @@ The steel thread:
 Run it locally — free, unattended, throwaway lab keys, no vault:
 
 ```sh
-mise run prep   # once: lab keys + cloud image cache
-mise run up     # create → wait out first boot → converge
+mise run up     # build → start → ride out first boot → converge
+                # (first run fetches the ~600MB image)
 ```
 
 (Bare `mise run` prints the workflow cheat sheet.)

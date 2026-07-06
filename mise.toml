@@ -4,7 +4,7 @@
 # jq, op).
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
-# mise-tasks/qemu/vm/create -> qemu:vm:create). Grammar:
+# mise-tasks/vm/build -> vm:build). Grammar:
 # <object>:<action> — every task here acts on the local QEMU lab, the
 # repo's only proof plane; cloud harnesses are self-contained
 # consumer-shaped folders that live with the operator's cloud custody
