@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Add the ansible and sysadmin accounts to an existing host (next: host:converge)"
+#MISE description="Bring an existing host under the baseline — strictly additive, nothing is removed (next: host:converge)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials
