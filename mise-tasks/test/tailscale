@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Run twice (changed=0); requires TAILSCALE_AUTHKEY"
+#MISE description="Prove the tailscale example idempotent: two runs, the second changed=0; needs a tailnet auth key"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/test/example-suite.sh"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Every example twice; skips tailscale unless TAILSCALE_AUTHKEY is set"
+#MISE description="Every example twice; tailscale only if its auth key is present"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/test/example-suite.sh"
 

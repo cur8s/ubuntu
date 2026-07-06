@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> assert only the baseline accounts remain)"
+#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> assert only ansible + sysadmin remain)"
 set -euo pipefail
 
 log_dir="$MISE_CONFIG_ROOT/.generated/scenarios"
