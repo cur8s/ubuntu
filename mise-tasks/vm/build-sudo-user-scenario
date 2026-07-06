@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build an 'existing server' to rehearse adoption on: login as a sudo user, ubuntu by default (next: vm:start)"
+#MISE description="Build an adoption rehearsal server: root cannot SSH — you enter as a sudo user (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"

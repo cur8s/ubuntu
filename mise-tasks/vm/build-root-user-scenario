@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build an 'existing server' to rehearse adoption on: login as root, the DigitalOcean shape (next: vm:start)"
+#MISE description="Build an adoption rehearsal server: root can SSH straight in (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
