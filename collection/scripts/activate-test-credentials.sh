@@ -19,7 +19,9 @@
 #           (git-ignored workstation state; dies with the lab).
 # Exports:  BOOTSTRAP_PUB_KEY, ANSIBLE_PUB_KEY, SYSADMIN_PUB_KEY,
 #           SSH_AUTH_SOCK, and QVM_SSH_IDENTITY_AGENT — the last so a
-#           vendored qemu-vm.sh's ssh verb signs through this agent.
+#           vendored qemu-vm.sh's ssh verb signs through this agent
+#           (honored by qemu-vm.sh >= 0.3.0; older versions pin
+#           IdentityAgent=none and pub-as-identity fails).
 
 # Make the test credentials operational in this shell: generate
 # missing keypairs, ensure the promptless ssh-agent is up, and export

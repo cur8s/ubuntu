@@ -301,16 +301,20 @@ three pieces, none copied by hand:
    [cur8s/qemu](https://github.com/cur8s/qemu) — a custody-neutral,
    single-file VM harness; its header carries the pinned refresh
    command.
-2. Install this collection; the lab tooling ships inside it:
+2. Install this collection; the lab tooling ships inside it.
    `scripts/render-cloud-init.sh` renders baseline user-data from your
-   public keys, and `scripts/activate-test-credentials.sh` is the custody
-   shim — source it from bash and call `activate_test_credentials` to get
-   throwaway keypairs, the promptless signing agent the collection's
-   pub-as-identity connections require, and the exported env
-   (including `QVM_SSH_IDENTITY_AGENT`, which wires the vendored
-   `qemu-vm.sh ssh` to the same agent). Because the shim ships with
-   the collection, its mechanics always match the collection version
-   you installed.
+   public keys. `scripts/run-lab-playbook.sh` is the one file to
+   source (from bash): it defines `run_lab_playbook <playbook>` — the
+   full connection environment for running any `cur8s.ubuntu.*`
+   playbook against the VM — and brings in its sibling
+   `scripts/activate-test-credentials.sh`, whose
+   `activate_test_credentials` provides throwaway keypairs, the
+   promptless signing agent the collection's pub-as-identity
+   connections require, and the exported env (including
+   `QVM_SSH_IDENTITY_AGENT`, which wires the vendored `qemu-vm.sh
+   ssh` to the same agent). Because this tooling ships with the
+   collection, its mechanics always match the collection version you
+   installed.
 3. Wire your task runner's environment: `QVM_DIR`, `QVM_CACHE_DIR`,
    `QEMU_KEYS_DIR`, and friends — see this repository's `mise.toml`
    for the working example.

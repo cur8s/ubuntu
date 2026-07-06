@@ -4,5 +4,5 @@
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 
-LOCK_ACCOUNTS="${LOCK_ACCOUNTS:-ubuntu}" qemu_ansible_playbook \
+LOCK_ACCOUNTS="${LOCK_ACCOUNTS:-ubuntu}" run_lab_playbook \
   "$MISE_CONFIG_ROOT/collection/playbooks/lock_accounts.yml"

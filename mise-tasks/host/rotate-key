@@ -5,4 +5,4 @@ set -euo pipefail
 
 : "${ROTATE_ACCOUNT:?set ROTATE_ACCOUNT=ansible|sysadmin}"
 : "${ROTATE_NEW_PUB_KEY:?set ROTATE_NEW_PUB_KEY=/path/to/new.pub}"
-qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/rotate_key.yml" "$@"
+run_lab_playbook "$MISE_CONFIG_ROOT/collection/playbooks/rotate_key.yml" "$@"

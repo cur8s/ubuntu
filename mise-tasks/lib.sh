@@ -19,52 +19,17 @@ qvm() {
   bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"
 }
 
-# === test credentials (RFC-004) =========================================
+# === the collection's lab library =======================================
 
-# The custody shim ships with the collection, so a consumer lab's
-# credential mechanics always match the collection version it
-# installed (RFC-004 travels with its implementation; the agent
-# rationale lives in the shim's header). Sourcing defines
-# activate_test_credentials; tasks call it before anything that SSHes.
-# The DigitalOcean integration never calls it and keeps the
-# vault-held keys.
-. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
-
-# === ansible against the lab VM =========================================
-
-# Write the lab inventory (regenerated on use so QVM_* env stays
-# authoritative) and print its path. A named alias is load-bearing: an
-# inventory host literally named 127.0.0.1 is treated as a localhost
-# alias, so `hosts: localhost` plays and `delegate_to: localhost` tasks
-# would SSH into the VM instead of running locally.
-write_qemu_inventory() {
-  printf '%s ansible_host=127.0.0.1 ansible_port=%s\n' "$QVM_NAME" "$QVM_SSH_PORT" \
-    > "$QVM_DIR/inventory"
-  printf '%s' "$QVM_DIR/inventory"
-}
-
-# Run a playbook against the local QEMU VM: qemu_ansible_playbook <playbook> [args...]
-# Activates the test credentials first, so playbooks that read
-# *_PUB_KEY resolve the throwaway test keys, never the vault's.
-qemu_ansible_playbook() {
-  if [[ ! -d $QVM_DIR ]]; then
-    echo "No local QEMU VM exists (mise run up)." >&2
-    return 1
-  fi
-  activate_test_credentials
-  # Ansible does not create a custom local tmp dir on its own
-  # (ANSIBLE_LOCAL_TEMP is pinned under .generated/ in mise.toml).
-  mkdir -p "$ANSIBLE_LOCAL_TEMP"
-  # IdentityAgent is pinned explicitly: 1Password's ~/.ssh/config sets a
-  # global IdentityAgent, which overrides SSH_AUTH_SOCK — without the pin,
-  # lab traffic would consult the 1Password agent and prompt. The
-  # VALIDATE_SSH_IDENTITY_AGENT export makes the collection's validation
-  # probe pin the same lab agent (by default the probe follows the user's
-  # ssh config, which is right everywhere except this lab).
-  VALIDATE_SSH_IDENTITY_AGENT="$QEMU_KEYS_DIR/agent.sock" \
-    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QVM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
-    ansible-playbook -i "$(write_qemu_inventory)" "$@"
-}
+# The lab tooling ships with the collection, so a consumer lab's
+# mechanics always match the collection version it installed (RFC-004
+# and the connection contract travel with their implementation; the
+# rationale lives in the scripts' headers). One source line defines
+# run_lab_playbook and, via its sibling shim,
+# activate_test_credentials; tasks call them directly. The
+# DigitalOcean integration never uses these and keeps the vault-held
+# keys.
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 
 # === the example suite ==================================================
 
@@ -77,7 +42,7 @@ run_example() {
   (
     export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
     case "$target" in
-      qemu) qemu_ansible_playbook "$playbook" ;;
+      qemu) run_lab_playbook "$playbook" ;;
       *)
         echo "Unknown example target '$target' (expected qemu)." >&2
         exit 1
