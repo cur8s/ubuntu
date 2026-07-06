@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Render the baseline cloud-init user-data for the Ubuntu host (RFC-006: Provisioning).
 #
 # cloud-init establishes access and patches the OS; the Ansible roles remain the
@@ -12,9 +12,9 @@
 # cloud-config to CLOUD_INIT_FILE. Depends on nothing but those three
 # environment variables and the collection's own files — no secrets
 # manager, no harness (RFC-011: Conventions Contract).
-set -eu
+set -euo pipefail
 
-if [ ! -s "$ANSIBLE_PUB_KEY" ] || [ ! -s "$SYSADMIN_PUB_KEY" ]; then
+if [[ ! -s $ANSIBLE_PUB_KEY || ! -s $SYSADMIN_PUB_KEY ]]; then
   echo "Missing public key files: point ANSIBLE_PUB_KEY and SYSADMIN_PUB_KEY at your extracted public keys." >&2
   exit 1
 fi
@@ -22,7 +22,7 @@ fi
 collection_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 sshd_dropin="$collection_root/roles/ssh/files/10-ubuntu-baseline.conf"
 
-if [ ! -s "$sshd_dropin" ]; then
+if [[ ! -s $sshd_dropin ]]; then
   echo "Missing sshd drop-in source: $sshd_dropin" >&2
   exit 1
 fi
@@ -32,7 +32,7 @@ fi
 # ssh-ed25519 public key, so a wrong or corrupted input cannot poison
 # the rendered document (RFC-004: ed25519 only).
 for baseline_pub_key in "$ANSIBLE_PUB_KEY" "$SYSADMIN_PUB_KEY"; do
-  if [ "$(LC_ALL=C grep -c '' "$baseline_pub_key")" -gt 1 ] \
+  if [[ $(LC_ALL=C grep -c '' "$baseline_pub_key") -gt 1 ]] \
     || ! LC_ALL=C grep -Eq '^ssh-ed25519 [A-Za-z0-9+/]+={0,3}( [A-Za-z0-9 @._:+-]*)?$' "$baseline_pub_key"; then
     echo "Refusing to render: $baseline_pub_key is not a single-line ssh-ed25519 public key." >&2
     exit 1

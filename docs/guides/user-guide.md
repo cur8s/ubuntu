@@ -82,7 +82,7 @@ roles own:
 export ANSIBLE_PUB_KEY=~/keys/ubuntu-ansible.pub
 export SYSADMIN_PUB_KEY=~/keys/ubuntu-sysadmin.pub
 export CLOUD_INIT_FILE=./ubuntu-baseline.yaml
-sh <collection>/scripts/render-cloud-init.sh
+bash <collection>/scripts/render-cloud-init.sh
 ```
 
 Pass the rendered file as the instance's user-data, and register a
