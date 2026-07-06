@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Acceptance gate: reboot, re-verify access and services"
+#MISE description="Reboot and prove the host comes back with access and services intact; the gate before host:lock-accounts"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 

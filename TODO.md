@@ -14,6 +14,7 @@ the words are validated against the system as it will actually ship.
   - C11/C18: `cur8s.ubuntu.patch` runs apt's safe upgrade (`upgrade: yes`), but RFC-011 and the docs promise "a full package upgrade." Recommendation: reword the promise to "package upgrade (never removes packages, never reboots)" rather than switching to dist-upgrade on running hosts.
   - T8: rotate_key's input policy checks live only in the localhost play, which `--limit` can skip — a typo'd ROTATE_ACCOUNT would then reach the remote play unvalidated. Recommendation: duplicate the two critical asserts into the remote play.
   - T11 (finder claim rejected by our own lab evidence): a reviewer called the "pubs must be 0600" note wrong; our recorded discovery is that ssh -i with a world-readable pub file does fail. Re-verify once, then keep or fix the folder README's phrasing.
+  - Naming (queued 2026-07-06, task-review round): `validate_reboot` inverts instrument and object — the reboot is the probe, the host is what gets validated. Candidate rename: `reboot_and_verify` (playbook + `host:` task). Contract change: sweeps the user guide's hardcodable table (§3), RFC-009 language, and the sandbox harness's FQCN reference on the next touch there.
 
 ## 2. mise harness review (code)
 - [ ] Review the task grammar end to end: task names and descriptions, the import files (`mise-tasks/test/example-suite.sh`, the collection's lab scripts), hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set.
