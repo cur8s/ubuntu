@@ -10,6 +10,8 @@ echo "Creating the local QEMU Ubuntu test VM"
 # mise-tasks/vendor/qemu-vm.sh.
 activate_test_credentials
 export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
+# sh matches the render script's POSIX shebang — collection scripts
+# ship without exec bits, so every caller names the interpreter.
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 
 QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" \
