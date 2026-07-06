@@ -3,6 +3,6 @@
 #MISE depends=["vm:fetch-image"]
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 activate_test_credentials
 echo "QEMU lab prepared: lab keys generated, cloud image cached (no 1Password needed). Next: mise run up"

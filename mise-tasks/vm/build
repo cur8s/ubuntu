@@ -2,7 +2,7 @@
 #MISE description="Build the VM: overlay disk + NoCloud seed from rendered cloud-init; starts nothing (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 
 # Render with the lab's throwaway keys (RFC-004: ephemeral test credentials)

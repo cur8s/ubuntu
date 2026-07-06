@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="The automation account"
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 activate_test_credentials
 bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" ssh ansible "$ANSIBLE_PUB_KEY" "$@"
