@@ -8,12 +8,14 @@ ssh_task_preamble() {
   mkdir -p "$ANSIBLE_LOCAL_TEMP"
 }
 
-# The vendored VM harness. Its QVM_* interface is fed straight from
-# the mise env; callers may override per invocation (scenario builds
-# set QVM_NAME and QVM_USER_DATA). Invoked directly — no `sh` prefix —
-# so its own shebang (bash) governs.
+# The vendored VM harness (upstream: cur8s/qemu; refresh procedure in
+# its header). Its QVM_* interface is fed straight from the mise env;
+# callers may override per invocation (scenario builds set QVM_NAME
+# and QVM_USER_DATA). It lives inside mise-tasks/ because this wrapper
+# is its only consumer — and stays non-executable so mise never
+# detects it as a task; bash matches its shebang.
 qvm() {
-  "$MISE_CONFIG_ROOT/vendor/qemu-vm.sh" "$@"
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"
 }
 
 # Point the key env vars at the QEMU lab's throwaway keypairs, generating

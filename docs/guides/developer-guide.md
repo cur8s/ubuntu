@@ -76,7 +76,8 @@ hidden but runnable by name. The grammar:
 
 ## 4. The QEMU lab — the everyday loop
 
-The VM mechanics live in `vendor/qemu-vm.sh` — a vendored copy of
+The VM mechanics live in `mise-tasks/vendor/qemu-vm.sh` — a vendored
+copy of
 the `cur8s/qemu` product (one bash file: fetch-image / build-vm / start-vm
 / wait-until-ready / ssh / status / show-boot-log / destroy-vm /
 help, `QVM_*` env config, guest arch

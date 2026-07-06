@@ -25,11 +25,11 @@ SSH_SPACING_SECONDS = "0"
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
 ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 
-# Local QEMU lab: the VM mechanics live in vendor/qemu-vm.sh (a single
-# vendored file — image, binary, and acceleration follow the host: hvf
-# on macOS, KVM on Linux/CI); the mise tasks wrap it with these settings
-# and the same rendered cloud-init a cloud host uses.
-# QVM_* is vendor/qemu-vm.sh's own interface — set directly, no
+# Local QEMU lab: the VM mechanics live in mise-tasks/vendor/qemu-vm.sh
+# (a single vendored file — image, binary, and acceleration follow the
+# host: hvf on macOS, KVM on Linux/CI); the mise tasks wrap it with
+# these settings and the same rendered cloud-init a cloud host uses.
+# QVM_* is qemu-vm.sh's own interface — set directly, no
 # mapping layer. Only values that differ from the script's defaults
 # appear: state lives under .generated/ (the house convention; clean
 # wipes one tree), the VM carries the lab's name, and the port is here
