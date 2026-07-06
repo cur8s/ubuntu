@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="From zero: vm:build -> vm:start -> vm:wait-until-ready -> host:converge"
-set -eu
+set -euo pipefail
 mise run vm:build
 mise run vm:start
 mise run vm:wait-until-ready

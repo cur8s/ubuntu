@@ -1,7 +1,7 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Acceptance gate: reboot, re-verify access and services"
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
+prepare_ansible_temp
 
 qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/validate_reboot.yml"

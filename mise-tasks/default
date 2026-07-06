@@ -1,7 +1,7 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Show the workflow cheat sheet (what bare 'mise run' prints)"
 #MISE quiet=true
-set -eu
+set -euo pipefail
 
 # Bold headers, cyan task names, dim annotations — only on a terminal, and
 # honoring the NO_COLOR convention (https://no-color.org).

@@ -1,9 +1,9 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Scenario: a pre-baseline server whose door is root — the DigitalOcean shape (next: vm:start, then ADOPT_USER=root host:adoptable)"
 #MISE quiet=true
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-qemu_keys_env
+export_lab_credentials
 echo "Creating the root-user scenario VM (door on: root)"
 if [ -e "$QVM_DIR" ]; then
   echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2

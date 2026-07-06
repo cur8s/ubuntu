@@ -1,8 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Every example twice; skips tailscale unless TAILSCALE_AUTHKEY is set"
 #MISE depends=["example:link"]
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
+prepare_ansible_temp
 
-example_test_all qemu
+test_all_examples qemu

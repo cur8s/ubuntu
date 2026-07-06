@@ -1,8 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Rides out the first boot (next: host:converge)"
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-qemu_keys_env
+export_lab_credentials
 # The lab's private keys sit beside their .pub files, so the harness can
 # probe with the file directly — no agent involved.
 qvm wait-until-ready ansible "$QEMU_KEYS_DIR/ubuntu-ansible"

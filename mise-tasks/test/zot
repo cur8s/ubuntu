@@ -1,8 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Runs it twice; second pass must report changed=0"
 #MISE depends=["example:link"]
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
+prepare_ansible_temp
 
-example_test zot qemu
+test_example zot qemu

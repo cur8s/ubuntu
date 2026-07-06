@@ -94,7 +94,7 @@ mise run up     # create → boot (127.0.0.1:2222) → wait → converge
 
 Mechanics worth knowing when debugging:
 
-- **Keys and agent**: `qemu_keys_env` (in `mise-tasks/lib.sh`) generates
+- **Keys and agent**: `export_lab_credentials` (in `mise-tasks/lib.sh`) generates
   three ed25519 keypairs into `.generated/qemu/keys/` and keeps a
   dedicated `ssh-agent` on `agent.sock` holding them. Every lab SSH pins
   `-o IdentityAgent=` to that socket — necessary because 1Password's

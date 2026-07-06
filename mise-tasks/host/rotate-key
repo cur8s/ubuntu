@@ -1,8 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Re-key one baseline account via its sibling (set ROTATE_ACCOUNT + ROTATE_NEW_PUB_KEY)"
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-ssh_task_preamble
+prepare_ansible_temp
 
 : "${ROTATE_ACCOUNT:?set ROTATE_ACCOUNT=ansible|sysadmin}"
 : "${ROTATE_NEW_PUB_KEY:?set ROTATE_NEW_PUB_KEY=/path/to/new.pub}"

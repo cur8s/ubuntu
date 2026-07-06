@@ -1,14 +1,14 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #MISE description="Build the VM: overlay disk + NoCloud seed from rendered cloud-init; starts nothing (next: vm:start)"
 #MISE quiet=true
-set -eu
+set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 
 # Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
 # into the lab's own output file; the VM mechanics live in the vendored
 # mise-tasks/vendor/qemu-vm.sh.
-qemu_keys_env
+export_lab_credentials
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 
 QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" qvm build-vm
