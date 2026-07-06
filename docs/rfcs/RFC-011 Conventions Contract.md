@@ -8,7 +8,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 
 * The collection is `cur8s.ubuntu`, distributed from its git repository (RFC-010: Release and Versioning).
 * The converge entry point is the collection playbook `cur8s.ubuntu.converge`.
-* The reboot acceptance gate is the collection playbook `cur8s.ubuntu.validate_reboot`.
+* The reboot acceptance gate is the collection playbook `cur8s.ubuntu.reboot_and_verify`.
 * Operator-invoked patching is the collection playbook `cur8s.ubuntu.patch`: a full package upgrade that never reboots.
 * The door-closing playbook is `cur8s.ubuntu.lock_accounts` — standalone and never part of converge (RFC-005: Accounts and Access).
 * The access-surface report is the read-only collection playbook `cur8s.ubuntu.report_access`; it always reports zero changes.

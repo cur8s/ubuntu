@@ -59,7 +59,7 @@ always present, locked passwords, key-only SSH, passwordless sudo.
 | --- | --- |
 | `cur8s.ubuntu.converge` | enforce the baseline; `changed=0` means conformant |
 | `cur8s.ubuntu.patch` | full package upgrade; never reboots |
-| `cur8s.ubuntu.validate_reboot` | acceptance gate: reboot, re-verify everything |
+| `cur8s.ubuntu.reboot_and_verify` | acceptance gate: reboot, re-verify everything |
 | `cur8s.ubuntu.report_access` | read-only access surface; always `changed=0` |
 | `cur8s.ubuntu.lock_accounts` | close named accounts' login doors |
 | `cur8s.ubuntu.adoptable` | read-only adoption verdict; nonzero exit on hard failures |
@@ -137,7 +137,7 @@ The full on-ramp, each stage gated by the one before, the old access
 path surviving until the new one is proven:
 
 ```
-adoptable → adopt → converge → validate_reboot → lock the old doors (§6)
+adoptable → adopt → converge → reboot_and_verify → lock the old doors (§6)
 ```
 
 ## 6. Runbooks

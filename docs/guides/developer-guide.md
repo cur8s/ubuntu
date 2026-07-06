@@ -146,7 +146,7 @@ mise run vm:build-sudo-user-scenario && mise run vm:start
 mise run host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
 mise run host:adopt
 mise run host:converge      # the delta the verdict predicted, then 0
-mise run host:validate-reboot
+mise run host:reboot-and-verify
 mise run host:lock-accounts # closes the scenario door (the default)
 ```
 
@@ -165,7 +165,7 @@ and 1Password custody. Its entry point, inside the folder:
 
 ```sh
 mise run test    # prep -> create -> first boot -> converge x2 (changed=0)
-                 # -> validate-reboot -> lock root -> report (two doors)
+                 # -> reboot-and-verify -> lock root -> report (two doors)
                  # -> destroy on success, keep on failure
 ```
 

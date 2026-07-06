@@ -87,5 +87,5 @@
       ansible.builtin.debug:
         msg: >-
           Adopted: both baseline accounts proven. Next: converge, then
-          validate_reboot, then close the old doors deliberately
+          reboot_and_verify, then close the old doors deliberately
           (cur8s.ubuntu.lock_accounts) — RFC-007.

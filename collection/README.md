@@ -7,7 +7,7 @@ This directory is the installable Ansible collection. Entry points:
 
 - `cur8s.ubuntu.converge` — enforce the baseline.
 - `cur8s.ubuntu.patch` — operator-invoked patching: full package upgrade (never reboots).
-- `cur8s.ubuntu.validate_reboot` — the reboot acceptance gate.
+- `cur8s.ubuntu.reboot_and_verify` — the reboot acceptance gate.
 - `cur8s.ubuntu.report_access` — render the access surface: every door, every privilege holder. Read-only.
 - `cur8s.ubuntu.lock_accounts` — close the doors of accounts named in `LOCK_ACCOUNTS`, after re-proving both baseline accounts.
 - `cur8s.ubuntu.rotate_key` — re-key one baseline account via its sibling (`ROTATE_ACCOUNT`, `ROTATE_NEW_PUB_KEY`).

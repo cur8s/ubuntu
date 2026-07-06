@@ -23,7 +23,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
 
   ${B}objects${R}
     ${C}vm${R}      the machine itself       ${D}build, start, wait-until-ready, status, destroy, ...${R}
-    ${C}host${R}    the managed system       ${D}converge, adopt, validate-reboot, ...${R}
+    ${C}host${R}    the managed system       ${D}converge, adopt, reboot-and-verify, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all; scenarios${R}
 
@@ -43,7 +43,7 @@ ${B}A SESSION, START TO FINISH${R}
   ${D}mise run${R} ${C}test:docker${R}            test one example: runs it twice,
                                 second pass must report changed=0
   ${D}mise run${R} ${C}test:all${R}               every example, same contract
-  ${D}mise run${R} ${C}host:validate-reboot${R}   acceptance gate: reboot, re-verify access
+  ${D}mise run${R} ${C}host:reboot-and-verify${R}   acceptance gate: reboot, re-verify access
   ${D}mise run${R} ${C}vm:destroy${R}             tear down; the cached image survives
 
   ${B}Real providers${R}: the release gate is the consumer-shaped DigitalOcean

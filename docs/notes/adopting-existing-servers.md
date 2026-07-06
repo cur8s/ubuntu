@@ -24,7 +24,7 @@ RFC-006 defines provisioning's contract as "produce a host reachable over
 SSH by the baseline identities." Cloud user-data does it at first boot;
 autoinstall will do it for new bare metal; adoption achieves the same
 outcome over SSH for hosts that already exist. Everything after that —
-converge, update, validate_reboot, retirement — already exists and needs
+converge, update, reboot_and_verify, retirement — already exists and needs
 no changes.
 
 The pre-existing access account (the installer-created user on bare metal)
@@ -75,7 +75,7 @@ by the previous one's validation, the old access path surviving until the
 new one is proven:
 
 ```
-adoptable → adopt → converge → update → validate_reboot → retire (optional)
+adoptable → adopt → converge → update → reboot_and_verify → retire (optional)
 ```
 
 **Lab testing** — a `vm:create-adoptable` harness task creating a plain

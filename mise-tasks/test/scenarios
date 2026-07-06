@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> validate-reboot -> lock -> assert only ansible + sysadmin remain)"
+#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> reboot-and-verify -> lock -> assert only ansible + sysadmin remain)"
 set -euo pipefail
 
 log_dir="$MISE_CONFIG_ROOT/.generated/scenarios"
@@ -74,8 +74,8 @@ run_scenario() {
   fi
   assert_changed_zero "$log" "scenario $scenario"
 
-  echo "--- acceptance gate: validate-reboot"
-  mise run host:validate-reboot
+  echo "--- acceptance gate: reboot-and-verify"
+  mise run host:reboot-and-verify
 
   echo "--- lock the scenario door ($door_user)"
   LOCK_ACCOUNTS="$door_user" MISE_YES=1 mise run host:lock-accounts

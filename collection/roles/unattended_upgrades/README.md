@@ -22,4 +22,4 @@ trusted, not pinned.
 
 Non-security updates are deliberately out of scope: apply them with the
 operator-invoked `cur8s.ubuntu.patch` playbook, and activate pending
-kernels through the validating reboot path (`cur8s.ubuntu.validate_reboot`).
+kernels through the validating reboot path (`cur8s.ubuntu.reboot_and_verify`).

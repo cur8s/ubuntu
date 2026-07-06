@@ -63,4 +63,4 @@
       ansible.builtin.debug:
         msg: >-
           Adoptable. Next: cur8s.ubuntu.adopt (then converge,
-          validate_reboot, and lock the old doors — RFC-007).
+          reboot_and_verify, and lock the old doors — RFC-007).

@@ -3,7 +3,7 @@
 # only security; this applies everything else, deliberately).
 #
 # This play NEVER reboots. If patching leaves a reboot pending (a new
-# kernel, typically), it says so and defers to cur8s.ubuntu.validate_reboot —
+# kernel, typically), it says so and defers to cur8s.ubuntu.reboot_and_verify —
 # the collection's only reboot path is the one that validates the host came
 # back conformant (RFC-009). lock_timeout lets the run coexist with a
 # concurrently firing apt-daily timer instead of failing on the dpkg lock.
@@ -56,7 +56,7 @@
       ansible.builtin.debug:
         msg: >-
           Patching requires a reboot. Run the validating reboot path:
-          cur8s.ubuntu.validate_reboot.
+          cur8s.ubuntu.reboot_and_verify.
       when: patch_reboot_required.stat.exists
 
     - name: Report no reboot required

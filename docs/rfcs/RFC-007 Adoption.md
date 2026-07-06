@@ -29,7 +29,7 @@ Afterward the old doors are closed deliberately — locked by name (RFC-005: Acc
 Each stage is gated by the one before it, and the old access path survives until the new one is proven:
 
 ```
-assess → adopt → converge → validate_reboot → lock old doors
+assess → adopt → converge → reboot_and_verify → lock old doors
 ```
 
 The first three make the host conformant; the gate (RFC-009: Validation and Acceptance) proves it survives a boot cycle; closing the pre-baseline doors is the operator's deliberate final act, in that order because there must never be a moment without a proven access path.

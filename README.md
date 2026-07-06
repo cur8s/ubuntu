@@ -96,7 +96,7 @@ mise run up     # create → wait out first boot → converge
 Acceptance test (opt-in; never part of routine converge):
 
 ```sh
-mise run host:validate-reboot   # reboot → re-verify access + baseline services
+mise run host:reboot-and-verify   # reboot → re-verify access + baseline services
 ```
 
 The same thread runs against real DigitalOcean as the release gate
