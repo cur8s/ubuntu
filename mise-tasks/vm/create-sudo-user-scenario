@@ -1,14 +1,13 @@
 #!/usr/bin/env sh
 #MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: vm:boot, then host:adoptable"
 #MISE quiet=true
-#MISE depends=["fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env
 scenario_user="${SCENARIO_USER:-ubuntu}"
 echo "Creating the sudo-user scenario VM (door on: $scenario_user)"
-if [ -e "$QEMU_VM_DIR" ]; then
-  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run vm:destroy first)." >&2
+if [ -e "$QVM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
   exit 1
 fi
 # The seed deliberately does NOT use the baseline render: this VM models
@@ -34,5 +33,5 @@ mkdir -p "$(dirname "$user_data")"
 } > "$user_data"
 QVM_NAME="ubuntu-qemu-sudo-user" QVM_USER_DATA="$user_data" qvm create
 
-echo "sudo-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
+echo "sudo-user scenario VM prepared in $QVM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
 echo "Next: mise run vm:boot, then mise run host:adoptable"

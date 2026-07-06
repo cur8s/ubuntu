@@ -29,13 +29,16 @@ ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 # vendorable file — image, binary, and acceleration follow the host: hvf
 # on macOS, KVM on Linux/CI); the mise tasks wrap it with these settings
 # and the same rendered cloud-init a cloud host uses.
-QEMU_VM_NAME = "ubuntu-qemu-lab"
-QEMU_SSH_PORT = "2222"
-QEMU_CPUS = "4"
-QEMU_MEMORY = "4G"
-QEMU_DISK_SIZE = "20G"
-QEMU_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
-QEMU_VM_DIR = "{{config_root}}/.generated/qemu/vm"
+# QVM_* is scripts/qemu-vm.sh's own interface — set directly, no
+# mapping layer. Only values that differ from the script's defaults
+# appear: state lives under .generated/ (the house convention; clean
+# wipes one tree), the VM carries the lab's name, and the port is here
+# because the lib's ssh helpers read the same knob. Sizes and timeouts
+# ride the script defaults; override per-run via environment.
+QVM_NAME = "ubuntu-qemu-lab"
+QVM_SSH_PORT = "2222"
+QVM_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
+QVM_DIR = "{{config_root}}/.generated/qemu/vm"
 # The QEMU lab uses throwaway keypairs generated on the workstation
 # (RFC-004: ephemeral lab credentials) so the local loop needs no
 # 1Password approvals; qemu tasks point the key env vars here. The

@@ -13,7 +13,7 @@ run_scenario() {
 
   echo
   echo "=== scenario: $_scn_name (door on: $_scn_user) ==="
-  if [ -d "$QEMU_VM_DIR" ]; then
+  if [ -d "$QVM_DIR" ]; then
     MISE_YES=1 mise run vm:destroy
   fi
   mise run "vm:create-$_scn_name-scenario"

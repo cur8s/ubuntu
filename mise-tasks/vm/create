@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 #MISE description="Overlay disk + NoCloud seed from rendered cloud-init (next: vm:boot)"
 #MISE quiet=true
-#MISE depends=["fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"

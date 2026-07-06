@@ -1,13 +1,12 @@
 #!/usr/bin/env sh
 #MISE description="Scenario: a pre-baseline server whose door is root — the DigitalOcean shape (next: vm:boot, then ADOPT_USER=root host:adoptable)"
 #MISE quiet=true
-#MISE depends=["fetch"]
 set -eu
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qemu_keys_env
 echo "Creating the root-user scenario VM (door on: root)"
-if [ -e "$QEMU_VM_DIR" ]; then
-  echo "A local QEMU VM already exists at $QEMU_VM_DIR (mise run vm:destroy first)." >&2
+if [ -e "$QVM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
   exit 1
 fi
 # The seed models the DigitalOcean shape: the provider injects the
@@ -29,5 +28,5 @@ mkdir -p "$(dirname "$user_data")"
 } > "$user_data"
 QVM_NAME="ubuntu-qemu-root-user" QVM_USER_DATA="$user_data" qvm create
 
-echo "root-user scenario VM prepared in $QEMU_VM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
+echo "root-user scenario VM prepared in $QVM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
 echo "Next: mise run vm:boot, then ADOPT_USER=root mise run host:adoptable"

@@ -13,9 +13,9 @@ else
   next="prep"
 fi
 
-if [ -f "$QEMU_VM_DIR/qemu.pid" ] && kill -0 "$(cat "$QEMU_VM_DIR/qemu.pid")" 2>/dev/null; then
-  echo "2 vm        running  pid $(cat "$QEMU_VM_DIR/qemu.pid"), ssh 127.0.0.1:$QEMU_SSH_PORT"
-elif [ -d "$QEMU_VM_DIR" ]; then
+if [ -f "$QVM_DIR/qemu.pid" ] && kill -0 "$(cat "$QVM_DIR/qemu.pid")" 2>/dev/null; then
+  echo "2 vm        running  pid $(cat "$QVM_DIR/qemu.pid"), ssh 127.0.0.1:$QVM_SSH_PORT"
+elif [ -d "$QVM_DIR" ]; then
   echo "2 vm        stopped  run: mise run vm:boot"
   next="${next:-vm:boot}"
 else

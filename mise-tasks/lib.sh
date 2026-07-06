@@ -8,18 +8,10 @@ ssh_task_preamble() {
   mkdir -p "$ANSIBLE_LOCAL_TEMP"
 }
 
-# Run the vendorable VM harness (scripts/qemu-vm.sh) with the lab's
-# QEMU_* settings mapped onto its QVM_* interface. QVM_NAME and
-# QVM_USER_DATA may be preset by the caller (scenario creates do).
+# The vendorable VM harness. Its QVM_* interface is fed straight from
+# the mise env; callers may override per invocation (scenario creates
+# set QVM_NAME and QVM_USER_DATA).
 qvm() {
-  QVM_DIR="$QEMU_VM_DIR" \
-  QVM_CACHE_DIR="$QEMU_CACHE_DIR" \
-  QVM_NAME="${QVM_NAME:-$QEMU_VM_NAME}" \
-  QVM_SSH_PORT="$QEMU_SSH_PORT" \
-  QVM_CPUS="$QEMU_CPUS" \
-  QVM_MEMORY="$QEMU_MEMORY" \
-  QVM_DISK_SIZE="$QEMU_DISK_SIZE" \
-  QVM_WAIT_TIMEOUT_SECONDS="${CLOUD_INIT_WAIT_TIMEOUT_SECONDS:-1200}" \
   sh "$MISE_CONFIG_ROOT/scripts/qemu-vm.sh" "$@"
 }
 
@@ -72,16 +64,16 @@ qemu_keys_env() {
 # plays and `delegate_to: localhost` tasks would SSH into the VM instead of
 # running locally.
 qemu_inventory() {
-  printf '%s ansible_host=127.0.0.1 ansible_port=%s\n' "$QEMU_VM_NAME" "$QEMU_SSH_PORT" \
-    > "$QEMU_VM_DIR/inventory"
-  printf '%s' "$QEMU_VM_DIR/inventory"
+  printf '%s ansible_host=127.0.0.1 ansible_port=%s\n' "$QVM_NAME" "$QVM_SSH_PORT" \
+    > "$QVM_DIR/inventory"
+  printf '%s' "$QVM_DIR/inventory"
 }
 
 # Run a playbook against the local QEMU VM: qemu_ansible_playbook <playbook> [args...]
 # Exports the lab key env first, so playbooks that read *_PUB_KEY resolve
 # the throwaway lab keys, never the vault's.
 qemu_ansible_playbook() {
-  if [ ! -d "$QEMU_VM_DIR" ]; then
+  if [ ! -d "$QVM_DIR" ]; then
     echo "No local QEMU VM exists (mise run up)." >&2
     return 1
   fi
@@ -93,7 +85,7 @@ qemu_ansible_playbook() {
   # probe pin the same lab agent (by default the probe follows the user's
   # ssh config, which is right everywhere except this lab).
   VALIDATE_SSH_IDENTITY_AGENT="$QEMU_KEYS_DIR/agent.sock" \
-    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QEMU_VM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
+    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QVM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
     ansible-playbook -i "$(qemu_inventory)" "$@"
 }
 
@@ -178,7 +170,7 @@ qemu_ssh() {
   _qemu_ssh_identity="$2"
   shift 2
   ssh \
-    -o UserKnownHostsFile="$QEMU_VM_DIR/known_hosts" \
+    -o UserKnownHostsFile="$QVM_DIR/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
     -o IdentitiesOnly=yes \
     -o IdentityAgent="$QEMU_KEYS_DIR/agent.sock" \
@@ -186,7 +178,7 @@ qemu_ssh() {
     -o ServerAliveInterval=15 \
     -o ServerAliveCountMax=4 \
     -i "$_qemu_ssh_identity" \
-    -p "$QEMU_SSH_PORT" \
+    -p "$QVM_SSH_PORT" \
     "$_qemu_ssh_user@127.0.0.1" "$@"
 }
 
