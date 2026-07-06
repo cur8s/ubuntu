@@ -142,7 +142,7 @@ mise run test:scenarios
 Or walk one by hand:
 
 ```sh
-mise run vm:build-sudo-user-scenario && mise run vm:start
+mise run vm:build-scenario sudo-user && mise run vm:start
 mise run host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
 mise run host:adopt
 mise run host:converge      # the delta the verdict predicted, then 0

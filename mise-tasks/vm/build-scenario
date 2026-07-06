@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+#MISE description="Build a rehearsal server for adoption: root-user (root can SSH straight in) or sudo-user (you enter as a sudo user) (next: vm:start)"
+#MISE quiet=true
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+
+scenario="${1:-}"
+if [[ $scenario != root-user && $scenario != sudo-user ]]; then
+  echo "usage: mise run vm:build-scenario <root-user|sudo-user>" >&2
+  exit 1
+fi
+if [ -e "$QVM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
+  exit 1
+fi
+activate_test_credentials
+
+# A scenario VM models an existing server that predates the baseline, so
+# its seed deliberately does NOT use the baseline render. The seed embeds
+# the bootstrap key, so each build renders the one seed it boots, fresh.
+user_data="$MISE_CONFIG_ROOT/.generated/cloud-init/scenario-$scenario.yaml"
+mkdir -p "$(dirname "$user_data")"
+case "$scenario" in
+  root-user)
+    echo "Creating the root-user scenario VM (door on: root)"
+    # The DigitalOcean shape: the provider injects the bootstrap key into
+    # root and creates no other account. Entering as root involves no
+    # sudo chain anywhere — the code path no other rehearsal covers — and
+    # locking root afterwards closes the one door that can never be
+    # deleted. The users list naming only root keeps cloud-init from
+    # creating the image's default user.
+    {
+      printf '#cloud-config\n'
+      printf 'disable_root: false\n'
+      printf 'ssh_pwauth: false\n'
+      printf 'users:\n'
+      printf '  - name: root\n'
+      printf '    ssh_authorized_keys:\n'
+      printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
+    } > "$user_data"
+    next_hint="ADOPT_USER=root mise run host:adoptable"
+    ;;
+  sudo-user)
+    scenario_user="${SCENARIO_USER:-ubuntu}"
+    echo "Creating the sudo-user scenario VM (door on: $scenario_user)"
+    # The AWS/installer shape with the default name, the Azure shape with
+    # SCENARIO_USER=azureuser (nothing in the collection may care which;
+    # that is the point). One sudo-capable user reachable by the
+    # bootstrap key — the pre-baseline door adoption connects through
+    # (ADOPT_USER) — and password auth left on, so the adoptability
+    # warning has something real to find.
+    {
+      printf '#cloud-config\n'
+      printf 'ssh_pwauth: true\n'
+      printf 'users:\n'
+      printf '  - name: %s\n' "$scenario_user"
+      printf '    shell: /bin/bash\n'
+      printf '    groups: [sudo]\n'
+      printf '    sudo: "ALL=(ALL) NOPASSWD:ALL"\n'
+      printf '    lock_passwd: true\n'
+      printf '    ssh_authorized_keys:\n'
+      printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
+    } > "$user_data"
+    next_hint="mise run host:adoptable"
+    ;;
+esac
+
+QVM_NAME="ubuntu-qemu-$scenario" QVM_USER_DATA="$user_data" \
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm
+
+echo "$scenario scenario VM prepared in $QVM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
+echo "Next: mise run vm:start, then $next_hint"

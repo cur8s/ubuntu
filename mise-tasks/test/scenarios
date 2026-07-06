@@ -56,7 +56,7 @@ run_scenario() {
   if [ -d "$QVM_DIR" ]; then
     MISE_YES=1 mise run vm:destroy
   fi
-  mise run "vm:build-$scenario-scenario"
+  mise run vm:build-scenario "$scenario"
   mise run vm:start
 
   ADOPT_USER="$door_user" mise run host:adoptable
