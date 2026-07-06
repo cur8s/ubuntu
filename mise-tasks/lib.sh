@@ -19,16 +19,16 @@ qvm() {
   bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"
 }
 
-# === lab credentials (RFC-004) ==========================================
+# === test credentials (RFC-004) =========================================
 
 # The custody shim ships with the collection, so a consumer lab's
 # credential mechanics always match the collection version it
 # installed (RFC-004 travels with its implementation; the agent
 # rationale lives in the shim's header). Sourcing defines
-# export_lab_credentials; tasks call it before anything that SSHes.
+# activate_test_credentials; tasks call it before anything that SSHes.
 # The DigitalOcean integration never calls it and keeps the
 # vault-held keys.
-. "$MISE_CONFIG_ROOT/collection/scripts/export-lab-credentials.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 
 # === ansible against the lab VM =========================================
 
@@ -44,14 +44,14 @@ write_qemu_inventory() {
 }
 
 # Run a playbook against the local QEMU VM: qemu_ansible_playbook <playbook> [args...]
-# Exports the lab credentials first, so playbooks that read *_PUB_KEY
-# resolve the throwaway lab keys, never the vault's.
+# Activates the test credentials first, so playbooks that read
+# *_PUB_KEY resolve the throwaway test keys, never the vault's.
 qemu_ansible_playbook() {
   if [[ ! -d $QVM_DIR ]]; then
     echo "No local QEMU VM exists (mise run up)." >&2
     return 1
   fi
-  export_lab_credentials
+  activate_test_credentials
   # Ansible does not create a custom local tmp dir on its own
   # (ANSIBLE_LOCAL_TEMP is pinned under .generated/ in mise.toml).
   mkdir -p "$ANSIBLE_LOCAL_TEMP"

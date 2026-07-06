@@ -2,7 +2,7 @@
 #MISE description="Rides out the first boot (next: host:converge)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-export_lab_credentials
+activate_test_credentials
 echo "Waiting for cloud-init to finish (a first boot may upgrade and reboot)..."
 # The lab's private keys sit beside their .pub files, so the harness can
 # probe with the file directly — no agent involved.

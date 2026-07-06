@@ -1,4 +1,4 @@
-# export-lab-credentials.sh — the cur8s.ubuntu lab custody shim.
+# activate-test-credentials.sh — the cur8s.ubuntu test-credential shim.
 #
 # Ships with the collection because it implements the collection's
 # custody contract (RFC-004: Identity and Trust): playbooks connect
@@ -11,7 +11,7 @@
 #
 # Usage, from a consumer harness (cur8s/ubuntu's mise tasks, a k3s
 # repo's lab, ...): source this file from bash, then call
-# export_lab_credentials before anything that SSHes. Deliberately not
+# activate_test_credentials before anything that SSHes. Deliberately not
 # executable — it defines one function and must run in the caller's
 # shell so the exports land there.
 #
@@ -21,12 +21,12 @@
 #           SSH_AUTH_SOCK, and QVM_SSH_IDENTITY_AGENT — the last so a
 #           vendored qemu-vm.sh's ssh verb signs through this agent.
 
-# Make the lab's throwaway credentials available: generate missing
-# keypairs, ensure the lab's promptless ssh-agent is up, and export
-# the env vars above. Ephemeral lab credentials open nothing but a
-# disposable VM on a loopback port, live git-ignored, and die with the
-# lab state — RFC-004 calls them test fixtures, not credentials.
-export_lab_credentials() {
+# Make the test credentials operational in this shell: generate
+# missing keypairs, ensure the promptless ssh-agent is up, and export
+# the env vars above. They open nothing but a disposable VM on a
+# loopback port, live git-ignored, and die with the lab state —
+# RFC-004 calls them test fixtures, not credentials.
+activate_test_credentials() {
   local key
   for key in ubuntu-bootstrap ubuntu-ansible ubuntu-sysadmin; do
     if [[ ! -f "$QEMU_KEYS_DIR/$key" ]]; then

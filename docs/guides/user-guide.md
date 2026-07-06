@@ -303,8 +303,8 @@ three pieces, none copied by hand:
    command.
 2. Install this collection; the lab tooling ships inside it:
    `scripts/render-cloud-init.sh` renders baseline user-data from your
-   public keys, and `scripts/export-lab-credentials.sh` is the custody
-   shim — source it from bash and call `export_lab_credentials` to get
+   public keys, and `scripts/activate-test-credentials.sh` is the custody
+   shim — source it from bash and call `activate_test_credentials` to get
    throwaway keypairs, the promptless signing agent the collection's
    pub-as-identity connections require, and the exported env
    (including `QVM_SSH_IDENTITY_AGENT`, which wires the vendored

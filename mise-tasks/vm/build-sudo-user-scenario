@@ -3,7 +3,7 @@
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-export_lab_credentials
+activate_test_credentials
 scenario_user="${SCENARIO_USER:-ubuntu}"
 echo "Creating the sudo-user scenario VM (door on: $scenario_user)"
 if [ -e "$QVM_DIR" ]; then

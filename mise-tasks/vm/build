@@ -8,7 +8,7 @@ echo "Creating the local QEMU Ubuntu test VM"
 # Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
 # into the lab's own output file; the VM mechanics live in the vendored
 # mise-tasks/vendor/qemu-vm.sh.
-export_lab_credentials
+activate_test_credentials
 export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 

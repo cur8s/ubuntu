@@ -94,8 +94,8 @@ mise run up     # create → boot (127.0.0.1:2222) → wait → converge
 
 Mechanics worth knowing when debugging:
 
-- **Keys and agent**: `export_lab_credentials` — defined by
-  `collection/scripts/export-lab-credentials.sh`, the custody shim
+- **Keys and agent**: `activate_test_credentials` — defined by
+  `collection/scripts/activate-test-credentials.sh`, the custody shim
   that ships with the collection so any consumer lab (this repo, the
   future k3s repo) inherits it by installing `cur8s.ubuntu` —
   generates three ed25519 keypairs into `.generated/qemu/keys/` and

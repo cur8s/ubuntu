@@ -2,7 +2,7 @@
 #MISE description="Additively add the baseline accounts to the scenario VM (next: host:converge)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-export_lab_credentials
+activate_test_credentials
 
 ADOPT_USER="${ADOPT_USER:-ubuntu}" qemu_ansible_playbook \
   "$MISE_CONFIG_ROOT/collection/playbooks/adopt.yml" \
