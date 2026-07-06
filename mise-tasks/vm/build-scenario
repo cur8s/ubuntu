@@ -18,6 +18,7 @@ activate_test_credentials
 # A scenario VM models an existing server that predates the baseline, so
 # its seed deliberately does NOT use the baseline render. The seed embeds
 # the bootstrap key, so each build renders the one seed it boots, fresh.
+# The heredocs expand $-substitutions; escape any literal $ in a seed.
 user_data="$MISE_CONFIG_ROOT/.generated/cloud-init/scenario-$scenario.yaml"
 mkdir -p "$(dirname "$user_data")"
 case "$scenario" in
@@ -29,15 +30,15 @@ case "$scenario" in
     # locking root afterwards closes the one door that can never be
     # deleted. The users list naming only root keeps cloud-init from
     # creating the image's default user.
-    {
-      printf '#cloud-config\n'
-      printf 'disable_root: false\n'
-      printf 'ssh_pwauth: false\n'
-      printf 'users:\n'
-      printf '  - name: root\n'
-      printf '    ssh_authorized_keys:\n'
-      printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
-    } > "$user_data"
+    cat > "$user_data" <<EOF
+#cloud-config
+disable_root: false
+ssh_pwauth: false
+users:
+  - name: root
+    ssh_authorized_keys:
+      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+EOF
     next_hint="ADOPT_USER=root mise run host:adoptable"
     ;;
   sudo-user)
@@ -49,18 +50,18 @@ case "$scenario" in
     # bootstrap key — the pre-baseline door adoption connects through
     # (ADOPT_USER) — and password auth left on, so the adoptability
     # warning has something real to find.
-    {
-      printf '#cloud-config\n'
-      printf 'ssh_pwauth: true\n'
-      printf 'users:\n'
-      printf '  - name: %s\n' "$scenario_user"
-      printf '    shell: /bin/bash\n'
-      printf '    groups: [sudo]\n'
-      printf '    sudo: "ALL=(ALL) NOPASSWD:ALL"\n'
-      printf '    lock_passwd: true\n'
-      printf '    ssh_authorized_keys:\n'
-      printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
-    } > "$user_data"
+    cat > "$user_data" <<EOF
+#cloud-config
+ssh_pwauth: true
+users:
+  - name: $scenario_user
+    shell: /bin/bash
+    groups: [sudo]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+EOF
     next_hint="mise run host:adoptable"
     ;;
 esac
