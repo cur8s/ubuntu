@@ -2,7 +2,6 @@
 #MISE description="Build the VM: overlay disk + NoCloud seed from rendered cloud-init; starts nothing (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 
@@ -13,5 +12,6 @@ activate_test_credentials
 export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 
-QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" qvm build-vm
+QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" \
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm
 echo "VM built in $QVM_DIR. Next: mise run vm:start"

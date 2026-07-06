@@ -2,6 +2,5 @@
 #MISE description="Download and checksum-verify the cloud image into the cache (no-op if cached)"
 #MISE hide=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
-qvm fetch-image
+bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" fetch-image
 echo "Image ready in $QVM_CACHE_DIR."

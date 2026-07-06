@@ -2,7 +2,6 @@
 #MISE description="Scenario: a pre-baseline server whose door is root — the DigitalOcean shape (next: vm:start, then ADOPT_USER=root host:adoptable)"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials
 echo "Creating the root-user scenario VM (door on: root)"
@@ -27,7 +26,8 @@ mkdir -p "$(dirname "$user_data")"
   printf '    ssh_authorized_keys:\n'
   printf '      - "%s"\n' "$(cat "$BOOTSTRAP_PUB_KEY")"
 } > "$user_data"
-QVM_NAME="ubuntu-qemu-root-user" QVM_USER_DATA="$user_data" qvm build-vm
+QVM_NAME="ubuntu-qemu-root-user" QVM_USER_DATA="$user_data" \
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm
 
 echo "root-user scenario VM prepared in $QVM_DIR (no baseline accounts, no dist-upgrade, no reboot)."
 echo "Next: mise run vm:start, then ADOPT_USER=root mise run host:adoptable"

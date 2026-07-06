@@ -2,12 +2,11 @@
 #MISE description="Stages done so far, and the next command"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
 next=""
 
-# One qvm status call answers both rows; its vocabulary is contract
+# One harness status call answers both rows; its vocabulary is contract
 # (cur8s/qemu RFC-001): image cached|missing, vm running|stopped|absent.
-harness="$(qvm status)"
+harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
 
 if [[ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" && -s "$QEMU_KEYS_DIR/ubuntu-sysadmin.pub" ]] \
   && grep -q '^image  *cached' <<<"$harness"; then

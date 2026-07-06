@@ -17,10 +17,11 @@
 # multiple real members. Task scripts must be executable or mise silently
 # ignores them; non-executable .sh files beside them are sourceable
 # libraries. There is no central lib: each task's first lines source
-# exactly what it uses — mise-tasks/qvm.sh (the VM harness wrapper),
-# collection/scripts/run-lab-playbook.sh (the collection's lab
-# library), or mise-tasks/test/example-suite.sh (the test namespace's
-# own).
+# exactly what it uses — collection/scripts/run-lab-playbook.sh (the
+# collection's lab library) or mise-tasks/test/example-suite.sh (the
+# test namespace's own) — and the vendored VM harness
+# (mise-tasks/vendor/qemu-vm.sh, non-executable) is invoked directly
+# via bash at each call site.
 
 [env]
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"
