@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Runs it twice; second pass must report changed=0"
-#MISE depends=["example:link"]
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/example-suite.sh"
 
 test_example tailscale qemu

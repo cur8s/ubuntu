@@ -2,7 +2,8 @@
 #MISE description="Scenario: a pre-baseline server whose door is a sudo user (SCENARIO_USER, default ubuntu) — next: vm:start, then host:adoptable"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials
 scenario_user="${SCENARIO_USER:-ubuntu}"
 echo "Creating the sudo-user scenario VM (door on: $scenario_user)"

@@ -2,7 +2,7 @@
 #MISE description="Stages done so far, and the next command"
 #MISE quiet=true
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
 next=""
 
 # One qvm status call answers both rows; its vocabulary is contract

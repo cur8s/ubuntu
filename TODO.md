@@ -16,7 +16,7 @@ the words are validated against the system as it will actually ship.
   - T11 (finder claim rejected by our own lab evidence): a reviewer called the "pubs must be 0600" note wrong; our recorded discovery is that ssh -i with a world-readable pub file does fail. Re-verify once, then keep or fix the folder README's phrasing.
 
 ## 2. mise harness review (code)
-- [ ] Review the task grammar end to end: task names and descriptions, `lib.sh`, hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set.
+- [ ] Review the task grammar end to end: task names and descriptions, the import files (`mise-tasks/qvm.sh`, `mise-tasks/test/example-suite.sh`, the collection's lab scripts), hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set.
 
 ## 3. QEMU lab review (code)
 - [ ] Review how the lab does images, seeds, boot, wait, and teardown — cross-checked against the explore-qemu learnings — and confirm the scenario flows read as clearly as the baseline flow.

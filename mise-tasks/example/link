@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Symlink the working-tree collection into .generated so examples resolve cur8s.ubuntu"
-#MISE quiet=true
-#MISE hide=true
-set -euo pipefail
-mkdir -p "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s"
-ln -sfn ../../../../collection "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s/ubuntu"
-echo "Linked .generated/collections/ansible_collections/cur8s/ubuntu -> collection/"

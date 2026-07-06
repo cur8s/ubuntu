@@ -56,9 +56,9 @@ them only when you run it.
 ## 3. The task surface
 
 Bare `mise run` prints the cheat sheet — the golden path through the
-labs. `mise tasks` lists the operator-level tasks; plumbing tasks pulled
-in as dependencies (`keys`, `vm:fetch-image`, `example:link`) are
-hidden but runnable by name. The grammar:
+labs. `mise tasks` lists the operator-level tasks; the one plumbing
+task pulled in as a dependency (`vm:fetch-image`) is hidden but
+runnable by name. The grammar:
 
 - the local QEMU lab (free; guest arch follows the host — arm64 on
   Apple silicon, amd64 in CI) is the root harness's only lab.
@@ -179,10 +179,10 @@ Each example has a local test task (`test:docker`, ... and
 `test:all` for the suite). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
-drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. The hidden
-`example:link` task symlinks the working tree into
-`.generated/collections/`, so examples resolve your live edits — no
-reinstall between iterations. `test:scenarios` is the second suite:
+drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. Every
+example run refreshes a symlink from `.generated/collections/` to the
+working tree, so examples resolve your live edits — no reinstall
+between iterations. `test:scenarios` is the second suite:
 both adoption rehearsals, each asserted end to end (§4).
 
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows

@@ -15,7 +15,12 @@
 # where the lab itself is the object (prep, up, clean) take no object
 # segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently
-# ignores them; shared helpers live in mise-tasks/lib.sh.
+# ignores them; non-executable .sh files beside them are sourceable
+# libraries. There is no central lib: each task's first lines source
+# exactly what it uses — mise-tasks/qvm.sh (the VM harness wrapper),
+# collection/scripts/run-lab-playbook.sh (the collection's lab
+# library), or mise-tasks/test/example-suite.sh (the test namespace's
+# own).
 
 [env]
 ANSIBLE_CONFIG = "{{config_root}}/ansible.cfg"

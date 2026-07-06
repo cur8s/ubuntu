@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Apply every pending package upgrade; never reboots, reports if a reboot becomes pending"
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 
 run_lab_playbook "$MISE_CONFIG_ROOT/collection/playbooks/patch.yml"

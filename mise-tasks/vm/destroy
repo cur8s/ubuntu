@@ -2,6 +2,6 @@
 #MISE description="Kills the VM and deletes its state; the image cache survives"
 #MISE confirm="Destroy the local QEMU VM and delete its state directory? This cannot be undone."
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
 qvm destroy-vm
 echo "VM destroyed (image cache kept in $QVM_CACHE_DIR)."

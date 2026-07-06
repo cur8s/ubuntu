@@ -1,37 +1,11 @@
-# Shared helpers, sourced by every task script (bash; the sourcing task
-# sets `set -euo pipefail`). Deliberately NOT executable: mise only
+# example-suite.sh — the test namespace's example suite: run one
+# example, or test one against the idempotency contract. Sourced by
+# test/docker, test/zot, test/tailscale, and test/all; no other
+# namespace uses these. Sources everything it needs itself, so a test
+# task needs only this file. Deliberately NOT executable: mise only
 # detects executable files as tasks, so this stays a library.
-# (Corollary: new task scripts MUST be chmod +x or mise silently
-# ignores them; the vendored qemu-vm.sh relies on the same rule to
-# stay out of the task list.)
-# Admission rule: nothing lives here with fewer than two calling
-# tasks — a single-caller function belongs in its calling task.
 
-# === the VM harness =====================================================
-
-# The vendored VM harness (upstream: cur8s/qemu; refresh procedure in
-# its header). Its QVM_* interface is fed straight from the mise env;
-# callers may override per invocation (scenario builds set QVM_NAME
-# and QVM_USER_DATA). It lives inside mise-tasks/ because this wrapper
-# is its only consumer — and stays non-executable so mise never
-# detects it as a task; bash matches its shebang.
-qvm() {
-  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"
-}
-
-# === the collection's lab library =======================================
-
-# The lab tooling ships with the collection, so a consumer lab's
-# mechanics always match the collection version it installed (RFC-004
-# and the connection contract travel with their implementation; the
-# rationale lives in the scripts' headers). One source line defines
-# run_lab_playbook and, via its sibling shim,
-# activate_test_credentials; tasks call them directly. The
-# DigitalOcean integration never uses these and keeps the vault-held
-# keys.
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
-
-# === the example suite ==================================================
 
 # Run one example against a target: run_example <example> <qemu>.
 # (Cloud targets live with the DO harness in the operator's sandbox
@@ -39,6 +13,11 @@ qvm() {
 # see examples/README.md.)
 run_example() {
   local playbook="$MISE_CONFIG_ROOT/examples/$1/site.yml" target="$2"
+  # Examples resolve cur8s.ubuntu from the working tree through a dev
+  # link, refreshed on every run (ln -sfn is idempotent).
+  mkdir -p "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s"
+  ln -sfn ../../../../collection \
+    "$MISE_CONFIG_ROOT/.generated/collections/ansible_collections/cur8s/ubuntu"
   (
     export ANSIBLE_COLLECTIONS_PATH="$MISE_CONFIG_ROOT/.generated/collections"
     case "$target" in
@@ -76,4 +55,3 @@ test_example() {
   fi
   grep -hA3 "PLAY RECAP" "$second_log" | sed "s/^/    /"
 }
-

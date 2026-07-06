@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #MISE description="One-time: throwaway lab keys + cloud image cache (next: up)"
-#MISE depends=["keys", "vm:fetch-image"]
+#MISE depends=["vm:fetch-image"]
 #MISE quiet=true
 set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
+activate_test_credentials
 echo "QEMU lab prepared: lab keys generated, cloud image cached (no 1Password needed). Next: mise run up"

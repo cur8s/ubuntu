@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #MISE description="Rides out the first boot (next: host:converge)"
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/qvm.sh"
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials
 echo "Waiting for cloud-init to finish (a first boot may upgrade and reboot)..."
 # The lab's private keys sit beside their .pub files, so the harness can
