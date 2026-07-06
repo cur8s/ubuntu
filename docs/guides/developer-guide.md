@@ -46,7 +46,7 @@ them only when you run it.
 
 - **The everyday loop needs no vault and no cloud.** The QEMU lab
   generates throwaway keypairs and runs its own promptless ssh-agent
-  (RFC-004: ephemeral lab credentials), so the entire local loop is
+  (RFC-004: ephemeral test credentials), so the entire local loop is
   unattended — no prompts, no billing.
 - Everything generated lands in git-ignored `.generated/` (the
   integration folders keep their own, inside themselves); `mise run

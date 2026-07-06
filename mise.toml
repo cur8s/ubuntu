@@ -39,7 +39,7 @@ QVM_DIR = "{{config_root}}/.generated/qemu/vm"
 # silenced and the tasks speak mise vocabulary (errors still print).
 QVM_QUIET = "1"
 # The QEMU lab uses throwaway keypairs generated on the workstation
-# (RFC-004: ephemeral lab credentials) so the local loop needs no
+# (RFC-004: ephemeral test credentials) so the local loop needs no
 # 1Password approvals; qemu tasks point the key env vars here. The
 # DigitalOcean integration folder keeps the vault-held keys.
 QEMU_KEYS_DIR = "{{config_root}}/.generated/qemu/keys"

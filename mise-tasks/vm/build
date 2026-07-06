@@ -5,7 +5,7 @@ set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 
-# Render with the lab's throwaway keys (RFC-004: ephemeral lab credentials)
+# Render with the lab's throwaway keys (RFC-004: ephemeral test credentials)
 # into the lab's own output file; the VM mechanics live in the vendored
 # mise-tasks/vendor/qemu-vm.sh.
 activate_test_credentials
