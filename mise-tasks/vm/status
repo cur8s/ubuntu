@@ -32,6 +32,5 @@ case "$vm_state" in
     ;;
 esac
 
-echo "3 converge  unknown  mise run host:report-drift answers (read-only)"
 echo
 echo "next: mise run ${next:-host:converge}"
