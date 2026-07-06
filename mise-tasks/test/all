@@ -3,6 +3,34 @@
 #MISE depends=["example:link"]
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-prepare_ansible_temp
+
+# Test every example; single caller, so the function lives here (lib.sh
+# admission rule). Coverage comes from globbing examples/ — a missing
+# per-example task wrapper can never silently drop an example from the
+# suite; it only earns a warning.
+test_all_examples() {
+  local target="$1" skipped="" example_dir name
+
+  for example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
+    name="$(basename "$example_dir")"
+    [[ -f $example_dir/site.yml ]] || continue
+
+    # The per-example wrappers live at mise-tasks/test/<example>.
+    if [[ $target == qemu && ! -x "$MISE_CONFIG_ROOT/mise-tasks/test/$name" ]]; then
+      echo "WARN examples/$name has no mise-tasks/test/$name wrapper (still tested by this suite)." >&2
+    fi
+
+    if [[ $name == tailscale && -z ${TAILSCALE_AUTHKEY:-} ]]; then
+      echo "SKIP tailscale: TAILSCALE_AUTHKEY is not set. (Joining also leaves a node"
+      echo "in the tailnet admin console unless the auth key is ephemeral.)"
+      skipped="$skipped tailscale"
+      continue
+    fi
+
+    test_example "$name" "$target"
+  done
+
+  echo "All examples passed twice on $target.${skipped:+ Skipped:$skipped.}"
+}
 
 test_all_examples qemu

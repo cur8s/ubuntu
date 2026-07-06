@@ -4,15 +4,8 @@
 # (Corollary: new task scripts MUST be chmod +x or mise silently
 # ignores them; the vendored qemu-vm.sh relies on the same rule to
 # stay out of the task list.)
-
-# === task preamble ======================================================
-
-# Ansible does not create a custom local tmp dir on its own; every task
-# that runs ansible calls this first (ANSIBLE_LOCAL_TEMP is pinned
-# under .generated/ in mise.toml).
-prepare_ansible_temp() {
-  mkdir -p "$ANSIBLE_LOCAL_TEMP"
-}
+# Admission rule: nothing lives here with fewer than two calling
+# tasks — a single-caller function belongs in its calling task.
 
 # === the VM harness =====================================================
 
@@ -28,54 +21,14 @@ qvm() {
 
 # === lab credentials (RFC-004) ==========================================
 
-# Make the lab's throwaway credentials available: generate missing
-# keypairs, ensure the lab's promptless ssh-agent is up, and export the
-# env vars the playbooks and render script read. Ephemeral lab
-# credentials open nothing but a disposable VM on a loopback port, live
-# git-ignored, and die with `clean`. The agent is load-bearing, not
-# ceremony: the collection connects pub-as-identity (converge pins the
-# connection key to the .pub), and OpenSSH resolves a .pub identity
-# only through an agent — 1Password in production, this one in the
-# lab; without it ssh tries the .pub as a private key and fails
-# ("invalid format"). The private halves beside the .pubs serve only
-# the flows that hand ssh a private file directly (the vendored
-# script's wait probe). The DigitalOcean integration never calls this
-# and keeps the vault-held keys.
-export_lab_credentials() {
-  local key
-  for key in ubuntu-bootstrap ubuntu-ansible ubuntu-sysadmin; do
-    if [[ ! -f "$QEMU_KEYS_DIR/$key" ]]; then
-      mkdir -p "$QEMU_KEYS_DIR"
-      ssh-keygen -q -t ed25519 -N '' -C "qemu-lab-$key" -f "$QEMU_KEYS_DIR/$key"
-      # 0600 like the vault-extracted pubs: ssh tries identity files as
-      # private keys first and refuses world-readable ones.
-      chmod 600 "$QEMU_KEYS_DIR/$key.pub"
-    fi
-  done
-
-  # A dedicated, promptless ssh-agent holds the lab keys, so every
-  # pub-as-identity mechanic (`-i <file>.pub`) works exactly as it does
-  # against 1Password — the lab merely substitutes its own agent.
-  local sock="$QEMU_KEYS_DIR/agent.sock" agent_state=0
-  SSH_AUTH_SOCK="$sock" ssh-add -l >/dev/null 2>&1 || agent_state=$?
-  if [[ $agent_state -eq 2 ]]; then
-    # No agent behind the socket (never started, or stale after a reboot).
-    rm -f "$sock"
-    ssh-agent -a "$sock" >/dev/null
-  fi
-  if [[ $agent_state -ne 0 ]]; then
-    SSH_AUTH_SOCK="$sock" ssh-add -q \
-      "$QEMU_KEYS_DIR/ubuntu-bootstrap" \
-      "$QEMU_KEYS_DIR/ubuntu-ansible" \
-      "$QEMU_KEYS_DIR/ubuntu-sysadmin"
-  fi
-  export SSH_AUTH_SOCK="$sock"
-
-  export BOOTSTRAP_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-bootstrap.pub"
-  export ANSIBLE_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-ansible.pub"
-  export SYSADMIN_PUB_KEY="$QEMU_KEYS_DIR/ubuntu-sysadmin.pub"
-  export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
-}
+# The custody shim ships with the collection, so a consumer lab's
+# credential mechanics always match the collection version it
+# installed (RFC-004 travels with its implementation; the agent
+# rationale lives in the shim's header). Sourcing defines
+# export_lab_credentials; tasks call it before anything that SSHes.
+# The DigitalOcean integration never calls it and keeps the
+# vault-held keys.
+. "$MISE_CONFIG_ROOT/collection/scripts/export-lab-credentials.sh"
 
 # === ansible against the lab VM =========================================
 
@@ -99,6 +52,9 @@ qemu_ansible_playbook() {
     return 1
   fi
   export_lab_credentials
+  # Ansible does not create a custom local tmp dir on its own
+  # (ANSIBLE_LOCAL_TEMP is pinned under .generated/ in mise.toml).
+  mkdir -p "$ANSIBLE_LOCAL_TEMP"
   # IdentityAgent is pinned explicitly: 1Password's ~/.ssh/config sets a
   # global IdentityAgent, which overrides SSH_AUTH_SOCK — without the pin,
   # lab traffic would consult the 1Password agent and prompt. The
@@ -108,28 +64,6 @@ qemu_ansible_playbook() {
   VALIDATE_SSH_IDENTITY_AGENT="$QEMU_KEYS_DIR/agent.sock" \
     ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QVM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
     ansible-playbook -i "$(write_qemu_inventory)" "$@"
-}
-
-# SSH to the local QEMU VM: qemu_ssh <user> <identity-file> [command...]
-# Deliberately parallel to `qvm ssh`, with one divergence: IdentityAgent
-# points at the lab agent (pub-as-identity needs it) where the vendored
-# script pins IdentityAgent=none. Each fresh VM presents new host keys
-# on the same forwarded port, so the known_hosts file lives in the VM
-# state dir and dies with it.
-qemu_ssh() {
-  local user="$1" identity="$2"
-  shift 2
-  ssh \
-    -o UserKnownHostsFile="$QVM_DIR/known_hosts" \
-    -o StrictHostKeyChecking=accept-new \
-    -o IdentitiesOnly=yes \
-    -o IdentityAgent="$QEMU_KEYS_DIR/agent.sock" \
-    -o ConnectTimeout=10 \
-    -o ServerAliveInterval=15 \
-    -o ServerAliveCountMax=4 \
-    -i "$identity" \
-    -p "$QVM_SSH_PORT" \
-    "$user@127.0.0.1" "$@"
 }
 
 # === the example suite ==================================================
@@ -178,73 +112,3 @@ test_example() {
   grep -hA3 "PLAY RECAP" "$second_log" | sed "s/^/    /"
 }
 
-# Test every example against a target: test_all_examples <qemu>.
-# Coverage comes from globbing examples/ — a missing per-example task
-# wrapper can never silently drop an example from the suite; it only
-# earns a warning.
-test_all_examples() {
-  local target="$1" skipped="" example_dir name
-
-  for example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
-    name="$(basename "$example_dir")"
-    [[ -f $example_dir/site.yml ]] || continue
-
-    # The per-example wrappers live at mise-tasks/test/<example>.
-    if [[ $target == qemu && ! -x "$MISE_CONFIG_ROOT/mise-tasks/test/$name" ]]; then
-      echo "WARN examples/$name has no mise-tasks/test/$name wrapper (still tested by this suite)." >&2
-    fi
-
-    if [[ $name == tailscale && -z ${TAILSCALE_AUTHKEY:-} ]]; then
-      echo "SKIP tailscale: TAILSCALE_AUTHKEY is not set. (Joining also leaves a node"
-      echo "in the tailnet admin console unless the auth key is ephemeral.)"
-      skipped="$skipped tailscale"
-      continue
-    fi
-
-    test_example "$name" "$target"
-  done
-
-  echo "All examples passed twice on $target.${skipped:+ Skipped:$skipped.}"
-}
-
-# === assertions =========================================================
-
-# Assert a captured ansible-playbook log reported changed=0 (the
-# idempotency contract), printing its recap: assert_changed_zero <log> <label>
-assert_changed_zero() {
-  local log="$1" label="$2"
-  if grep -qE 'changed=[1-9]' "$log"; then
-    grep -A9 "PLAY RECAP" "$log" || cat "$log"
-    echo "FAIL $label: reported changes; expected changed=0." >&2
-    exit 1
-  fi
-  grep -hA3 "PLAY RECAP" "$log" | sed 's/^/    /'
-}
-
-# Assert a captured report-access log shows an access surface of exactly
-# the two baseline doors — ssh-key doors ansible+sysadmin only, no
-# unlocked-password doors, no unexpected keys: assert_two_doors <log>
-assert_two_doors() {
-  local log="$1" doors unlocked
-  # grep -v exits 1 when every door filters away (a healthy "(none)"
-  # report), and pipefail would turn that into a false failure — hence
-  # the || true on the capture.
-  doors="$(awk '/doors, ssh keys/{f=1;next} /doors, unlocked passwords/{f=0} f' "$log" \
-    | tr -d '",' | awk '{print $1}' | grep -v '^(none)$' | sort | paste -s -d' ' - || true)"
-  if [[ $doors != "ansible sysadmin" ]]; then
-    echo "FAIL: expected exactly the two baseline doors, saw: ${doors:-none}" >&2
-    exit 1
-  fi
-  # Captured, then tested in bash — not piped to grep -q: under pipefail
-  # an early-exiting grep can fail the very pipeline it reads (SIGPIPE).
-  unlocked="$(awk '/doors, unlocked passwords/{f=1;next} /privileged group members/{f=0} f' "$log")"
-  if [[ $unlocked != *'(none)'* ]]; then
-    echo "FAIL: expected no unlocked-password doors." >&2
-    exit 1
-  fi
-  if ! grep -q 'ansible: 0' "$log" || ! grep -q 'sysadmin: 0' "$log"; then
-    echo "FAIL: unexpected keys on a baseline account." >&2
-    exit 1
-  fi
-  echo "Access surface: exactly ansible + sysadmin."
-}

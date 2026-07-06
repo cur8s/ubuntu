@@ -29,12 +29,15 @@ ANSIBLE_LOCAL_TEMP = "{{config_root}}/.generated/ansible/tmp"
 # mapping layer. Only values that differ from the script's defaults
 # appear: state lives under .generated/ (the house convention; clean
 # wipes one tree), the VM carries the lab's name, and the port is here
-# because the lib's ssh helpers read the same knob. Sizes and timeouts
+# because the tasks' narration reads the same knob. Sizes and timeouts
 # ride the script defaults; override per-run via environment.
 QVM_NAME = "ubuntu-qemu-lab"
 QVM_SSH_PORT = "2222"
 QVM_CACHE_DIR = "{{config_root}}/.generated/qemu/cache"
 QVM_DIR = "{{config_root}}/.generated/qemu/vm"
+# The harness owns the narration: the script's informational lines are
+# silenced and the tasks speak mise vocabulary (errors still print).
+QVM_QUIET = "1"
 # The QEMU lab uses throwaway keypairs generated on the workstation
 # (RFC-004: ephemeral lab credentials) so the local loop needs no
 # 1Password approvals; qemu tasks point the key env vars here. The

@@ -3,4 +3,4 @@
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 export_lab_credentials
-qemu_ssh sysadmin "$SYSADMIN_PUB_KEY"
+qvm ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"

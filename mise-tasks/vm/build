@@ -9,7 +9,8 @@ echo "Creating the local QEMU Ubuntu test VM"
 # into the lab's own output file; the VM mechanics live in the vendored
 # mise-tasks/vendor/qemu-vm.sh.
 export_lab_credentials
+export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
 sh "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
 
 QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" qvm build-vm
-echo "Next: mise run vm:start"
+echo "VM built in $QVM_DIR. Next: mise run vm:start"

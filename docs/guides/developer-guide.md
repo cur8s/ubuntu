@@ -94,9 +94,14 @@ mise run up     # create → boot (127.0.0.1:2222) → wait → converge
 
 Mechanics worth knowing when debugging:
 
-- **Keys and agent**: `export_lab_credentials` (in `mise-tasks/lib.sh`) generates
-  three ed25519 keypairs into `.generated/qemu/keys/` and keeps a
-  dedicated `ssh-agent` on `agent.sock` holding them. The agent is
+- **Keys and agent**: `export_lab_credentials` — defined by
+  `collection/scripts/export-lab-credentials.sh`, the custody shim
+  that ships with the collection so any consumer lab (this repo, the
+  future k3s repo) inherits it by installing `cur8s.ubuntu` —
+  generates three ed25519 keypairs into `.generated/qemu/keys/` and
+  keeps a dedicated `ssh-agent` on `agent.sock` holding them; it also
+  exports `QVM_SSH_IDENTITY_AGENT` so the vendored `qemu-vm.sh ssh`
+  signs through the same agent. The agent is
   load-bearing: the collection connects pub-as-identity, and OpenSSH
   resolves a `.pub` identity only through an agent — it is the lab's
   stand-in for the secrets manager's signer. Every lab SSH pins

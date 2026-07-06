@@ -293,6 +293,28 @@ it releases when Ubuntu-level facts change, never because a layer above
 it changed its mind — and composition reaches only upward, so the
 baseline never tests or promises any particular layer.
 
+**A local lab for your layer.** A consumer repository that wants the
+same free, unattended QEMU loop this repository uses needs exactly
+three pieces, none copied by hand:
+
+1. Vendor `qemu-vm.sh` from its upstream,
+   [cur8s/qemu](https://github.com/cur8s/qemu) — a custody-neutral,
+   single-file VM harness; its header carries the pinned refresh
+   command.
+2. Install this collection; the lab tooling ships inside it:
+   `scripts/render-cloud-init.sh` renders baseline user-data from your
+   public keys, and `scripts/export-lab-credentials.sh` is the custody
+   shim — source it from bash and call `export_lab_credentials` to get
+   throwaway keypairs, the promptless signing agent the collection's
+   pub-as-identity connections require, and the exported env
+   (including `QVM_SSH_IDENTITY_AGENT`, which wires the vendored
+   `qemu-vm.sh ssh` to the same agent). Because the shim ships with
+   the collection, its mechanics always match the collection version
+   you installed.
+3. Wire your task runner's environment: `QVM_DIR`, `QVM_CACHE_DIR`,
+   `QEMU_KEYS_DIR`, and friends — see this repository's `mise.toml`
+   for the working example.
+
 ## 8. Installing deb packages (reference)
 
 Every purpose layer starts by getting software onto the host. These are

@@ -6,7 +6,7 @@
 # you would hand a real cloud host, passed through verbatim. destroy-vm
 # leaves nothing behind but the cached image.
 #
-# Upstream: https://github.com/cur8s/qemu        Version: 0.2.0
+# Upstream: https://github.com/cur8s/qemu        Version: 0.3.0
 # This file is designed to be vendored: copy it into any repository that
 # needs a quick VM and keep this header. Refresh a vendored copy with:
 #   gh api -H "Accept: application/vnd.github.raw" \
@@ -49,7 +49,10 @@
 #   Support      fetch-image       download + checksum-verify the cloud
 #                                  image into the cache (build-vm does this
 #                                  itself; standalone for pre-warming)
-#                status            image / state / process facts
+#                status            image / state / process facts. The
+#                                  vocabulary is stable for wrappers to
+#                                  parse: image cached|missing, vm
+#                                  running|stopped|absent
 #                show-boot-log     print the VM's boot log (serial console
 #                                  output) and follow new lines — the
 #                                  debug window when SSH is down
@@ -72,6 +75,14 @@
 #   QVM_SHA256SUMS_URL checksum file                (default: SHA256SUMS
 #                      beside the image URL)
 #   QVM_SSH_PORT       forwarded SSH port           (default: 2222)
+#   QVM_SSH_IDENTITY_AGENT                          (default: none)
+#                      agent socket for ssh signatures. The default
+#                      signs with the identity file alone and blocks a
+#                      globally configured secrets-manager agent from
+#                      intercepting; point it at a socket when the
+#                      private half lives in an agent (e.g. -i key.pub)
+#   QVM_QUIET          set to 1 to silence informational lines; errors,
+#                      status, and the boot log always print
 #   QVM_CPUS / QVM_MEMORY / QVM_DISK_SIZE           (default: 4 / 4G / 20G)
 #   QVM_WAIT_TIMEOUT_SECONDS                        (default: 1200)
 #   Keep QVM_DIR and QVM_CACHE_DIR free of commas (QEMU's -drive option
@@ -90,6 +101,8 @@ QVM_CACHE_DIR="${QVM_CACHE_DIR:-./.qvm/cache}"
 [[ $QVM_CACHE_DIR = /* ]] || QVM_CACHE_DIR="$PWD/${QVM_CACHE_DIR#./}"
 QVM_NAME="${QVM_NAME:-qemu-vm}"
 QVM_SSH_PORT="${QVM_SSH_PORT:-2222}"
+QVM_SSH_IDENTITY_AGENT="${QVM_SSH_IDENTITY_AGENT:-none}"
+QVM_QUIET="${QVM_QUIET:-}"
 QVM_CPUS="${QVM_CPUS:-4}"
 QVM_MEMORY="${QVM_MEMORY:-4G}"
 QVM_DISK_SIZE="${QVM_DISK_SIZE:-20G}"
@@ -100,6 +113,12 @@ QVM_WAIT_TIMEOUT_SECONDS="${QVM_WAIT_TIMEOUT_SECONDS:-1200}"
 # the host; resolve_* derives values into variables; *_is_* answers
 # yes/no; cmd_<verb> implements the CLI verb of the same name; the
 # rest act (make_seed_iso, start_qemu_process).
+
+# Informational output; QVM_QUIET=1 silences it so an embedding
+# harness can own the narration. Errors never route through here.
+say() {
+  [[ -n $QVM_QUIET ]] || echo "$@"
+}
 
 # The guest architecture follows the host: hvf and KVM cannot cross.
 detect_guest_arch() {
@@ -282,7 +301,7 @@ cmd_build_vm() {
   if [[ -n $uefi_vars ]]; then
     cp "$uefi_vars" "$QVM_DIR/efivars.fd"
   fi
-  echo "VM prepared in $QVM_DIR (start it with: qemu-vm.sh start-vm)"
+  say "VM prepared in $QVM_DIR (start it with: qemu-vm.sh start-vm)"
 }
 
 cmd_start_vm() {
@@ -295,15 +314,21 @@ cmd_start_vm() {
     echo "The VM is already running (pid $(cat "$QVM_DIR/qemu.pid"))." >&2
     exit 1
   fi
+  # Probe the forward port before QEMU does: its own failure is option
+  # grammar, not guidance. bash's /dev/tcp needs no extra tools.
+  if (exec 3<>"/dev/tcp/127.0.0.1/$QVM_SSH_PORT") 2>/dev/null; then
+    echo "qemu-vm: port $QVM_SSH_PORT on 127.0.0.1 is already in use (another VM, or a stale process?)." >&2
+    exit 1
+  fi
   start_qemu_process
-  echo "VM booting: SSH forwarded to 127.0.0.1:$QVM_SSH_PORT (watch: qemu-vm.sh show-boot-log)"
+  say "VM booting: SSH forwarded to 127.0.0.1:$QVM_SSH_PORT (watch: qemu-vm.sh show-boot-log)"
 }
 
 cmd_wait_until_ready() {
   [[ $# -eq 2 ]] || { echo "usage: qemu-vm.sh wait-until-ready <user> <identity-file>" >&2; exit 1; }
   local deadline
   deadline=$(( $(date +%s) + QVM_WAIT_TIMEOUT_SECONDS ))
-  echo "Waiting for cloud-init to finish (a first boot may upgrade and reboot)..."
+  say "Waiting for cloud-init to finish (a first boot may upgrade and reboot)..."
   wait_for_cloud_init "$1" "$2" "$deadline"
   # A first-boot power_state reboot fires the moment cloud-init reports
   # done, so that success may be the pre-reboot instance. Let the reboot
@@ -311,12 +336,12 @@ cmd_wait_until_ready() {
   # second pass returns immediately.
   sleep 15
   wait_for_cloud_init "$1" "$2" "$deadline"
-  echo "cloud-init is done; the VM is ready."
+  say "cloud-init is done; the VM is ready."
 }
 
 cmd_destroy_vm() {
   if [[ ! -e $QVM_DIR ]]; then
-    echo "No VM to destroy."
+    say "No VM to destroy."
     return 0
   fi
   if vm_is_running; then
@@ -335,7 +360,7 @@ cmd_destroy_vm() {
     done
   fi
   rm -rf "$QVM_DIR"
-  echo "VM destroyed (cached image kept in $QVM_CACHE_DIR)."
+  say "VM destroyed (cached image kept in $QVM_CACHE_DIR)."
 }
 
 # === access ============================================================
@@ -346,10 +371,14 @@ cmd_destroy_vm() {
 #   + StrictHostKeyChecking          key on the same port; trust it on
 #     accept-new                     first contact, pin it for the VM's
 #                                    lifetime, discard it with the VM
-#   IdentitiesOnly + IdentityAgent   sign with the -i file and nothing
-#     none                           else: a globally configured
+#   IdentitiesOnly + IdentityAgent   sign with the -i identity and
+#     $QVM_SSH_IDENTITY_AGENT        nothing else. The default (none)
+#                                    blocks a globally configured
 #                                    secrets-manager agent (ssh config
-#                                    IdentityAgent) must not intercept
+#                                    IdentityAgent) from intercepting;
+#                                    a consumer whose private half
+#                                    lives in an agent points this at
+#                                    that agent's socket
 #   ConnectTimeout / ServerAlive*    fail fast while the VM boots; drop
 #                                    dead connections during reboots
 cmd_ssh() {
@@ -359,7 +388,7 @@ cmd_ssh() {
     -o UserKnownHostsFile="$QVM_DIR/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
     -o IdentitiesOnly=yes \
-    -o IdentityAgent=none \
+    -o IdentityAgent="$QVM_SSH_IDENTITY_AGENT" \
     -o ConnectTimeout=10 \
     -o ServerAliveInterval=15 \
     -o ServerAliveCountMax=4 \
@@ -373,11 +402,11 @@ cmd_ssh() {
 cmd_fetch_image() {
   resolve_image_locations
   if [[ -f $cached_image_path ]]; then
-    echo "Using cached image $cached_image_path"
+    say "Using cached image $cached_image_path"
     return 0
   fi
   mkdir -p "$QVM_CACHE_DIR"
-  echo "Fetching $image_url"
+  say "Fetching $image_url"
   # Download to .partial: the cache path only ever holds verified images.
   curl -fL --progress-bar -o "$cached_image_path.partial" "$image_url"
 
@@ -403,7 +432,7 @@ cmd_fetch_image() {
     exit 1
   fi
   mv "$cached_image_path.partial" "$cached_image_path"
-  echo "Fetched and verified $cached_image_path"
+  say "Fetched and verified $cached_image_path"
 }
 
 cmd_status() {

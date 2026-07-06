@@ -4,3 +4,4 @@
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qvm destroy-vm
+echo "VM destroyed (image cache kept in $QVM_CACHE_DIR)."

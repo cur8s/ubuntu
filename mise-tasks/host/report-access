@@ -2,6 +2,5 @@
 #MISE description="Who can get in? Read-only; always changed=0"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-prepare_ansible_temp
 
 qemu_ansible_playbook "$MISE_CONFIG_ROOT/collection/playbooks/report_access.yml"

@@ -3,4 +3,5 @@
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
 qvm start-vm
+echo "VM booting: SSH forwarded to 127.0.0.1:$QVM_SSH_PORT (mise run vm:show-boot-log to watch)."
 echo "First boot dist-upgrades and reboots; mise run vm:wait-until-ready blocks until it is ready."

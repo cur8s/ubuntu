@@ -3,6 +3,5 @@
 #MISE depends=["example:link"]
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-prepare_ansible_temp
 
 test_example zot qemu

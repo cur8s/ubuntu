@@ -2,7 +2,6 @@
 #MISE description="Read-only adoption verdict for the scenario VM (ADOPT_USER, default ubuntu; next: host:adopt)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/lib.sh"
-prepare_ansible_temp
 export_lab_credentials
 
 ADOPT_USER="${ADOPT_USER:-ubuntu}" qemu_ansible_playbook \
