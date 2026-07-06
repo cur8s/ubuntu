@@ -68,8 +68,8 @@ runnable by name. The grammar:
   the same grammar reads `<object>:<action>` with no prefix.
 - objects: `vm` (the machine, provider plane), `host` (baseline
   operations on the managed system — each task runs its `cur8s.ubuntu.*`
-  playbook; `host:check` is converge in check mode, the drift alarm),
-  `ssh` (a shell, by account), `test` (examples, and the scenario
+  playbook one-to-one; the one alias is `host:report-drift`, converge
+  in check mode), `ssh` (a shell, by account), `test` (examples, and the scenario
   chain).
 - the one provider workflow with no object: `up` (provision +
   converge; fetches keys and image on demand). Workstation-scoped:

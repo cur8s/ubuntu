@@ -38,7 +38,7 @@ ${B}A SESSION, START TO FINISH${R}
                                 ${D}(= vm:build -> vm:start -> vm:wait-until-ready -> host:converge)${R}
   ${D}mise run${R} ${C}vm:status${R}              where am I? stages done, and the next command
   ${D}mise run${R} ${C}ssh:ansible${R}            inspect by hand ${D}(boot problems: vm:show-boot-log)${R}
-  ${D}mise run${R} ${C}host:check${R}             drift alarm: the converge report, nothing enforced
+  ${D}mise run${R} ${C}host:report-drift${R}      is anything drifting? read-only, like report-access
   ${D}mise run${R} ${C}host:converge${R}          daily enforcement; changed=0 means conformant
   ${D}mise run${R} ${C}test:docker${R}            test one example: runs it twice,
                                 second pass must report changed=0
