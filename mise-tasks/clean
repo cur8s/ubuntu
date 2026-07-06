@@ -3,6 +3,6 @@
 #MISE depends=["vm:destroy"]
 set -euo pipefail
 # The lab ssh-agent outlives its socket file; kill it before wiping state
-# so clean/prep cycles do not leak one orphaned agent per cycle.
+# so clean/up cycles do not leak one orphaned agent per cycle.
 pkill -f "ssh-agent -a $MISE_CONFIG_ROOT/.generated/qemu/keys/agent.sock" 2>/dev/null || true
 rm -rf "$MISE_CONFIG_ROOT/.generated"

@@ -52,8 +52,8 @@ jobs:
           path: .generated/qemu/cache
           key: qemu-image-noble-amd64-v1
 
-      - name: prep — lab keys + image cache
-        run: mise run prep
+      - name: fetch-image — warm the image cache
+        run: mise run vm:fetch-image
 
       - name: up — create, boot, ride out first boot, converge
         run: mise run up

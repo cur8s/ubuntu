@@ -51,7 +51,7 @@ them only when you run it.
 - Everything generated lands in git-ignored `.generated/` (the
   integration folders keep their own, inside themselves); `mise run
   clean` destroys the local VM and wipes the root one. Recover with
-  `prep`.
+  `up` — it fetches keys and image on demand.
 
 ## 3. The task surface
 
@@ -71,8 +71,9 @@ runnable by name. The grammar:
   playbook; `host:check` is converge in check mode, the drift alarm),
   `ssh` (a shell, by account), `test` (examples, and the scenario
   chain).
-- provider workflows with no object: `prep` (one-time groundwork), `up`
-  (provision + converge). Workstation-scoped: `clean` and `default`.
+- the one provider workflow with no object: `up` (provision +
+  converge; fetches keys and image on demand). Workstation-scoped:
+  `clean` and `default`.
 
 ## 4. The QEMU lab — the everyday loop
 
@@ -88,8 +89,9 @@ patches go upstream, and its header carries the pinned refresh
 command.
 
 ```sh
-mise run prep   # once: throwaway lab keys + cloud image (~600MB)
-mise run up     # create → boot (127.0.0.1:2222) → wait → converge
+mise run up     # build → start (127.0.0.1:2222) → wait → converge
+                # (first run fetches the ~600MB image;
+                #  optional pre-warm: mise run vm:fetch-image)
 ```
 
 Mechanics worth knowing when debugging:
@@ -187,7 +189,7 @@ both adoption rehearsals, each asserted end to end (§4).
 
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
-CI — `.github/workflows/ci.yml` runs `prep`, `up`, and `test:all` on
+CI — `.github/workflows/ci.yml` runs `vm:fetch-image`, `up`, and `test:all` on
 every push and pull request on an amd64 KVM runner (no secrets, no
 billable resources), plus `test:scenarios` on pushes to main. The
 sandbox DigitalOcean harness stays the real-provider leg at release

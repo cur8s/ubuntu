@@ -8,12 +8,11 @@ next=""
 # (cur8s/qemu RFC-001): image cached|missing, vm running|stopped|absent.
 harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
 
-if [[ -s "$QEMU_KEYS_DIR/ubuntu-ansible.pub" && -s "$QEMU_KEYS_DIR/ubuntu-sysadmin.pub" ]] \
-  && grep -q '^image  *cached' <<<"$harness"; then
-  echo "1 prep      done     lab keys generated, image cached"
+# Keys are not a stage: vm:build generates them on demand.
+if grep -q '^image  *cached' <<<"$harness"; then
+  echo "1 image     cached   shared by every VM; clean removes it"
 else
-  echo "1 prep      todo     run: mise run prep"
-  next="prep"
+  echo "1 image     missing  up fetches on demand (pre-warm: mise run vm:fetch-image)"
 fi
 
 vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"

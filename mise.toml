@@ -12,7 +12,7 @@
 # at b0ba5ff). Objects are vm (the machine, provider plane), host
 # (baseline operations on the managed system, via the collection
 # playbooks), ssh (shell access, by user), test (examples). Workflows
-# where the lab itself is the object (prep, up, clean) take no object
+# where the lab itself is the object (up, clean) take no object
 # segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently
 # ignores them; non-executable .sh files beside them are sourceable
