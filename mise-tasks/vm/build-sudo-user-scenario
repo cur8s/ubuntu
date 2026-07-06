@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Pre-baseline server, door on a sudo user (SCENARIO_USER, default ubuntu); next: vm:start"
+#MISE description="Build an 'existing server' to rehearse adoption on: login as a sudo user (SCENARIO_USER, default ubuntu; next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"

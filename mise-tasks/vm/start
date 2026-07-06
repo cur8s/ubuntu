@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Daemonized; serial console to console.log (next: vm:wait-until-ready)"
+#MISE description="Boot the built VM in the background (next: vm:wait-until-ready)"
 set -euo pipefail
 bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" start-vm
 echo "VM booting: SSH forwarded to 127.0.0.1:$QVM_SSH_PORT (mise run vm:show-boot-log to watch)."

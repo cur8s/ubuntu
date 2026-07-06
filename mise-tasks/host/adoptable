@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Read-only adoption verdict (ADOPT_USER, default ubuntu; next: host:adopt)"
+#MISE description="Can this host be adopted? Read-only verdict (connects as ADOPT_USER; next: host:adopt)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials

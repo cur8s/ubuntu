@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Add the baseline accounts via the ADOPT_USER door (next: host:converge)"
+#MISE description="Add the two baseline accounts to an existing host, connecting as ADOPT_USER (next: host:converge)"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 activate_test_credentials

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Close account doors (LOCK_ACCOUNTS, default ubuntu); run host:validate-reboot first"
+#MISE description="Lock the named accounts out of SSH (LOCK_ACCOUNTS, default ubuntu); run host:validate-reboot first"
 #MISE confirm="Lock these accounts' doors on the QEMU VM?"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
