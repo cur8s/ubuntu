@@ -112,7 +112,9 @@ same converge; the old access path is closed deliberately at the end.
 Both door shapes the clouds hand you are rehearsed locally by
 `mise run test:adoption` (root-user and sudo-user rehearsals), and the
 refusal side — a server adoption must reject, rejected with nothing
-added — by `mise run test:adoption-refusals`.
+added — by `mise run test:adoption-refusals`. Key rotation is rehearsed
+the same way — both accounts re-keyed and back through the sibling
+door — by `mise run test:rotation`.
 
 SSH shortcuts (local lab):
 

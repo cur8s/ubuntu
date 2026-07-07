@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+#MISE description="Rotate both baseline accounts to new keys and back, entered through the sibling; a planted stranger key must refuse; the lab ends standard"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/rotation"
+mkdir -p "$log_dir"
+keys="$QEMU_KEYS_DIR"
+# The same stranger key the adoptability fixtures use — test data, never
+# in any agent; nothing can actually enter by it.
+rogue_pub="$MISE_CONFIG_ROOT/collection/tests/adoptability/keys/fixture-rogue.pub"
+
+# The suite runs over the sibling door only in the refusal leg, before
+# any key has moved; afterwards the playbooks own every connection.
+lab_ssh_sysadmin() {
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"
+}
+
+echo "--- the provisioned lab, running and conformant"
+# The harness's name row says which world occupies the slot; rotation
+# only makes sense on the provisioned lab.
+harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
+occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
+vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
+if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
+  if [ -d "$QVM_DIR" ]; then
+    MISE_YES=1 mise run vm:destroy
+  fi
+  mise run up
+fi
+clog="$log_dir/converge0.log"
+if ! mise run host:converge > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: the lab would not converge before rotation." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "pre-rotation converge"
+
+echo "--- new keypairs, added to the lab agent"
+for a in ansible sysadmin; do
+  rm -f "$keys/ubuntu-$a-next" "$keys/ubuntu-$a-next.pub" \
+        "$keys/ubuntu-$a-prev" "$keys/ubuntu-$a-prev.pub"
+  ssh-keygen -q -t ed25519 -N '' -C "qemu-lab-ubuntu-$a-next" -f "$keys/ubuntu-$a-next"
+  chmod 600 "$keys/ubuntu-$a-next.pub"
+  ssh-add -q "$keys/ubuntu-$a-next"
+done
+
+# After each rotation the key FILES swap names — the lab analog of the
+# user guide's "swap the vault items". The standard env vars then always
+# name the account's current key, which matters because the credential
+# shim re-exports them on every task (deliberately, so a stray vault env
+# can never leak into the lab — per-invocation overrides do not survive).
+# A mid-suite failure can leave the slot rotated; recovery is
+# MISE_YES=1 mise run vm:destroy && mise run up — the lab is disposable.
+swap_in() {
+  mv "$keys/ubuntu-$1" "$keys/ubuntu-$1-prev"
+  mv "$keys/ubuntu-$1.pub" "$keys/ubuntu-$1-prev.pub"
+  mv "$keys/ubuntu-$1-next" "$keys/ubuntu-$1"
+  mv "$keys/ubuntu-$1-next.pub" "$keys/ubuntu-$1.pub"
+}
+swap_back() {
+  mv "$keys/ubuntu-$1" "$keys/ubuntu-$1-next"
+  mv "$keys/ubuntu-$1.pub" "$keys/ubuntu-$1-next.pub"
+  mv "$keys/ubuntu-$1-prev" "$keys/ubuntu-$1"
+  mv "$keys/ubuntu-$1-prev.pub" "$keys/ubuntu-$1.pub"
+}
+
+echo "--- refuse a bogus account name"
+nlog="$log_dir/bogus-account.log"
+if ROTATE_ACCOUNT=bogus ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
+    mise run host:rotate-key > "$nlog" 2>&1; then
+  cat "$nlog"
+  echo "FAIL: a bogus ROTATE_ACCOUNT was accepted." >&2
+  exit 1
+fi
+grep -q 'Set ROTATE_ACCOUNT to ansible or sysadmin' "$nlog" || {
+  cat "$nlog"
+  echo "FAIL: bogus account refused without the expected message." >&2
+  exit 1
+}
+echo "    refused with the input-policy message"
+
+echo "--- refuse rotation while a stranger key sits on the account"
+rogue_line="$(cat "$rogue_pub")"
+lab_ssh_sysadmin "echo '$rogue_line' | sudo tee -a /home/ansible/.ssh/authorized_keys >/dev/null"
+before="$(lab_ssh_sysadmin 'sudo cat /home/ansible/.ssh/authorized_keys')"
+rlog="$log_dir/refusal.log"
+if ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
+    mise run host:rotate-key > "$rlog" 2>&1; then
+  cat "$rlog"
+  echo "FAIL: rotation proceeded over an unexpected key." >&2
+  exit 1
+fi
+grep -q 'holds keys the baseline does not expect' "$rlog" || {
+  cat "$rlog"
+  echo "FAIL: refusal fired without the expected message." >&2
+  exit 1
+}
+after="$(lab_ssh_sysadmin 'sudo cat /home/ansible/.ssh/authorized_keys')"
+if [ "$before" != "$after" ]; then
+  echo "FAIL: a refused rotation changed authorized_keys." >&2
+  exit 1
+fi
+lab_ssh_sysadmin "sudo sed -i '/fixture-rogue@cur8s-tests/d' /home/ansible/.ssh/authorized_keys"
+echo "    refused, account untouched; stranger key removed again"
+
+echo "--- rotate ansible (entered as sysadmin), then swap the key files"
+ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
+  mise run host:rotate-key
+swap_in ansible
+
+echo "--- rotate sysadmin (entered through the rotated ansible door)"
+ROTATE_ACCOUNT=sysadmin ROTATE_NEW_PUB_KEY="$keys/ubuntu-sysadmin-next.pub" \
+  mise run host:rotate-key
+swap_in sysadmin
+
+echo "--- the rotated world: exactly the new doors, and converge agrees"
+report="$log_dir/rotated-report.log"
+if ! mise run host:report-access > "$report" 2>&1; then
+  cat "$report"
+  exit 1
+fi
+assert_two_doors "$report"
+clog="$log_dir/rotated-converge.log"
+if ! mise run host:converge > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: converge failed in the rotated world." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "rotated-world converge"
+
+echo "--- rotate both back: the lab returns to its standard keys"
+ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-prev.pub" \
+  mise run host:rotate-key
+swap_back ansible
+ROTATE_ACCOUNT=sysadmin ROTATE_NEW_PUB_KEY="$keys/ubuntu-sysadmin-prev.pub" \
+  mise run host:rotate-key
+swap_back sysadmin
+
+echo "--- back to standard: two doors, changed=0"
+report="$log_dir/final-report.log"
+if ! mise run host:report-access > "$report" 2>&1; then
+  cat "$report"
+  exit 1
+fi
+assert_two_doors "$report"
+clog="$log_dir/final-converge.log"
+if ! mise run host:converge > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: final converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "post-rotation converge"
+
+# Tidy the transient keys out of the agent and off disk.
+for a in ansible sysadmin; do
+  ssh-add -qd "$keys/ubuntu-$a-next" 2>/dev/null || true
+  rm -f "$keys/ubuntu-$a-next" "$keys/ubuntu-$a-next.pub"
+done
+
+echo
+echo "test:rotation PASSED - both accounts rotated and back via the sibling door; stranger key refused; changed=0 throughout."

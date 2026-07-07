@@ -64,6 +64,10 @@ jobs:
       - name: test:all — every example twice, second pass changed=0
         run: mise run test:all
 
+      - name: test:rotation — both accounts re-keyed and back (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:rotation
+
       - name: test:adoption — both rehearsals end to end (main only)
         if: github.event_name != 'pull_request'
         run: mise run test:adoption

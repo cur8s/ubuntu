@@ -211,6 +211,13 @@ exit codes, adopt refusing with nothing added. The one documented
 residual: no proof plane boots a non-24.04 image, so the release
 refusal is proven at the fixture layer only.
 
+`test:rotation` covers the remaining access-mutating verb: both
+baseline accounts re-keyed and back on the provisioned lab, each
+rotation entered through the sibling door; a planted stranger key must
+refuse with the account untouched, a bogus `ROTATE_ACCOUNT` must fail
+the input policy, and the suite ends with the standard keys restored
+and `changed=0` — non-destructive, the lab stays up.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` first (it fails in
@@ -264,7 +271,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
    `mise run test` against the release-candidate ref (the real-provider
    leg), plus green CI and `mise run test:adoption-verdicts`, `mise run test:all`,
-   `mise run test:adoption`, and `mise run test:adoption-refusals` locally.
+   `mise run test:rotation`, `mise run test:adoption`, and
+   `mise run test:adoption-refusals` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
