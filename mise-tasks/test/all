@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Every example twice; tailscale only if its auth key is present"
+#MISE description="Every example twice; the second pass must report changed=0"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/mise-tasks/test/example-suite.sh"
 
@@ -8,7 +8,7 @@ set -euo pipefail
 # per-example task wrapper can never silently drop an example from the
 # suite; it only earns a warning.
 test_all_examples() {
-  local target="$1" skipped="" example_dir name
+  local target="$1" example_dir name
 
   for example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
     name="$(basename "$example_dir")"
@@ -19,17 +19,10 @@ test_all_examples() {
       echo "WARN examples/$name has no mise-tasks/test/$name wrapper (still tested by this suite)." >&2
     fi
 
-    if [[ $name == tailscale && -z ${TAILSCALE_AUTHKEY:-} ]]; then
-      echo "SKIP tailscale: TAILSCALE_AUTHKEY is not set. (Joining also leaves a node"
-      echo "in the tailnet admin console unless the auth key is ephemeral.)"
-      skipped="$skipped tailscale"
-      continue
-    fi
-
     test_example "$name" "$target"
   done
 
-  echo "All examples passed twice on $target.${skipped:+ Skipped:$skipped.}"
+  echo "All examples passed twice on $target."
 }
 
 test_all_examples qemu

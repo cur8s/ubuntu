@@ -62,7 +62,7 @@ the collection's only reboot path is the one that validates.
 
 **Everything composes upward.** Purpose layers (a k3s node, a database
 host) enforce the baseline first, then add their own state — see
-`examples/` for eight runnable demonstrations of the pattern. Environment
+`examples/` for runnable demonstrations of the pattern. Environment
 repositories sit on top, holding the inventory, keys, and schedule.
 Because every tier enforces the baseline, it holds on every host, on
 every converge.

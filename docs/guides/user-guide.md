@@ -276,10 +276,9 @@ sibling so the operation never depends on the key it replaces (RFC-004):
 
 Purpose layers (a k3s node, a database host) import
 `cur8s.ubuntu.converge` first, then apply their own state — every tier
-enforces the baseline (RFC-001). The `examples/` directory holds three
-runnable demonstrations of the pattern — docker (vendor apt repo), zot
-(release binary run as a service you define), tailscale (secret-gated
-join of an access network) — each a `site.yml` that composes the
+enforces the baseline (RFC-001). The `examples/` directory holds
+runnable demonstrations of the pattern — docker (vendor apt repo) and
+zot (release binary run as a service you define) — each a `site.yml` that composes the
 baseline with a purpose, ready to drop into an environment repository
 beside your inventory and `requirements.yml`.
 
@@ -385,8 +384,8 @@ The `examples/docker/` playbook is this pattern live.
 
 **Vendor publishes ready-made keyring and list files.** Some vendors
 (Tailscale) host both a binary keyring and a matching `.list`; fetch
-the pair verbatim instead of authoring anything — see
-`examples/tailscale/`.
+the pair verbatim instead of authoring anything — the tailscale demo
+beside the operator's cloud custody shows the pair of `get_url` tasks.
 
 **Legacy: ASCII key that must be dearmored.** Older vendor docs
 (osquery, CISOfy/lynis) publish an ASCII-armored key referenced from a

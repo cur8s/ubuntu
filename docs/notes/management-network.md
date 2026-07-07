@@ -2,8 +2,10 @@
 
 Status: Idea — a recorded design sketch, **not committed to be executed**.
 The access layer it describes belongs to a future, separate collection
-(`cur8s.tailscale`), not to this repository. A runnable technique demo
-exists at `examples/tailscale/`.
+(`cur8s.tailscale`), not to this repository. The runnable technique
+demo lives beside the operator's cloud custody (moved from
+`examples/tailscale/` on 2026-07-07: verifying it needs a real tailnet
+and a secret, which this repository's proof plane excludes).
 
 Date: 2026-07-03 (carried over from the prototype RFC series)
 

@@ -197,7 +197,7 @@ Each example has a local test task (`test:docker`, ... and
 `test:all` for the suite). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
-drop; `tailscale` is skipped without `TAILSCALE_AUTHKEY`. Every
+drop. Every
 example run refreshes a symlink from `.generated/collections/` to the
 working tree, so examples resolve your live edits — no reinstall
 between iterations. `test:adoption` is the second suite:

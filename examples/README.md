@@ -26,7 +26,12 @@ already show; anything else belongs in that reference.
 | `site.yml` (this dir) | composition | minimal consumer playbook: baseline import + your plays |
 | `docker/` | containers | vendor apt repo (deb822 `.sources` + `Signed-By` keyring), multi-package install, service + validation |
 | `zot/` | containers | GitHub release binary → system user/dirs → config from vars → hand-written systemd unit + handlers |
-| `tailscale/` | access | vendor-hosted keyring/list, secret input via env var (`no_log`), stateful idempotent join |
+
+The access-layer demo (tailscale) lives beside the operator's cloud
+custody: verifying it needs a real tailnet and a secret, which the
+local proof plane deliberately excludes. Its techniques worth stealing:
+secret input via an env var with `no_log`, and probe-state-before-acting
+idempotent joins.
 
 ## Running the examples (contributors)
 
@@ -37,7 +42,7 @@ role edits are picked up without committing or reinstalling:
 
 ```sh
 mise run test:docker   # one example, on the local lab
-mise run test:all      # every example (skips tailscale without TAILSCALE_AUTHKEY)
+mise run test:all      # every example
 ```
 
 Every `test:` task enforces the examples' contract: it runs the example
