@@ -119,8 +119,9 @@ Mechanics worth knowing when debugging:
   lab inventory names the host `ubuntu-qemu-lab` with
   `ansible_host=127.0.0.1`.
 - **Consoles and state**: `vm:show-boot-log` follows the boot log — the
-  debug window when SSH is down. `vm:status` reports stages done and
-  the next command. Per-VM `known_hosts` lives in the VM dir and dies
+  debug window when SSH is down. `vm:status` reports stages done, which
+  VM occupies the slot (the harness's name row, read from the built
+  VM's own seed), and the next command. Per-VM `known_hosts` lives in the VM dir and dies
   with it. `vm:destroy` keeps the image cache: destroy → up is an
   offline few-minute loop.
 - **Confirm-guarded tasks need a yes**: `vm:destroy` and

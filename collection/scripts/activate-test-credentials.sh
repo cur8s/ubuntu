@@ -22,6 +22,13 @@
 #           vendored qemu-vm.sh's ssh verb signs through this agent
 #           (honored by qemu-vm.sh >= 0.3.0; older versions pin
 #           IdentityAgent=none and pub-as-identity fails).
+#           The exports always win: pre-set values are overwritten on
+#           every activation, so a stray outer env (a vault path, say)
+#           can never leak into the lab — and per-invocation overrides
+#           of the key vars do not survive either. Anything needing a
+#           transitional key points at it by file (the way
+#           mise-tasks/test/rotation swaps key files, mirroring the
+#           vault choreography) or passes playbook vars with -e.
 
 # Make the test credentials operational in this shell: generate
 # missing keypairs, ensure the promptless ssh-agent is up, and export
