@@ -26,9 +26,17 @@ Preflight guards are not checks in this sense. Converge may assert its precondit
 
 Exclusion is reversible and cheap; premature inclusion is not. When in doubt, a control stays out of the baseline until a real incident supplies the evidence.
 
+## Ownership: Floors, Not Practices
+
+The baseline is a floor, not a practice. A practice — a scanner's configuration, fleet hygiene, site policy — churns as opinion and circumstance change. A floor freezes: it releases when the facts beneath it change (a new Ubuntu release, an upstream default shift), never because a layer above it changed its mind.
+
+The test for what the baseline may own is version pressure: if changing your mind about X would force a release of Y, X does not belong in Y. Whatever fails that test against the baseline lives above it — in its own versioned collection when it carries a real contract of its own, or in the consumer's environment repository when it is site policy.
+
+And composition reaches only upward: layers import and enforce the baseline (RFC-001: The Host Baseline); the baseline never tests, promises, or names a particular layer above it.
+
 ## Scope
 
-This RFC defines what qualifies a control for the baseline and the doctrine baseline roles are written under.
+This RFC defines what qualifies a control for the baseline, the doctrine baseline roles are written under, and the ownership doctrine — floors versus practices — that decides where work lives.
 
 It does not enumerate the baseline's contents (RFC-003: Baseline Contents) or define the acceptance gates that verify outcomes (RFC-009: Validation and Acceptance).
 
