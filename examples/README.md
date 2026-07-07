@@ -54,11 +54,12 @@ continuously.
 
 ## Using from your own repository (consumers)
 
-Install the collection from git, then copy the example directory you want
-into your environment repository as a starting point:
+Copy the example directory you want into your environment repository as
+a starting point; each ships a `requirements.yml` that installs the
+collection from git:
 
 ```sh
-ansible-galaxy collection install -r requirements.yml
+ansible-galaxy collection install -r docker/requirements.yml
 ANSIBLE_PUB_KEY=/path/to/ubuntu-ansible.pub \
 SYSADMIN_PUB_KEY=/path/to/ubuntu-sysadmin.pub \
 ansible-playbook -i <host-ip>, docker/site.yml

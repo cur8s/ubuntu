@@ -1,0 +1,5 @@
+# Pin a release tag (version: v24.4.0) once tags exist (RFC-010).
+collections:
+  - name: https://github.com/cur8s/ubuntu.git#/collection/
+    type: git
+    version: main
