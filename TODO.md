@@ -8,7 +8,7 @@ the words are validated against the system as it will actually ship.
 
 ## 1. Playbook review (code first, on purpose)
 - [ ] Read every collection playbook, shared task file, and role with fresh eyes; surface and resolve any concerns (structure, naming, failure modes, output readability). Code changes are unrestricted here — which is exactly why the code reviews precede the docs and RFC reads: what those describe will already be final.
-- [ ] Multi-host proof: run converge, report_access, and a rotation against one inventory holding both rehearsal servers — every proof so far is N=1; the product claim is a fleet.
+- [ ] Multi-host proof: run converge, report_access, and a rotation against one inventory holding two hosts — every proof so far is N=1; the product claim is a fleet. Design approved 2026-07-07: `docs/notes/multi-host-proof.md` (the `test:fleet` suite, two fleet slots via mise env seam, standing lab untouched).
 
 ## 2. mise harness review (code)
 - [ ] Review the task grammar end to end: task names and descriptions, the import files (`mise-tasks/test/example-suite.sh`, the collection's lab scripts), hidden plumbing, the cheat sheet, next-hints, and whether the workflows still read plainly after everything added since the grammar was set.
