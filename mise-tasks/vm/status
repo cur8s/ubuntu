@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-#MISE description="Stages done so far, and the next command"
+#MISE description="Stages done so far, which VM sits in the slot, and the next command"
 #MISE quiet=true
 set -euo pipefail
 next=""
 
-# One harness status call answers both rows; its vocabulary is contract
-# (cur8s/qemu RFC-001): image cached|missing, vm running|stopped|absent.
+# One harness status call answers every row; its vocabulary is contract
+# (cur8s/qemu RFC-001): image cached|missing, vm running|stopped|absent,
+# and a name row naming the built VM whenever one exists on disk.
 # Every detail cell is a concrete fact or a typeable command — this
 # display reports, it never teaches.
 harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
@@ -31,6 +32,14 @@ case "$vm_state" in
     next="${next:-up}"
     ;;
 esac
+
+# Which world occupies the slot: the harness reads the name from the
+# built VM's own seed, so it names the actual occupant — provisioned,
+# adoptable, or unadoptable — regardless of what the env says.
+vm_name="$(awk '$1 == "name" {print $2}' <<<"$harness")"
+if [ -n "$vm_name" ]; then
+  echo "3 name      $vm_name"
+fi
 
 echo
 echo "next: mise run ${next:-host:converge}"

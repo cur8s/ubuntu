@@ -6,7 +6,7 @@
 # you would hand a real cloud host, passed through verbatim. destroy-vm
 # leaves nothing behind but the cached image.
 #
-# Upstream: https://github.com/cur8s/qemu        Version: 0.3.0
+# Upstream: https://github.com/cur8s/qemu        Version: 0.3.1
 # This file is designed to be vendored: copy it into any repository that
 # needs a quick VM and keep this header. Refresh a vendored copy with:
 #   gh api -H "Accept: application/vnd.github.raw" \
@@ -448,6 +448,12 @@ cmd_status() {
     echo "vm        stopped  state in $QVM_DIR"
   else
     echo "vm        absent   (run build-vm)"
+  fi
+  # The built VM's own name, read from its seed on disk: the QVM_NAME in
+  # the environment can describe a different VM than the one that was
+  # actually built. Row present only when a built VM exists.
+  if [[ -f $QVM_DIR/seed/meta-data ]]; then
+    echo "name      $(awk -F': ' '/^local-hostname:/{print $2}' "$QVM_DIR/seed/meta-data")"
   fi
 }
 
