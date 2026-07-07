@@ -9,6 +9,7 @@ activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/rotation"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 keys="$QEMU_KEYS_DIR"
 # The same stranger key the adoptability fixtures use — test data, never
 # in any agent; nothing can actually enter by it.
@@ -21,27 +22,22 @@ lab_ssh_sysadmin() {
 }
 
 echo "--- the provisioned lab, running and conformant"
-# The harness's name row says which world occupies the slot; rotation
-# only makes sense on the provisioned lab.
-harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
-occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
-vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
-if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
-  if [ -d "$QVM_DIR" ]; then
-    MISE_YES=1 mise run vm:destroy
-  fi
-  mise run up
-fi
+require_provisioned_lab
 clog="$log_dir/converge0.log"
 if ! mise run host:converge > "$clog" 2>&1; then
   cat "$clog"
   echo "FAIL: the lab would not converge before rotation." >&2
+  echo "      (A torn state from an interrupted rotation heals with:" >&2
+  echo "       MISE_YES=1 mise run vm:destroy && mise run up)" >&2
   exit 1
 fi
 assert_changed_zero "$clog" "pre-rotation converge"
 
 echo "--- new keypairs, added to the lab agent"
 for a in ansible sysadmin; do
+  # Purge a prior aborted run's identity from the agent before the file
+  # it was loaded from disappears; harmless when absent.
+  ssh-add -qd "$keys/ubuntu-$a-next" 2>/dev/null || true
   rm -f "$keys/ubuntu-$a-next" "$keys/ubuntu-$a-next.pub" \
         "$keys/ubuntu-$a-prev" "$keys/ubuntu-$a-prev.pub"
   ssh-keygen -q -t ed25519 -N '' -C "qemu-lab-ubuntu-$a-next" -f "$keys/ubuntu-$a-next"
@@ -93,7 +89,12 @@ if ROTATE_ACCOUNT=bogus ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
   echo "FAIL: a bogus ROTATE_ACCOUNT slipped past --limit." >&2
   exit 1
 fi
-grep -q 're-checked on the host play' "$llog" || {
+# The fail_msg, not the task banner: banners print pass or fail, and a
+# neutered re-check that fails later for another reason would still
+# show the banner. Only a FAILING assert renders this text (the
+# localhost play matched no hosts under --limit, so only the host
+# play's re-check can have produced it).
+grep -q 'Set ROTATE_ACCOUNT to ansible or sysadmin' "$llog" || {
   cat "$llog"
   echo "FAIL: the host-play re-check did not fire." >&2
   exit 1
@@ -101,8 +102,9 @@ grep -q 're-checked on the host play' "$llog" || {
 echo "    refused by the host play's own re-check"
 
 echo "--- refuse rotation while a stranger key sits on the account"
-rogue_line="$(cat "$rogue_pub")"
-lab_ssh_sysadmin "echo '$rogue_line' | sudo tee -a /home/ansible/.ssh/authorized_keys >/dev/null"
+# Streamed over stdin: quoting key material into a remote command
+# would break (or worse) on a quote in a future comment field.
+lab_ssh_sysadmin 'sudo tee -a /home/ansible/.ssh/authorized_keys >/dev/null' < "$rogue_pub"
 before="$(lab_ssh_sysadmin 'sudo cat /home/ansible/.ssh/authorized_keys')"
 rlog="$log_dir/refusal.log"
 if ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
@@ -121,7 +123,17 @@ if [ "$before" != "$after" ]; then
   echo "FAIL: a refused rotation changed authorized_keys." >&2
   exit 1
 fi
-lab_ssh_sysadmin "sudo sed -i '/fixture-rogue@cur8s-tests/d' /home/ansible/.ssh/authorized_keys"
+rogue_marker="$(awk '{print $3}' "$rogue_pub")"
+lab_ssh_sysadmin "sudo sed -i '/$rogue_marker/d' /home/ansible/.ssh/authorized_keys"
+# sed exits 0 whether or not it deleted anything: verify the removal,
+# or the next rotate dies confusingly at its known-state precondition.
+# Captured, then tested — a pipe into grep -q is the pipefail/SIGPIPE
+# trap suite-asserts.sh documents.
+cleanup_check="$(lab_ssh_sysadmin 'sudo cat /home/ansible/.ssh/authorized_keys')"
+if grep -qF "$rogue_marker" <<<"$cleanup_check"; then
+  echo "FAIL: the stranger key survived its cleanup." >&2
+  exit 1
+fi
 echo "    refused, account untouched; stranger key removed again"
 
 echo "--- rotate ansible (entered as sysadmin), then swap the key files"
@@ -138,9 +150,10 @@ echo "--- the rotated world: exactly the new doors, and converge agrees"
 report="$log_dir/rotated-report.log"
 if ! mise run host:report-access > "$report" 2>&1; then
   cat "$report"
+  echo "FAIL: report-access failed in the rotated world." >&2
   exit 1
 fi
-assert_two_doors "$report"
+assert_two_doors "$report" "rotated world"
 clog="$log_dir/rotated-converge.log"
 if ! mise run host:converge > "$clog" 2>&1; then
   cat "$clog"
@@ -161,9 +174,10 @@ echo "--- back to standard: two doors, changed=0"
 report="$log_dir/final-report.log"
 if ! mise run host:report-access > "$report" 2>&1; then
   cat "$report"
+  echo "FAIL: report-access failed after the return trip." >&2
   exit 1
 fi
-assert_two_doors "$report"
+assert_two_doors "$report" "return trip"
 clog="$log_dir/final-converge.log"
 if ! mise run host:converge > "$clog" 2>&1; then
   cat "$clog"

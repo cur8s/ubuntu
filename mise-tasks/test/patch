@@ -7,6 +7,7 @@ activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/patch"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 
 # The stale world: the previous Ubuntu point release, pinned by serial,
 # so the suite always patches a real months-deep delta with a kernel in
@@ -27,8 +28,19 @@ stale_url="https://cloud-images.ubuntu.com/releases/noble/$stale_serial/ubuntu-2
 # mismatch.
 cached="$QVM_CACHE_DIR/$(basename "$stale_url")"
 if [ -f "$cached" ]; then
-  expected="$(curl -fsSL "$(dirname "$stale_url")/SHA256SUMS" \
-    | awk -v f="*$(basename "$stale_url")" '$2 == f {print $1}')"
+  sums_url="$(dirname "$stale_url")/SHA256SUMS"
+  # Named failures on both external edges: a transient fetch must not
+  # read as a suite bug, and an empty lookup must never delete a good
+  # ~600MB cached image only to re-download it before failing anyway.
+  if ! sums="$(curl -fsSL "$sums_url")"; then
+    echo "FAIL: could not fetch $sums_url to verify the cached $stale_serial image." >&2
+    exit 1
+  fi
+  expected="$(awk -v f="*$(basename "$stale_url")" '$2 == f {print $1}' <<<"$sums")"
+  if [ -z "$expected" ]; then
+    echo "FAIL: $(basename "$stale_url") is not listed in $sums_url (naming drift? pin needs attention)." >&2
+    exit 1
+  fi
   if command -v sha256sum >/dev/null 2>&1; then
     actual="$(sha256sum "$cached" | awk '{print $1}')"
   else
@@ -41,17 +53,15 @@ if [ -f "$cached" ]; then
 fi
 
 qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
-door_ssh() { qvm ssh ubuntu "$BOOTSTRAP_PUB_KEY" "$@"; }
 ansible_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
 
 echo "--- the stale adoptable server ($stale_serial, door on: ubuntu)"
 if [ -d "$QVM_DIR" ]; then
   MISE_YES=1 mise run vm:destroy
 fi
-QVM_IMAGE_URL="$stale_url" mise run vm:build-adoptable sudo-user
+DOOR_USER=ubuntu QVM_IMAGE_URL="$stale_url" mise run vm:build-adoptable sudo-user
 mise run vm:start
 qvm wait-until-ready ubuntu "$BOOTSTRAP_PUB_KEY"
-boot_id_start="$(door_ssh cat /proc/sys/kernel/random/boot_id)"
 
 echo "--- adopt it: the real on-ramp for a server like this"
 alog="$log_dir/adoptable.log"
@@ -76,17 +86,23 @@ fi
 assert_changed_zero "$clog" "pre-patch converge"
 
 echo "--- patch #1: a real delta, and the play must not reboot"
+# Captured immediately before patch, so a boot_id change can only be
+# attributed to patch itself, not to anything the on-ramp did.
+boot_id_prepatch="$(ansible_ssh cat /proc/sys/kernel/random/boot_id)"
 plog="$log_dir/patch1.log"
 if ! mise run host:patch > "$plog" 2>&1; then
   cat "$plog"
   echo "FAIL: patch failed on the stale server." >&2
   exit 1
 fi
-grep -qE 'changed=[1-9]' "$plog" || {
+# The upgrade task's own status, not the recap: the cache-update task
+# reports changed on every run, so a recap-level changed>0 is vacuous.
+upgrade_status="$(grep -A2 'TASK \[Upgrade installed Ubuntu packages\]' "$plog" || true)"
+if [[ $upgrade_status != *$'\n'changed:* ]]; then
   cat "$plog"
-  echo "FAIL: patch reported no changes on a months-stale server." >&2
+  echo "FAIL: the upgrade task reported no changes on a months-stale server." >&2
   exit 1
-}
+fi
 grep -qF 'Patching requires a reboot' "$plog" || {
   cat "$plog"
   echo "FAIL: a kernel-bearing delta must end in the reboot-required report." >&2
@@ -97,7 +113,7 @@ ansible_ssh test -f /var/run/reboot-required || {
   exit 1
 }
 boot_id_after_patch="$(ansible_ssh cat /proc/sys/kernel/random/boot_id)"
-if [ "$boot_id_start" != "$boot_id_after_patch" ]; then
+if [ "$boot_id_prepatch" != "$boot_id_after_patch" ]; then
   echo "FAIL: patch rebooted the host (boot_id changed) — the play must never reboot." >&2
   exit 1
 fi
@@ -106,7 +122,7 @@ echo "    patched; reboot correctly deferred (same boot_id, flag present)"
 echo "--- the validating reboot the report pointed at"
 mise run host:reboot-and-verify
 boot_id_after_gate="$(ansible_ssh cat /proc/sys/kernel/random/boot_id)"
-if [ "$boot_id_start" = "$boot_id_after_gate" ]; then
+if [ "$boot_id_prepatch" = "$boot_id_after_gate" ]; then
   echo "FAIL: reboot-and-verify did not actually reboot (boot_id unchanged)." >&2
   exit 1
 fi
@@ -123,7 +139,13 @@ grep -qF 'No reboot required.' "$p2log" || {
   echo "FAIL: after the reboot the report must say no reboot is required." >&2
   exit 1
 }
-leftover="$(ansible_ssh 'sudo apt-get -s dist-upgrade 2>/dev/null | grep -E "^[0-9]+ upgraded"')"
+# Guarded assignment: apt errors or a non-matching grep must produce a
+# named failure, not a silent set -e death; LC_ALL=C pins the format
+# against a forwarded workstation locale.
+if ! leftover="$(ansible_ssh 'sudo LC_ALL=C apt-get -s dist-upgrade | grep -E "^[0-9]+ upgraded"')"; then
+  echo "FAIL: could not read the leftover-upgrade count from the host." >&2
+  exit 1
+fi
 grep -q '^0 upgraded' <<<"$leftover" || {
   echo "FAIL: packages left behind after patching: $leftover" >&2
   exit 1

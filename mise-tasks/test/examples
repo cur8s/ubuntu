@@ -8,7 +8,7 @@ set -euo pipefail
 # per-example task wrapper can never silently drop an example from the
 # suite; it only earns a warning.
 test_all_examples() {
-  local target="$1" example_dir name
+  local target="$1" example_dir name tested=0
 
   for example_dir in "$MISE_CONFIG_ROOT/examples"/*/; do
     name="$(basename "$example_dir")"
@@ -20,9 +20,16 @@ test_all_examples() {
     fi
 
     test_example "$name" "$target"
+    tested=$((tested + 1))
   done
 
-  echo "All examples passed twice on $target."
+  # The glob IS the coverage claim: zero examples found must refuse,
+  # not print success over an empty directory.
+  if [ "$tested" -eq 0 ]; then
+    echo "FAIL: no examples with a site.yml found under examples/." >&2
+    exit 1
+  fi
+  echo "All $tested examples passed twice on $target."
 }
 
 test_all_examples qemu

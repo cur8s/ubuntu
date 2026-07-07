@@ -7,6 +7,7 @@ activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/reboot-refusal"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 
 qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
 lab_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
@@ -20,15 +21,10 @@ lab_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
 # failing the play).
 
 echo "--- the provisioned lab, running and conformant"
-harness="$(qvm status)"
-occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
-vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
-if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
-  if [ -d "$QVM_DIR" ]; then
-    MISE_YES=1 mise run vm:destroy
-  fi
-  mise run up
-fi
+require_provisioned_lab
+# Heal a previous aborted run first: the mask survives reboots and
+# suite deaths, and both commands are no-ops on a healthy unit.
+lab_ssh 'sudo systemctl unmask apt-daily.timer >/dev/null 2>&1 || true; sudo systemctl start apt-daily.timer 2>/dev/null || true'
 lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null || {
   echo "FAIL: apt-daily.timer is not active before the rehearsal; the control is broken." >&2
   exit 1
@@ -36,7 +32,9 @@ lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null || {
 boot_id_start="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
 
 echo "--- break a baseline service, then ask the gate"
-lab_ssh 'sudo systemctl mask --now apt-daily.timer' >/dev/null 2>&1 || true
+# stdout silenced, stderr kept: a sudo/ssh failure here should be
+# visible rather than surface later as a misleading control failure.
+lab_ssh 'sudo systemctl mask --now apt-daily.timer' >/dev/null || true
 if lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null 2>&1; then
   echo "FAIL: the timer is still active after masking." >&2
   exit 1
@@ -47,9 +45,12 @@ if mise run host:reboot-and-verify > "$glog" 2>&1; then
   echo "FAIL: the gate passed a host with a masked baseline service." >&2
   exit 1
 fi
-grep -qF 'Verify baseline service' "$glog" || {
+# The per-item failure line, not the task banner: banners print pass
+# or fail, so a refusal at a later leg (journal history) would still
+# show the banner and false-pass this attribution.
+grep -q 'failed:.*(item=apt-daily.timer)' "$glog" || {
   cat "$glog"
-  echo "FAIL: the refusal did not come from the service verification." >&2
+  echo "FAIL: the refusal did not come from the apt-daily.timer service check." >&2
   exit 1
 }
 boot_id_broken="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
@@ -65,7 +66,12 @@ lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null || {
   echo "FAIL: the timer did not come back after unmasking." >&2
   exit 1
 }
-mise run host:reboot-and-verify
+hlog="$log_dir/gate-healed.log"
+if ! mise run host:reboot-and-verify > "$hlog" 2>&1; then
+  cat "$hlog"
+  echo "FAIL: the healed gate run failed." >&2
+  exit 1
+fi
 boot_id_healed="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
 if [ "$boot_id_broken" = "$boot_id_healed" ]; then
   echo "FAIL: the healed gate run did not reboot." >&2

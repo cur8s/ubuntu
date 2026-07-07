@@ -7,6 +7,7 @@ activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/lock-refusals"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 rogue_pub="$MISE_CONFIG_ROOT/collection/tests/adoptability/keys/fixture-rogue.pub"
 
 qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
@@ -29,15 +30,7 @@ refuse_via_mise() {
 }
 
 echo "--- the provisioned lab, running and conformant"
-harness="$(qvm status)"
-occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
-vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
-if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
-  if [ -d "$QVM_DIR" ]; then
-    MISE_YES=1 mise run vm:destroy
-  fi
-  mise run up
-fi
+require_provisioned_lab
 
 echo "--- input refusals (no connection to the host needed to be safe)"
 refuse_via_mise empty-list    "Set LOCK_ACCOUNTS to a comma-separated list"  ", ,"
@@ -61,11 +54,16 @@ if LOCK_ACCOUNTS=doorstop run_lab_playbook \
   echo "FAIL: lock proceeded although the sysadmin proof cannot pass." >&2
   exit 1
 fi
-grep -qF 'Validate sysadmin SSH and sudo access' "$slog" || {
+# The probe's own fatal, not the include-task banner: banners print
+# pass or fail, so a play failing anywhere after a PASSING proof would
+# still show the banner and false-pass this attribution.
+# -A15: ansible's error rendering inserts an Origin context block
+# between the banner and the fatal line.
+if ! grep -A15 'Validate SSH and passwordless sudo for sysadmin' "$slog" | grep -qE 'fatal:|\[ERROR\]'; then
   cat "$slog"
   echo "FAIL: the failure did not happen at the sysadmin access proof." >&2
   exit 1
-}
+fi
 after="$(lab_ssh 'sudo passwd -S doorstop; sudo ls /etc/sudoers.d')"
 if [ "$before" != "$after" ]; then
   echo "FAIL: a refused lock changed account state." >&2
@@ -75,9 +73,14 @@ echo "    refused at the sysadmin proof; nothing changed"
 
 echo "--- the connection-user guard: the play refuses to saw off its own branch"
 # Give doorstop a real door (bootstrap key + sudo) and connect as it.
-rogue_bootstrap="$(cat "$BOOTSTRAP_PUB_KEY")"
-lab_ssh "sudo install -d -m 700 -o doorstop -g doorstop /home/doorstop/.ssh
-sudo tee /home/doorstop/.ssh/authorized_keys >/dev/null <<< '$rogue_bootstrap'
+# The key streams over stdin (quoting key material into a remote
+# command would break on a quote in a future comment field); the rest
+# runs under set -e so a failed early step cannot be masked by a later
+# one and misdiagnosed downstream.
+lab_ssh 'sudo tee /home/doorstop/.authorized_keys.staged >/dev/null' < "$BOOTSTRAP_PUB_KEY"
+lab_ssh "set -e
+sudo install -d -m 700 -o doorstop -g doorstop /home/doorstop/.ssh
+sudo mv /home/doorstop/.authorized_keys.staged /home/doorstop/.ssh/authorized_keys
 sudo chown doorstop:doorstop /home/doorstop/.ssh/authorized_keys
 sudo chmod 600 /home/doorstop/.ssh/authorized_keys
 echo 'doorstop ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/doorstop >/dev/null
@@ -109,9 +112,10 @@ sudo userdel -r doorstop'
 report="$log_dir/final-report.log"
 if ! mise run host:report-access > "$report" 2>&1; then
   cat "$report"
+  echo "FAIL: report-access failed after the refusals." >&2
   exit 1
 fi
-assert_two_doors "$report"
+assert_two_doors "$report" "post-refusals"
 flog="$log_dir/final-converge.log"
 if ! mise run host:converge > "$flog" 2>&1; then
   cat "$flog"
@@ -121,4 +125,4 @@ fi
 assert_changed_zero "$flog" "post-refusals converge"
 
 echo
-echo "test:lock-refusals PASSED - five refusals by name; no door closed; the lab reads standard."
+echo "test:lock-refusals PASSED - six refusals by name; no door closed; the lab reads standard."

@@ -7,24 +7,18 @@ activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/lock-bystanders"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 combined=/etc/sudoers.d/90-cloud-init-users
 
 qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
 lab_ssh() { qvm ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"; }
 
 echo "--- the provisioned lab, running and conformant"
-harness="$(qvm status)"
-occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
-vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
-if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
-  if [ -d "$QVM_DIR" ]; then
-    MISE_YES=1 mise run vm:destroy
-  fi
-  mise run up
-fi
+require_provisioned_lab
 
 echo "--- the world C17 describes: two provisioning-time accounts, one combined grant file"
-lab_ssh 'for u in olduser bystander; do id "$u" >/dev/null 2>&1 || sudo useradd -m -s /bin/bash "$u"; done
+lab_ssh 'set -e
+for u in olduser bystander; do id "$u" >/dev/null 2>&1 || sudo useradd -m -s /bin/bash "$u"; done
 printf "olduser ALL=(ALL) NOPASSWD:ALL\nbystander ALL=(ALL) NOPASSWD:ALL\n" | sudo tee '"$combined"' >/dev/null
 sudo chmod 440 '"$combined"''
 
@@ -48,7 +42,10 @@ lab_ssh 'sudo visudo -c >/dev/null' || {
   echo "FAIL: sudoers no longer parses after the partial removal." >&2
   exit 1
 }
-lab_ssh 'sudo sudo -l -U bystander' | grep -q 'NOPASSWD' || {
+# Captured, then tested — a pipe into grep -q is the pipefail/SIGPIPE
+# trap, and would misdiagnose a transport error as lost sudo.
+bystander_sudo="$(lab_ssh 'sudo sudo -l -U bystander')"
+grep -q 'NOPASSWD' <<<"$bystander_sudo" || {
   echo "FAIL: the bystander lost working sudo." >&2
   exit 1
 }
@@ -77,7 +74,11 @@ lab_ssh "test ! -e $combined" || {
 echo "    combined file removed exactly when empty"
 
 echo "--- tidy and standard"
-lab_ssh 'for u in olduser bystander; do
+# set -e in the remote block: a failed first userdel must not be
+# masked by a succeeding second one (residue would pass the final
+# asserts since a locked account presents no door).
+lab_ssh 'set -e
+for u in olduser bystander; do
 sudo loginctl terminate-user "$u" 2>/dev/null || true
 sudo pkill -KILL -u "$u" 2>/dev/null || true
 done
@@ -87,9 +88,10 @@ sudo userdel -r bystander'
 report="$log_dir/final-report.log"
 if ! mise run host:report-access > "$report" 2>&1; then
   cat "$report"
+  echo "FAIL: report-access failed after cleanup." >&2
   exit 1
 fi
-assert_two_doors "$report"
+assert_two_doors "$report" "post-cleanup"
 flog="$log_dir/final-converge.log"
 if ! mise run host:converge > "$flog" 2>&1; then
   cat "$flog"

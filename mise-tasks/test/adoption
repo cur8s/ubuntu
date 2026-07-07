@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 #MISE description="Both adoption rehearsals end to end: verdict asserted -> adopt -> converge x2 (changed=0) -> reboot-and-verify -> lock -> exactly two doors remain"
 set -euo pipefail
-
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 . "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
 
 log_dir="$MISE_CONFIG_ROOT/.generated/adoption"
 mkdir -p "$log_dir"
+rm -f "$log_dir"/*
 
 run_rehearsal() {
   local shape="$1" door_user="$2"
@@ -17,6 +19,10 @@ run_rehearsal() {
   fi
   mise run vm:build-adoptable "$shape"
   mise run vm:start
+  # Gate on cloud-init DONE, not just "sshd answers": the sudo shape's
+  # ssh_pwauth lands in a later cloud-init stage than the door key, and
+  # an early sshd -T probe would honestly miss [PASSWORD_AUTH_ENABLED].
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" wait-until-ready "$door_user" "$BOOTSTRAP_PUB_KEY"
 
   # The verdict must pass AND carry the right codes: the first-converge
   # delta always, the password-auth warning only where pwauth is on
@@ -44,6 +50,14 @@ run_rehearsal() {
     echo "FAIL rehearsal root-user: [PASSWORD_AUTH_ENABLED] fired with pwauth off." >&2
     exit 1
   fi
+  # Clean rehearsal servers must not trip the never-fires-here warnings.
+  for absent_code in COMPETING_SSHD_DROPINS PENDING_REBOOT; do
+    if grep -qF "[$absent_code]" "$alog"; then
+      cat "$alog"
+      echo "FAIL rehearsal $shape: [$absent_code] fired on a clean rehearsal server." >&2
+      exit 1
+    fi
+  done
   ADOPT_USER="$door_user" mise run host:adopt
 
   echo "--- converge #1 (the delta the verdict predicted)"
@@ -68,9 +82,10 @@ run_rehearsal() {
   local report="$log_dir/$shape-report.log"
   if ! mise run host:report-access > "$report" 2>&1; then
     cat "$report"
+    echo "FAIL rehearsal $shape: report-access failed." >&2
     exit 1
   fi
-  assert_two_doors "$report"
+  assert_two_doors "$report" "rehearsal $shape"
 
   MISE_YES=1 mise run vm:destroy
   echo "=== rehearsal $shape: PASSED"
