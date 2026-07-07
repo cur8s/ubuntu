@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+#MISE description="The fleet claim at N=2: two lab slots in one inventory - converge to changed=0 on every host, probes attributed to their own ports, per-host reports, one rotation across the fleet"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/fleet"
+mkdir -p "$log_dir"
+rm -f "$log_dir"/*
+keys="$QEMU_KEYS_DIR"
+playbooks="$MISE_CONFIG_ROOT/collection/playbooks"
+
+# The slot seam: mise.toml's QVM_* pins are defaults that yield to
+# these exports, so every vm: task and the vendored harness run
+# against the named slot. Ports sit well clear of the standing lab's
+# 2222; the image cache is shared.
+fleet_name() { echo "ubuntu-qemu-fleet-$1"; }
+fleet_port() { echo "$((2230 + $1))"; }
+fleet_dir()  { echo "$MISE_CONFIG_ROOT/.generated/qemu/fleet-$1"; }
+slot() {  # slot <n> <command...> - run a command against slot n
+  local n="$1"; shift
+  QVM_NAME="$(fleet_name "$n")" QVM_SSH_PORT="$(fleet_port "$n")" \
+    QVM_DIR="$(fleet_dir "$n")" "$@"
+}
+fleet_ssh() {  # fleet_ssh <n> <user> <pub-key-file> <cmd...>
+  local n="$1"; shift
+  slot "$n" bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" ssh "$@"
+}
+
+# One inventory holding both slots. The named alias stays load-bearing
+# (a host literally named 127.0.0.1 would swallow delegate_to:
+# localhost). known_hosts merge from the slots' own files - entries
+# are keyed [127.0.0.1]:<port>, so the two cannot collide.
+write_fleet_inventory() {
+  for n in 1 2; do
+    printf '%s ansible_host=127.0.0.1 ansible_port=%s\n' \
+      "$(fleet_name "$n")" "$(fleet_port "$n")"
+  done > "$log_dir/inventory"
+}
+run_fleet_playbook() {  # run_fleet_playbook <playbook> [args...]
+  cat "$(fleet_dir 1)/known_hosts" "$(fleet_dir 2)/known_hosts" \
+    > "$log_dir/known_hosts" 2>/dev/null || true
+  [[ -z ${ANSIBLE_LOCAL_TEMP:-} ]] || mkdir -p "$ANSIBLE_LOCAL_TEMP"
+  VALIDATE_SSH_IDENTITY_AGENT="$keys/agent.sock" \
+    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile='$log_dir/known_hosts' -o StrictHostKeyChecking=accept-new -o IdentityAgent='$keys/agent.sock'" \
+    ansible-playbook -i "$log_dir/inventory" "$@"
+}
+
+# Slice one host's ACCESS SURFACE block out of a fleet report so the
+# standard two-doors assert judges each host alone.
+extract_host_report() {  # extract_host_report <log> <host> <out-file>
+  awk -v tag="ACCESS SURFACE — $2" '
+    index($0, tag) { f = 1 }
+    f { print }
+    f && /^[[:space:]]*][[:space:]]*$/ { exit }
+  ' "$1" > "$3"
+}
+
+echo "--- two fresh provisioned slots (the standing lab is not touched)"
+for n in 1 2; do
+  if [ -e "$(fleet_dir "$n")" ]; then
+    slot "$n" env MISE_YES=1 mise run vm:destroy
+  fi
+done
+slot 1 mise run vm:build-provisioned
+slot 1 mise run vm:start
+slot 2 mise run vm:build-provisioned
+slot 2 mise run vm:start
+for n in 1 2; do
+  slot "$n" mise run vm:wait-until-ready
+done
+
+echo "--- ground truth: each port answers with its own hostname"
+for n in 1 2; do
+  hn="$(fleet_ssh "$n" ansible "$ANSIBLE_PUB_KEY" hostname)"
+  if [ "$hn" != "$(fleet_name "$n")" ]; then
+    echo "FAIL: port $(fleet_port "$n") answered as '$hn', expected $(fleet_name "$n")." >&2
+    exit 1
+  fi
+done
+
+echo "--- first converge across the fleet"
+write_fleet_inventory
+clog="$log_dir/converge1.log"
+if ! run_fleet_playbook "$playbooks/converge.yml" > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: the first fleet converge failed." >&2
+  exit 1
+fi
+
+echo "--- second converge: changed=0 on every host, probes on their own ports"
+# -v so each delegated probe's ok result carries its command line; the
+# attribution assert reads the port straight out of it.
+c2log="$log_dir/converge2.log"
+if ! run_fleet_playbook "$playbooks/converge.yml" -v > "$c2log" 2>&1; then
+  cat "$c2log"
+  echo "FAIL: the second fleet converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$c2log" "fleet converge"
+recap="$(grep -A9 'PLAY RECAP' "$c2log")"
+for n in 1 2; do
+  grep -q "$(fleet_name "$n") *: ok=" <<<"$recap" || {
+    cat "$c2log"
+    echo "FAIL: $(fleet_name "$n") missing from the recap - a dropped host must not read as a pass." >&2
+    exit 1
+  }
+done
+# The cross-contamination class, checked directly: every delegated
+# probe recorded for a host must carry that host's own port and never
+# the sibling's (a hostvars mixup here passes every N=1 suite).
+for n in 1 2; do
+  own="$(fleet_port "$n")"; sibling="$(fleet_port "$((3 - n))")"
+  probes="$(grep "ok: \[$(fleet_name "$n") -> localhost\]" "$c2log" | grep -- '"-p"' || true)"
+  if [ -z "$probes" ]; then
+    cat "$c2log"
+    echo "FAIL: no delegated probe recorded for $(fleet_name "$n")." >&2
+    exit 1
+  fi
+  if ! grep -q "\"-p\", \"$own\"" <<<"$probes" || grep -q "\"-p\", \"$sibling\"" <<<"$probes"; then
+    echo "$probes"
+    echo "FAIL: $(fleet_name "$n")'s probes are not pinned to port $own - cross-host contamination." >&2
+    exit 1
+  fi
+done
+echo "    both hosts at changed=0; every probe on its own port"
+
+echo "--- report_access across the fleet: each host judged alone"
+rlog="$log_dir/report.log"
+if ! run_fleet_playbook "$playbooks/report_access.yml" > "$rlog" 2>&1; then
+  cat "$rlog"
+  echo "FAIL: fleet report-access failed." >&2
+  exit 1
+fi
+for n in 1 2; do
+  extract_host_report "$rlog" "$(fleet_name "$n")" "$log_dir/report-$n.log"
+  assert_two_doors "$log_dir/report-$n.log" "fleet report, $(fleet_name "$n")"
+done
+
+echo "--- one rotation re-keys the whole fleet (ansible, entered as sysadmin)"
+# Purge a prior aborted run's identity before its file disappears.
+ssh-add -qd "$keys/ubuntu-ansible-next" 2>/dev/null || true
+rm -f "$keys/ubuntu-ansible-next" "$keys/ubuntu-ansible-next.pub" \
+      "$keys/ubuntu-ansible-prev" "$keys/ubuntu-ansible-prev.pub"
+ssh-keygen -q -t ed25519 -N '' -C "qemu-fleet-ubuntu-ansible-next" -f "$keys/ubuntu-ansible-next"
+chmod 600 "$keys/ubuntu-ansible-next.pub"
+ssh-add -q "$keys/ubuntu-ansible-next"
+rotlog="$log_dir/rotate.log"
+if ! ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
+    run_fleet_playbook "$playbooks/rotate_key.yml" > "$rotlog" 2>&1; then
+  cat "$rotlog"
+  echo "FAIL: the fleet rotation failed." >&2
+  echo "      (recovery: the fleet slots are disposable - rerun the suite; it destroys and rebuilds them)" >&2
+  exit 1
+fi
+for n in 1 2; do
+  fleet_ssh "$n" ansible "$keys/ubuntu-ansible-next.pub" 'sudo -n /usr/bin/true' || {
+    echo "FAIL: $(fleet_name "$n") does not open to the new key after rotation." >&2
+    exit 1
+  }
+  if fleet_ssh "$n" ansible "$ANSIBLE_PUB_KEY" true 2>/dev/null; then
+    echo "FAIL: $(fleet_name "$n") still opens to the old key after rotation." >&2
+    exit 1
+  fi
+done
+# The key files swap names - the lab analog of "swap the vault items" -
+# so the standard env vars name the fleet's current key again.
+mv "$keys/ubuntu-ansible" "$keys/ubuntu-ansible-prev"
+mv "$keys/ubuntu-ansible.pub" "$keys/ubuntu-ansible-prev.pub"
+mv "$keys/ubuntu-ansible-next" "$keys/ubuntu-ansible"
+mv "$keys/ubuntu-ansible-next.pub" "$keys/ubuntu-ansible.pub"
+
+echo "--- the rotated fleet converges to changed=0, then rotates back"
+clog="$log_dir/rotated-converge.log"
+if ! run_fleet_playbook "$playbooks/converge.yml" > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: converge failed on the rotated fleet." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "rotated-fleet converge"
+blog="$log_dir/rotate-back.log"
+if ! ROTATE_ACCOUNT=ansible ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-prev.pub" \
+    run_fleet_playbook "$playbooks/rotate_key.yml" > "$blog" 2>&1; then
+  cat "$blog"
+  echo "FAIL: the return rotation failed." >&2
+  exit 1
+fi
+mv "$keys/ubuntu-ansible" "$keys/ubuntu-ansible-next"
+mv "$keys/ubuntu-ansible.pub" "$keys/ubuntu-ansible-next.pub"
+mv "$keys/ubuntu-ansible-prev" "$keys/ubuntu-ansible"
+mv "$keys/ubuntu-ansible-prev.pub" "$keys/ubuntu-ansible.pub"
+
+echo "--- back to standard: per-host reports and changed=0"
+rlog="$log_dir/final-report.log"
+if ! run_fleet_playbook "$playbooks/report_access.yml" > "$rlog" 2>&1; then
+  cat "$rlog"
+  echo "FAIL: the final fleet report failed." >&2
+  exit 1
+fi
+for n in 1 2; do
+  extract_host_report "$rlog" "$(fleet_name "$n")" "$log_dir/final-report-$n.log"
+  assert_two_doors "$log_dir/final-report-$n.log" "final report, $(fleet_name "$n")"
+done
+clog="$log_dir/final-converge.log"
+if ! run_fleet_playbook "$playbooks/converge.yml" > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: the final fleet converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "final fleet converge"
+
+# Tidy: the transient key out of the agent and off disk, both slots gone.
+ssh-add -qd "$keys/ubuntu-ansible-next" 2>/dev/null || true
+rm -f "$keys/ubuntu-ansible-next" "$keys/ubuntu-ansible-next.pub"
+for n in 1 2; do
+  slot "$n" env MISE_YES=1 mise run vm:destroy
+done
+
+echo
+echo "test:fleet PASSED - two hosts, one inventory: changed=0 together, every probe on its own port, per-host reports clean, one rotation re-keyed the fleet and back."

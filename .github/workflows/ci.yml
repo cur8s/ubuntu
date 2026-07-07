@@ -102,6 +102,13 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mise run test:lock-bystanders
 
-      - name: Console log on failure
+      - name: test:fleet — two hosts, one inventory, the N=2 fleet claim (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:fleet
+
+      - name: Console logs on failure
         if: failure()
-        run: tail -n 200 .generated/qemu/vm/console.log 2>/dev/null || true
+        run: |
+          for d in vm fleet-1 fleet-2; do
+            tail -n 200 ".generated/qemu/$d/console.log" 2>/dev/null || true
+          done

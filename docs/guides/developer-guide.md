@@ -264,14 +264,27 @@ host. The journal-history leg is deliberately not broken: wiping the
 persistent journal would poison the next run's `--boot=-1` check too,
 and all three verification legs refuse through the same mechanics.
 
+`test:fleet` proves the fleet claim at N=2 — the smallest world where
+multi-host bugs are visible at all (every other suite is one VM, where
+a hostvars mixup or `run_once` bleed passes vacuously). Two fresh
+provisioned slots on their own ports (the standing lab untouched — the
+`QVM_*` values in `mise.toml` are defaults that yield to a caller's
+environment, which is the whole slot seam), one inventory holding
+both: converge to `changed=0` with both hosts required in the recap, a
+direct attribution assert that every delegated access probe carried
+its own host's port and never the sibling's, the access report judged
+per host, and one rotation re-keying `ansible` across the whole fleet
+through the sysadmin door and back.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
 `test:render` first (they fail in the first minute, before any VM
 boots), then `vm:fetch-image`, `up`, and
 `test:examples` on every push and pull request on an amd64 KVM runner (no
-secrets, no billable resources), plus `test:adoption` and
-`test:adoption-refusals` on pushes to main. The
+secrets, no billable resources), plus the full rehearsal ladder —
+rotation, adoption and its refusals, patch, the lock and reboot
+refusals, bystanders, fleet — on pushes to main. The
 sandbox DigitalOcean harness stays the real-provider leg at release
 cadence (§5). Nothing may assume an architecture it did not detect.
 
