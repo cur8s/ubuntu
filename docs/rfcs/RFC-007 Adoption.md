@@ -14,6 +14,15 @@ Adoption is two artifacts with a fixed division of labor.
 
 **Adopt** re-runs the same checks, refuses on any hard failure, and then only adds: the two baseline accounts, their keys, their sudoers files, followed by proof that both can SSH in and use sudo. It edits nothing that exists, removes nothing, restarts nothing. There are no policy knobs and no force flag on either artifact: ambiguity refuses, additions coexist, and overwriting happens only later, only by converge, and only on surface the baseline owns.
 
+## Verdict Codes
+
+The verdict is contract for machines as well as humans. Every hard-failure and warning line begins with a stable bracketed code; the prose after it may be reworded freely. Scripts gate on the assessment's exit status and match codes, never prose. The vocabulary:
+
+* Hard failures: `[UNSUPPORTED_RELEASE]`, `[NO_SSHD_INCLUDE]`, `[NO_SUDOERS_INCLUDE]`, and `[SQUATTED_ACCOUNT:<account>]`, whose subject names the squatted baseline account.
+* Warnings: `[PASSWORD_AUTH_ENABLED]`, `[COMPETING_SSHD_DROPINS]`, `[PENDING_REBOOT]`, `[FIRST_CONVERGE_DELTA]`.
+
+Codes are stable the way playbook names are: adding or renaming one is a revision to this RFC, and RFC-011 lists the vocabulary as contract surface. Adopt re-renders the same verdict, so a refusal carries the same codes wherever it fires.
+
 ## Squatting
 
 An `ansible` or `sysadmin` account that already exists with any key the baseline did not put there — even alongside correct baseline keys — is a hard failure. The tool never merges into, and never strips, an account whose ownership it cannot prove; the refusal names the unexpected keys and a human resolves them. A stale key from an earlier rotation reads as unexpected on purpose — an old key is still a door someone may hold; remove it, then re-assess. An account matching baseline shape exactly reports as already adopted: adopting twice, or adopting a baseline-born host, changes nothing.

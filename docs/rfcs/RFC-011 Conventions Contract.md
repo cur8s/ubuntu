@@ -13,6 +13,7 @@ Layers and consumers need names they can hardcode. This RFC enumerates the stabl
 * The door-closing playbook is `cur8s.ubuntu.lock_accounts` — standalone and never part of converge (RFC-005: Accounts and Access).
 * The access-surface report is the read-only collection playbook `cur8s.ubuntu.report_access`; it always reports zero changes.
 * The adoption assessment is the read-only collection playbook `cur8s.ubuntu.adoptable` — nonzero exit on hard failures — and adoption is `cur8s.ubuntu.adopt` (RFC-007: Adoption).
+* The adoptability verdict codes — the bracketed prefixes on the verdict's hard-failure and warning lines — are contract, enumerated in RFC-007: Adoption. Scripts match codes and the exit status, never prose.
 * The key-rotation playbook is `cur8s.ubuntu.rotate_key` — one baseline account per invocation, entered through the sibling account (RFC-004: Identity and Trust).
 * The account names are `ansible` and `sysadmin`: always present, locked passwords, passwordless sudo (RFC-004: Identity and Trust).
 
