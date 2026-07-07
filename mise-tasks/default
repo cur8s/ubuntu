@@ -25,7 +25,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
     ${C}vm${R}      the machine itself       ${D}build-provisioned, build-adoptable, build-unadoptable, start, status, destroy, ...${R}
     ${C}host${R}    the managed system       ${D}converge, adopt, reboot-and-verify, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
-    ${C}test${R}    an example, or a suite   ${D}docker, zot, all;
+    ${C}test${R}    an example, or a suite   ${D}example-docker, example-zot, examples;
                                      adoption, adoption-refusals, adoption-verdicts,
                                      rotation, render, patch, lock-refusals,
                                      lock-bystanders, reboot-refusal${R}
@@ -43,9 +43,9 @@ ${B}A SESSION, START TO FINISH${R}
   ${D}mise run${R} ${C}ssh:ansible${R}            inspect by hand ${D}(boot problems: vm:show-boot-log)${R}
   ${D}mise run${R} ${C}host:report-drift${R}      is anything drifting? read-only, like report-access
   ${D}mise run${R} ${C}host:converge${R}          daily enforcement; changed=0 means conformant
-  ${D}mise run${R} ${C}test:docker${R}            test one example: runs it twice,
+  ${D}mise run${R} ${C}test:example-docker${R}    test one example: runs it twice,
                                 second pass must report changed=0
-  ${D}mise run${R} ${C}test:all${R}               every example, same contract
+  ${D}mise run${R} ${C}test:examples${R}          every example, same contract
   ${D}mise run${R} ${C}host:reboot-and-verify${R}   acceptance gate: reboot, re-verify access
   ${D}mise run${R} ${C}vm:destroy${R}             tear down; the cached image survives
 

@@ -41,8 +41,8 @@ working tree via a symlink under `.generated/` — created automatically — so
 role edits are picked up without committing or reinstalling:
 
 ```sh
-mise run test:docker   # one example, on the local lab
-mise run test:all      # every example
+mise run test:example-docker   # one example, on the local lab
+mise run test:examples         # every example
 ```
 
 Every `test:` task enforces the examples' contract: it runs the example

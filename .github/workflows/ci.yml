@@ -71,8 +71,8 @@ jobs:
       - name: up — create, boot, ride out first boot, converge
         run: mise run up
 
-      - name: test:all — every example twice, second pass changed=0
-        run: mise run test:all
+      - name: test:examples — every example twice, second pass changed=0
+        run: mise run test:examples
 
       - name: test:rotation — both accounts re-keyed and back (main only)
         if: github.event_name != 'pull_request'

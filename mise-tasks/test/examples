@@ -14,9 +14,9 @@ test_all_examples() {
     name="$(basename "$example_dir")"
     [[ -f $example_dir/site.yml ]] || continue
 
-    # The per-example wrappers live at mise-tasks/test/<example>.
-    if [[ $target == qemu && ! -x "$MISE_CONFIG_ROOT/mise-tasks/test/$name" ]]; then
-      echo "WARN examples/$name has no mise-tasks/test/$name wrapper (still tested by this suite)." >&2
+    # The per-example wrappers live at mise-tasks/test/example-<name>.
+    if [[ $target == qemu && ! -x "$MISE_CONFIG_ROOT/mise-tasks/test/example-$name" ]]; then
+      echo "WARN examples/$name has no mise-tasks/test/example-$name wrapper (still tested by this suite)." >&2
     fi
 
     test_example "$name" "$target"

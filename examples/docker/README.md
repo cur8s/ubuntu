@@ -17,7 +17,7 @@ Run against the local lab VM (`mise run up` first — see the
 developer guide):
 
 ```sh
-mise run test:docker
+mise run test:example-docker
 ```
 
 The first play enforces the baseline (the composition pattern every layer

@@ -1,6 +1,6 @@
 # example-suite.sh — the test namespace's example suite: run one
 # example, or test one against the idempotency contract. Sourced by
-# test/docker, test/zot, and test/all; no other
+# test/example-docker, test/example-zot, and test/examples; no other
 # namespace uses these. Sources everything it needs itself, so a test
 # task needs only this file. Deliberately NOT executable: mise only
 # detects executable files as tasks, so this stays a library.

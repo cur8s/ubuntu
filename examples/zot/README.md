@@ -23,7 +23,7 @@ Run against the local lab VM (`mise run up` first — see the
 developer guide):
 
 ```sh
-mise run test:zot
+mise run test:example-zot
 ```
 
 The first play enforces the baseline (RFC-001); the second installs zot.

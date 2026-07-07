@@ -193,8 +193,8 @@ is already covered continuously by CI (§6).
 
 ## 6. Testing
 
-Each example has a local test task (`test:docker`, ... and
-`test:all` for the suite). Every one enforces the
+Each example has a local test task (`test:example-docker`, ... and
+`test:examples` for the whole catalog). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
 `changed=0`. The suite globs `examples/` so coverage cannot silently
 drop. Every
@@ -269,7 +269,7 @@ the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
 `test:render` first (they fail in the first minute, before any VM
 boots), then `vm:fetch-image`, `up`, and
-`test:all` on every push and pull request on an amd64 KVM runner (no
+`test:examples` on every push and pull request on an amd64 KVM runner (no
 secrets, no billable resources), plus `test:adoption` and
 `test:adoption-refusals` on pushes to main. The
 sandbox DigitalOcean harness stays the real-provider leg at release
@@ -318,7 +318,7 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
    `mise run test` against the release-candidate ref (the real-provider
    leg), plus green CI and `mise run test:adoption-verdicts`,
-   `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
+   `mise run test:render`, `mise run test:examples`, `mise run test:rotation`,
    `mise run test:adoption`, `mise run test:adoption-refusals`,
    `mise run test:patch`, `mise run test:lock-refusals`,
    `mise run test:lock-bystanders`, and `mise run test:reboot-refusal`
