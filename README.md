@@ -110,7 +110,9 @@ servers — enter through adoption instead (RFC-007): a read-only
 assessment, an additive adopt that creates the two accounts, then the
 same converge; the old access path is closed deliberately at the end.
 Both door shapes the clouds hand you are rehearsed locally by
-`mise run test:scenarios` (root-user and sudo-user scenarios).
+`mise run test:scenarios` (root-user and sudo-user scenarios), and the
+refusal side — a server adoption must reject, rejected with nothing
+added — by `mise run test:refusals`.
 
 SSH shortcuts (local lab):
 

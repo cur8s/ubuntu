@@ -68,6 +68,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mise run test:scenarios
 
+      - name: test:refusals — the unadoptable server, refused with nothing added (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:refusals
+
       - name: Console log on failure
         if: failure()
         run: tail -n 200 .generated/qemu/vm/console.log 2>/dev/null || true

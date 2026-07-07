@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+#MISE description="The refusal rehearsal: adoptable must exit nonzero naming every code; adopt must refuse the same way and add nothing"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/refusals"
+mkdir -p "$log_dir"
+
+# The world is vm:build-unadoptable's seed; the fixture layer proves the
+# same expectations against cases/everything-wrong.yml. Codes per RFC-007.
+expected_codes=(
+  NO_SSHD_INCLUDE
+  NO_SUDOERS_INCLUDE
+  "SQUATTED_ACCOUNT:ansible"
+  "SQUATTED_ACCOUNT:sysadmin"
+  PASSWORD_AUTH_ENABLED
+  COMPETING_SSHD_DROPINS
+  PENDING_REBOOT
+  FIRST_CONVERGE_DELTA
+)
+
+# Run over the root door with the bootstrap key, pub-as-identity through
+# the lab agent (the shim exported QVM_SSH_IDENTITY_AGENT above).
+spoiled_ssh() {
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" ssh root "$BOOTSTRAP_PUB_KEY" "$@"
+}
+
+assert_codes() {  # assert_codes <log> <label>
+  local log="$1" label="$2" code
+  for code in "${expected_codes[@]}"; do
+    if ! grep -qF "[$code]" "$log"; then
+      cat "$log"
+      echo "FAIL $label: verdict missing [$code]." >&2
+      exit 1
+    fi
+  done
+}
+
+# The account surface adopt must not touch: both squatted authorized_keys
+# and the sudoers.d listing.
+snapshot_surface() {
+  spoiled_ssh 'for u in ansible sysadmin; do echo "== $u"; cat "/home/$u/.ssh/authorized_keys" 2>/dev/null; done; echo "== sudoers.d"; ls -1 /etc/sudoers.d'
+}
+
+if [ -d "$QVM_DIR" ]; then
+  MISE_YES=1 mise run vm:destroy
+fi
+mise run vm:build-unadoptable
+mise run vm:start
+bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" wait-until-ready root "$BOOTSTRAP_PUB_KEY"
+
+echo "--- adoptable: must exit nonzero naming every code"
+alog="$log_dir/adoptable.log"
+if ADOPT_USER=root mise run host:adoptable > "$alog" 2>&1; then
+  cat "$alog"
+  echo "FAIL: adoptable exited 0 on the unadoptable server." >&2
+  exit 1
+fi
+assert_codes "$alog" "adoptable"
+echo "    nonzero exit; all ${#expected_codes[@]} codes named"
+
+echo "--- adopt: must refuse identically and add nothing"
+before="$log_dir/surface-before.txt"
+after="$log_dir/surface-after.txt"
+snapshot_surface > "$before"
+plog="$log_dir/adopt.log"
+if ADOPT_USER=root mise run host:adopt > "$plog" 2>&1; then
+  cat "$plog"
+  echo "FAIL: adopt exited 0 on the unadoptable server." >&2
+  exit 1
+fi
+assert_codes "$plog" "adopt"
+recap="$(grep -A5 'PLAY RECAP' "$plog" || true)"
+if ! grep -qE 'changed=0' <<<"$recap" || grep -qE 'changed=[1-9]' <<<"$recap"; then
+  cat "$plog"
+  echo "FAIL: adopt's refusal reported changes; the refusal path must be read-only." >&2
+  exit 1
+fi
+snapshot_surface > "$after"
+if ! cmp -s "$before" "$after"; then
+  diff -u "$before" "$after" || true
+  echo "FAIL: adopt changed the account surface while refusing (RFC-007: never merged into, never stripped)." >&2
+  exit 1
+fi
+sudoers_listing="$(spoiled_ssh 'ls -1 /etc/sudoers.d')"
+if grep -qE '^(ansible|sysadmin)$' <<<"$sudoers_listing"; then
+  echo "FAIL: adopt created a baseline sudoers file while refusing." >&2
+  exit 1
+fi
+echo "    refused with identical codes; changed=0; surface byte-identical; no sudoers files"
+
+MISE_YES=1 mise run vm:destroy
+echo
+echo "test:refusals PASSED - nonzero verdicts, all codes, adopt added nothing."

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-#MISE description="Build a rehearsal server for adoption: root-user (root can SSH straight in) or sudo-user (you enter as a sudo user) (next: vm:start)"
+#MISE description="Build a server to practice adoption on: root-user (root SSHes straight in) or sudo-user (you enter as a sudo user) (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 
 scenario="${1:-}"
 if [[ $scenario != root-user && $scenario != sudo-user ]]; then
-  echo "usage: mise run vm:build-scenario <root-user|sudo-user>" >&2
+  echo "usage: mise run vm:build-adoptable <root-user|sudo-user>" >&2
   exit 1
 fi
 if [ -e "$QVM_DIR" ]; then

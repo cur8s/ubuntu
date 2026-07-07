@@ -132,6 +132,10 @@ will change, and hard failures (wrong release, no root path, ignored
 drop-in directories, squatted baseline accounts). It exits nonzero on
 hard failures, so it can gate scripts; `adopt` refuses on the same
 grounds, adds the two accounts, and proves them over SSH with sudo.
+Every hard-failure and warning line begins with a stable bracketed
+code (`[SQUATTED_ACCOUNT:ansible]`, `[PASSWORD_AUTH_ENABLED]`, ... —
+RFC-007 lists them all), so scripts can match codes and the exit
+status; the prose may change between releases, the codes will not.
 
 The full on-ramp, each stage gated by the one before, the old access
 path surviving until the new one is proven:

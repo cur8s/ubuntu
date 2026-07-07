@@ -56,10 +56,34 @@ run_scenario() {
   if [ -d "$QVM_DIR" ]; then
     MISE_YES=1 mise run vm:destroy
   fi
-  mise run vm:build-scenario "$scenario"
+  mise run vm:build-adoptable "$scenario"
   mise run vm:start
 
-  ADOPT_USER="$door_user" mise run host:adoptable
+  # The verdict must pass AND carry the right codes: the first-converge
+  # delta always, the password-auth warning only where pwauth is on
+  # (RFC-007 verdict codes; the refusal side lives in test:refusals).
+  local alog="$log_dir/$scenario-adoptable.log"
+  if ! ADOPT_USER="$door_user" mise run host:adoptable > "$alog" 2>&1; then
+    cat "$alog"
+    echo "FAIL scenario $scenario: adoptable refused a clean rehearsal server." >&2
+    exit 1
+  fi
+  grep -qF '[FIRST_CONVERGE_DELTA]' "$alog" || {
+    cat "$alog"
+    echo "FAIL scenario $scenario: verdict missing [FIRST_CONVERGE_DELTA]." >&2
+    exit 1
+  }
+  if [ "$scenario" = sudo-user ]; then
+    grep -qF '[PASSWORD_AUTH_ENABLED]' "$alog" || {
+      cat "$alog"
+      echo "FAIL scenario sudo-user: verdict missing [PASSWORD_AUTH_ENABLED]." >&2
+      exit 1
+    }
+  elif grep -qF '[PASSWORD_AUTH_ENABLED]' "$alog"; then
+    cat "$alog"
+    echo "FAIL scenario root-user: [PASSWORD_AUTH_ENABLED] fired with pwauth off." >&2
+    exit 1
+  fi
   ADOPT_USER="$door_user" mise run host:adopt
 
   echo "--- converge #1 (the delta the verdict predicted)"

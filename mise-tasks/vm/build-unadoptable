@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#MISE description="Build a server adoption must refuse: every plantable defect seeded at birth (next: vm:start, then mise run test:refusals)"
+#MISE quiet=true
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+
+if [ -e "$QVM_DIR" ]; then
+  echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
+  exit 1
+fi
+activate_test_credentials
+
+echo "Creating the unadoptable server (every plantable defect, seeded at birth)"
+# The fixture mirror: collection/tests/adoptability/cases/everything-wrong.yml
+# expects exactly this world, so drift between the fixture layer and this
+# seed fails one of them. The rogue key is the same fixture key the cases
+# use — test data, never loaded into any agent, nothing can enter by it.
+# Root is the door on purpose: the sudoers spoil below would sever a sudo
+# user's own become chain, while root's escalation never consults
+# /etc/sudoers.d.
+# The heredoc expands $-substitutions; escape any literal $ in the seed.
+user_data="$MISE_CONFIG_ROOT/.generated/cloud-init/unadoptable.yaml"
+mkdir -p "$(dirname "$user_data")"
+rogue_key="$(cat "$MISE_CONFIG_ROOT/collection/tests/adoptability/keys/fixture-rogue.pub")"
+cat > "$user_data" <<EOF
+#cloud-config
+disable_root: false
+ssh_pwauth: true
+users:
+  - name: root
+    ssh_authorized_keys:
+      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+  # Both baseline accounts squatted at birth: they exist, holding a key
+  # the baseline did not put there.
+  - name: ansible
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - "$rogue_key"
+  - name: sysadmin
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - "$rogue_key"
+write_files:
+  # Sorts before 10-ubuntu-baseline.conf: the COMPETING_SSHD_DROPINS
+  # warning. Comment-only, so it stays inert even if sshd reloads.
+  - path: /etc/ssh/sshd_config.d/00-legacy.conf
+    owner: "root:root"
+    permissions: "0644"
+    content: |
+      # planted by vm:build-unadoptable — sorts before the baseline drop-in
+runcmd:
+  # NO_SSHD_INCLUDE: comment out the Include line; the running sshd is
+  # untouched, so the root door stays open. Every command is a
+  # single-quoted YAML scalar: a plain scalar would read the "# " and
+  # ": " inside the sed replacements as YAML syntax mid-command.
+  - 'sed -i "s|^Include /etc/ssh/sshd_config\.d/\*\.conf|# spoiled Include sshd_config.d|" /etc/ssh/sshd_config'
+  # PASSWORD_AUTH_ENABLED, deterministically: with the Include broken the
+  # cloud image's own "PasswordAuthentication no" drop-in stops applying,
+  # but pin the observation in the main file rather than rely on that.
+  - 'printf "PasswordAuthentication yes\n" >> /etc/ssh/sshd_config'
+  # NO_SUDOERS_INCLUDE: still a comment to sudo, but no longer matches
+  # the check's ^[#@]includedir — root's own grant survives in the main
+  # file, so become keeps working.
+  - 'sed -i "s|^@includedir /etc/sudoers.d|# spoiled includedir|" /etc/sudoers'
+  # PENDING_REBOOT
+  - 'touch /var/run/reboot-required'
+EOF
+
+QVM_NAME="ubuntu-qemu-unadoptable" QVM_USER_DATA="$user_data" \
+  bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm
+
+echo "unadoptable server prepared in $QVM_DIR (no dist-upgrade, no reboot)."
+echo "Next: mise run vm:start, then mise run test:refusals (or ADOPT_USER=root mise run host:adoptable)"

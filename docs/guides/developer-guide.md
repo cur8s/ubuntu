@@ -142,7 +142,7 @@ mise run test:scenarios
 Or walk one by hand:
 
 ```sh
-mise run vm:build-scenario sudo-user && mise run vm:start
+mise run vm:build-adoptable sudo-user && mise run vm:start
 mise run host:adoptable     # verdict; ADOPT_USER defaults to ubuntu
 mise run host:adopt
 mise run host:converge      # the delta the verdict predicted, then 0
@@ -152,6 +152,18 @@ mise run host:lock-accounts # closes the scenario door (the default)
 
 (For the root-user scenario, set `ADOPT_USER=root` and
 `LOCK_ACCOUNTS=root` on the corresponding steps.)
+
+**The refusal rehearsal** — the opposite story. `mise run test:refusals`
+builds a server born with every plantable defect (`vm:build-unadoptable`:
+both baseline accounts squatted with the fixture rogue key, both include
+lines broken, a competing sshd drop-in, a pending reboot; root is the
+door because the sudoers spoil would sever a sudo user's own become
+chain) and asserts the sad path end to end: `adoptable` exits nonzero
+naming every verdict code, and `adopt` refuses on identical grounds with
+`changed=0` and a byte-identical account surface — never merged into,
+never stripped (RFC-007). The same world exists judgment-side as the
+`everything-wrong` fixture case, so drift between the layers fails one
+of them.
 
 ## 5. The real-provider release gate
 
@@ -193,15 +205,19 @@ proven in seconds against fixture observations on localhost, no VM.
 The adoptability checks split at a documented seam (probe → the
 `adopt_observations` dict → verdict); the fixtures in
 `collection/tests/adoptability/` feed the verdict half directly and
-assert the stable verdict codes (RFC-007), never prose.
+assert the stable verdict codes (RFC-007), never prose. `test:refusals`
+is the boot-level half of the same coverage (§4): real probes, real
+exit codes, adopt refusing with nothing added. The one documented
+residual: no proof plane boots a non-24.04 image, so the release
+refusal is proven at the fixture layer only.
 
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:verdicts` first (it fails in
 the first minute, before any VM boots), then `vm:fetch-image`, `up`, and
 `test:all` on every push and pull request on an amd64 KVM runner (no
-secrets, no billable resources), plus `test:scenarios` on pushes to
-main. The
+secrets, no billable resources), plus `test:scenarios` and
+`test:refusals` on pushes to main. The
 sandbox DigitalOcean harness stays the real-provider leg at release
 cadence (§5). Nothing may assume an architecture it did not detect.
 
@@ -247,8 +263,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
    `mise run test` against the release-candidate ref (the real-provider
-   leg), plus green CI and `mise run test:all` and
-   `mise run test:scenarios` locally.
+   leg), plus green CI and `mise run test:verdicts`, `mise run test:all`,
+   `mise run test:scenarios`, and `mise run test:refusals` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
