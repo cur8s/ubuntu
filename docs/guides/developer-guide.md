@@ -194,6 +194,92 @@ is already covered continuously by CI (§6).
 
 ## 6. Testing
 
+Tests are organized by **proof plane** — where a claim is cheapest to
+prove without lying about it. Three planes, fast to slow, each trading
+speed for fidelity; a suite lives at the fastest plane that can
+actually prove its claim.
+
+- **The fixture plane — no VM, seconds.** `test:adoption-verdicts` and
+  `test:render` run pure logic against fixtures on localhost: every
+  adoptability verdict class (including the unsupported-release refusal
+  no lab can boot) and every cloud-init input guard, proven before any
+  VM exists. This plane is possible only because of a deliberate seam —
+  the adoptability checks split probe (reads the host) from verdict
+  (pure judgment over an `adopt_observations` dict), so the fixtures in
+  `collection/tests/adoptability/` feed the verdict half directly.
+- **The lab plane — the local QEMU VM, minutes.** The bulk of the suite
+  boots a real Ubuntu host and proves behavior end to end:
+  born-conformant convergence, both adoption rehearsals and the
+  refusal, rotation, patch, the lock and reboot refusals, and the N=2
+  fleet. The lab is free, unattended, and secretless (RFC-004 ephemeral
+  credentials + the vendored `qemu-vm.sh`) — the load-bearing
+  architectural choice, because "prove it on a real host" then costs
+  nothing and needs no cloud account, so every push runs the whole
+  ladder. Guest arch follows the host — arm64 on Apple silicon, amd64
+  on CI's KVM runner — so the same suites prove both shipped
+  architectures, and nothing may assume an architecture it did not
+  detect (RFC-010).
+- **The real-provider plane — DigitalOcean, release cadence.** The one
+  thing no lab can fake: the real datasource, the provider's own image
+  and cloud-init, real network. It runs from the sandbox harness (§5)
+  at release time only; everything else is proven cheaper, and this
+  plane's unique coverage is the provider realities alone (RFC-009).
+
+**Fixtures mirror the lab worlds, so the fast plane is not a weaker
+test.** The `everything-wrong` fixture case is the same world
+`vm:build-unadoptable` boots; the fixture plane asserts the verdict, the
+lab plane (`test:adoption-refusals`) asserts the boot-level reality —
+real probes, real exit codes, adopt adding nothing. Drift between the
+two fails one of them: the fast plane and the slow plane check the same
+claim from opposite sides, not two different claims. The one documented
+residual is the unsupported release — no proof plane boots a non-24.04
+image, so that refusal is proven at the fixture layer only.
+
+**What a passing suite is allowed to mean.** A green suite is worth only
+its assertions, so every suite is written to a shared discipline that
+keeps a PASS honest:
+
+- **`changed=0` is the contract.** Every idempotent claim is proven by
+  running twice; the second pass must report zero across every host in
+  the recap. `assert_changed_zero` (`mise-tasks/test/suite-asserts.sh`)
+  refuses a recap-less log loudly rather than scanning nothing and
+  passing vacuously.
+- **Assert on failure evidence, never a task banner.** A banner prints
+  whether its task passed *or* failed, so keying an attribution on it
+  false-passes a regression that failed later for another reason. The
+  refusal suites key on the `fail_msg` text, the per-item `failed:`
+  line, or the probe's own `fatal:` — the thing that appears only when
+  the *intended* check is what failed.
+- **Capture, then test — never pipe to `grep -q` under `pipefail`.** An
+  early-exiting `grep` can `SIGPIPE` the command feeding it and fail the
+  pipeline it was reading; the suites capture to a variable and test the
+  variable.
+- **No vacuous asserts.** `systemctl is-active` over several units exits
+  0 if any one is active; a recap-level `changed>0` is satisfied by the
+  apt-cache task that changes every run. Assertions target the specific
+  unit and the specific task, never an aggregate a bystander can
+  satisfy.
+- **Access-mutating suites leave the lab as they found it.** Rotation
+  and the lock refusals restore the standard doors and end `changed=0`
+  (the standing lab survives); patch, fleet, and the adoption rehearsals
+  build and destroy their own VMs. Either way a suite never strands the
+  next one.
+
+Shared helpers earn a place in `suite-asserts.sh` only once two suites
+call them (the namespace-lib rule); until then a suite keeps its own.
+
+**The CI ladder runs the planes fail-fast** (`.github/workflows/ci.yml`
+— one amd64 KVM job, no secrets, no billable resources). Every push and
+pull request runs the fixture plane first (`test:adoption-verdicts`,
+`test:render` — they fail in the first minute, before any VM boots),
+then the born-conformant path (`up`) and `test:examples`: fast feedback
+in minutes. Pushes to `main` add the full rehearsal ladder — rotation,
+adoption and its refusals, patch, the lock and reboot refusals,
+bystanders, fleet. The real-provider plane is the release gate, not CI
+(§5).
+
+The suites, in detail.
+
 Each example has a local test task (`test:example-docker`, ... and
 `test:examples` for the whole catalog). Every one enforces the
 idempotency contract: run twice, fail unless the second pass reports
@@ -204,17 +290,13 @@ working tree, so examples resolve your live edits — no reinstall
 between iterations. `test:adoption` is the second suite:
 both adoption rehearsals, each asserted end to end (§4).
 
-`test:adoption-verdicts` is the fast layer: every adoptability verdict class —
-including the unsupported-release refusals no local VM can boot —
-proven in seconds against fixture observations on localhost, no VM.
-The adoptability checks split at a documented seam (probe → the
-`adopt_observations` dict → verdict); the fixtures in
-`collection/tests/adoptability/` feed the verdict half directly and
-assert the stable verdict codes (RFC-007), never prose. `test:adoption-refusals`
-is the boot-level half of the same coverage (§4): real probes, real
-exit codes, adopt refusing with nothing added. The one documented
-residual: no proof plane boots a non-24.04 image, so the release
-refusal is proven at the fixture layer only.
+`test:adoption-verdicts` is the fixture plane in practice: each case in
+`collection/tests/adoptability/cases/` is one `adopt_observations`
+world fed straight to the verdict half, asserting the stable bracketed
+codes (RFC-007) and whether the refusal fires — never the prose.
+`test:adoption-refusals` is its lab-plane twin (§4): the same worlds
+booted, with real probes, real exit codes, and adopt refusing with
+nothing added.
 
 `test:rotation` covers the remaining access-mutating verb: both
 baseline accounts re-keyed and back on the provisioned lab, each
@@ -276,18 +358,6 @@ direct attribution assert that every delegated access probe carried
 its own host's port and never the sibling's, the access report judged
 per host, and one rotation re-keying `ansible` across the whole fleet
 through the sysadmin door and back.
-
-Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
-the host, so the same tasks prove arm64 on Apple silicon and amd64 in
-CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
-`test:render` first (they fail in the first minute, before any VM
-boots), then `vm:fetch-image`, `up`, and
-`test:examples` on every push and pull request on an amd64 KVM runner (no
-secrets, no billable resources), plus the full rehearsal ladder —
-rotation, adoption and its refusals, patch, the lock and reboot
-refusals, bystanders, fleet — on pushes to main. The
-sandbox DigitalOcean harness stays the real-provider leg at release
-cadence (§5). Nothing may assume an architecture it did not detect.
 
 ## 7. Adding things
 
