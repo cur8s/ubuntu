@@ -7,7 +7,7 @@ without a VM:
 ansible-playbook collection/tests/adoptability/verify-verdicts.yml
 ```
 
-(from the repo: `mise run test:verdicts`)
+(from the repo: `mise run test:adoption-verdicts`)
 
 Each file in `cases/` is one world: the `adopt_observations` a host
 like that would produce (the probe/verdict seam — shape documented in
@@ -24,4 +24,4 @@ behavior are contract surface (RFC-011: Conventions Contract).
 What this layer deliberately cannot prove — that the probes read real
 files correctly, that the playbooks exit nonzero at the shell, and that
 adopt refuses without adding anything — is proven on a live VM by the
-repo's refusal rehearsal (`mise run test:refusals`).
+repo's refusal rehearsal (`mise run test:adoption-refusals`).

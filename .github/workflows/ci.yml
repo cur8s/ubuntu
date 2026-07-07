@@ -46,8 +46,8 @@ jobs:
         with:
           install: false
 
-      - name: test:verdicts — every refusal class against fixtures, before any VM
-        run: mise run test:verdicts
+      - name: test:adoption-verdicts — every refusal class against fixtures, before any VM
+        run: mise run test:adoption-verdicts
 
       - name: Cache the Ubuntu cloud image
         uses: actions/cache@v4
@@ -64,13 +64,13 @@ jobs:
       - name: test:all — every example twice, second pass changed=0
         run: mise run test:all
 
-      - name: test:scenarios — both adoption rehearsals (main only)
+      - name: test:adoption — both rehearsals end to end (main only)
         if: github.event_name != 'pull_request'
-        run: mise run test:scenarios
+        run: mise run test:adoption
 
-      - name: test:refusals — the unadoptable server, refused with nothing added (main only)
+      - name: test:adoption-refusals — the unadoptable server, refused with nothing added (main only)
         if: github.event_name != 'pull_request'
-        run: mise run test:refusals
+        run: mise run test:adoption-refusals
 
       - name: Console log on failure
         if: failure()

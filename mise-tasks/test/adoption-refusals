@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-#MISE description="The refusal rehearsal: adoptable must exit nonzero naming every code; adopt must refuse the same way and add nothing"
+#MISE description="The unadoptable server: adoptable exits nonzero naming every code; adopt refuses the same way and adds nothing"
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
 activate_test_credentials
 
-log_dir="$MISE_CONFIG_ROOT/.generated/refusals"
+log_dir="$MISE_CONFIG_ROOT/.generated/adoption-refusals"
 mkdir -p "$log_dir"
 
 # The world is vm:build-unadoptable's seed; the fixture layer proves the
@@ -92,4 +92,4 @@ echo "    refused with identical codes; changed=0; surface byte-identical; no su
 
 MISE_YES=1 mise run vm:destroy
 echo
-echo "test:refusals PASSED - nonzero verdicts, all codes, adopt added nothing."
+echo "test:adoption-refusals PASSED - nonzero verdicts, all codes, adopt added nothing."

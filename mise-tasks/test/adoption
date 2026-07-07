@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Both adoption rehearsals: root-user, then sudo-user (adopt -> converge x2 -> reboot-and-verify -> lock -> assert only ansible + sysadmin remain)"
+#MISE description="Both adoption rehearsals end to end: verdict asserted -> adopt -> converge x2 (changed=0) -> reboot-and-verify -> lock -> exactly two doors remain"
 set -euo pipefail
 
-log_dir="$MISE_CONFIG_ROOT/.generated/scenarios"
+log_dir="$MISE_CONFIG_ROOT/.generated/adoption"
 mkdir -p "$log_dir"
 
 # The two assertions live here, their only caller (lib.sh admission
@@ -48,40 +48,41 @@ assert_two_doors() {
   echo "Access surface: exactly ansible + sysadmin."
 }
 
-run_scenario() {
-  local scenario="$1" door_user="$2"
+run_rehearsal() {
+  local shape="$1" door_user="$2"
 
   echo
-  echo "=== scenario: $scenario (door on: $door_user) ==="
+  echo "=== rehearsal: $shape (door on: $door_user) ==="
   if [ -d "$QVM_DIR" ]; then
     MISE_YES=1 mise run vm:destroy
   fi
-  mise run vm:build-adoptable "$scenario"
+  mise run vm:build-adoptable "$shape"
   mise run vm:start
 
   # The verdict must pass AND carry the right codes: the first-converge
   # delta always, the password-auth warning only where pwauth is on
-  # (RFC-007 verdict codes; the refusal side lives in test:refusals).
-  local alog="$log_dir/$scenario-adoptable.log"
+  # (RFC-007 verdict codes; the refusal side lives in
+  # test:adoption-refusals).
+  local alog="$log_dir/$shape-adoptable.log"
   if ! ADOPT_USER="$door_user" mise run host:adoptable > "$alog" 2>&1; then
     cat "$alog"
-    echo "FAIL scenario $scenario: adoptable refused a clean rehearsal server." >&2
+    echo "FAIL rehearsal $shape: adoptable refused a clean rehearsal server." >&2
     exit 1
   fi
   grep -qF '[FIRST_CONVERGE_DELTA]' "$alog" || {
     cat "$alog"
-    echo "FAIL scenario $scenario: verdict missing [FIRST_CONVERGE_DELTA]." >&2
+    echo "FAIL rehearsal $shape: verdict missing [FIRST_CONVERGE_DELTA]." >&2
     exit 1
   }
-  if [ "$scenario" = sudo-user ]; then
+  if [ "$shape" = sudo-user ]; then
     grep -qF '[PASSWORD_AUTH_ENABLED]' "$alog" || {
       cat "$alog"
-      echo "FAIL scenario sudo-user: verdict missing [PASSWORD_AUTH_ENABLED]." >&2
+      echo "FAIL rehearsal sudo-user: verdict missing [PASSWORD_AUTH_ENABLED]." >&2
       exit 1
     }
   elif grep -qF '[PASSWORD_AUTH_ENABLED]' "$alog"; then
     cat "$alog"
-    echo "FAIL scenario root-user: [PASSWORD_AUTH_ENABLED] fired with pwauth off." >&2
+    echo "FAIL rehearsal root-user: [PASSWORD_AUTH_ENABLED] fired with pwauth off." >&2
     exit 1
   fi
   ADOPT_USER="$door_user" mise run host:adopt
@@ -90,22 +91,22 @@ run_scenario() {
   mise run host:converge
 
   echo "--- converge #2 (the contract: changed=0)"
-  local log="$log_dir/$scenario-converge2.log"
+  local log="$log_dir/$shape-converge2.log"
   if ! mise run host:converge > "$log" 2>&1; then
     cat "$log"
-    echo "FAIL scenario $scenario: second converge failed." >&2
+    echo "FAIL rehearsal $shape: second converge failed." >&2
     exit 1
   fi
-  assert_changed_zero "$log" "scenario $scenario"
+  assert_changed_zero "$log" "rehearsal $shape"
 
   echo "--- acceptance gate: reboot-and-verify"
   mise run host:reboot-and-verify
 
-  echo "--- lock the scenario door ($door_user)"
+  echo "--- lock the rehearsal door ($door_user)"
   LOCK_ACCOUNTS="$door_user" MISE_YES=1 mise run host:lock-accounts
 
   echo "--- report: assert exactly the two baseline doors"
-  local report="$log_dir/$scenario-report.log"
+  local report="$log_dir/$shape-report.log"
   if ! mise run host:report-access > "$report" 2>&1; then
     cat "$report"
     exit 1
@@ -113,11 +114,11 @@ run_scenario() {
   assert_two_doors "$report"
 
   MISE_YES=1 mise run vm:destroy
-  echo "=== scenario $scenario: PASSED"
+  echo "=== rehearsal $shape: PASSED"
 }
 
-run_scenario root-user root
-run_scenario sudo-user "${SCENARIO_USER:-ubuntu}"
+run_rehearsal root-user root
+run_rehearsal sudo-user "${DOOR_USER:-ubuntu}"
 
 echo
-echo "test:scenarios PASSED - both rehearsals: adopt, changed=0, reboot survived, two doors."
+echo "test:adoption PASSED - both rehearsals: adopt, changed=0, reboot survived, two doors."

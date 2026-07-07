@@ -110,9 +110,9 @@ servers — enter through adoption instead (RFC-007): a read-only
 assessment, an additive adopt that creates the two accounts, then the
 same converge; the old access path is closed deliberately at the end.
 Both door shapes the clouds hand you are rehearsed locally by
-`mise run test:scenarios` (root-user and sudo-user scenarios), and the
+`mise run test:adoption` (root-user and sudo-user rehearsals), and the
 refusal side — a server adoption must reject, rejected with nothing
-added — by `mise run test:refusals`.
+added — by `mise run test:adoption-refusals`.
 
 SSH shortcuts (local lab):
 
@@ -139,7 +139,7 @@ Outside converge, two standalone playbooks act on the access surface
 door and privilege holder, read-only; `cur8s.ubuntu.lock_accounts` closes
 doors named in `LOCK_ACCOUNTS` (the `lock_account` role) after re-proving
 both baseline accounts — converge itself never removes access. The local
-scenario chain rehearses the whole arc (`test:scenarios`); on a real
+rehearsal chain runs the whole arc (`test:adoption`); on a real
 cloud host the same playbook closes the provider door (acceptance gate
 first).
 

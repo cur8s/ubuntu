@@ -13,7 +13,7 @@
 # (baseline operations on the managed system — host:<action> runs the
 # cur8s.ubuntu.<action> playbook one-to-one; the one alias is
 # report-drift, converge in check mode), ssh (shell access, by user),
-# test (examples). Workflows
+# test (examples and the adoption suites). Workflows
 # where the lab itself is the object (up, clean) take no object
 # segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently
