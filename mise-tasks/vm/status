@@ -10,7 +10,7 @@ next=""
 # display reports, it never teaches.
 harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
 
-# Keys are not a stage: vm:build generates them on demand.
+# Keys are not a stage: vm:build-provisioned generates them on demand.
 if grep -q '^image  *cached' <<<"$harness"; then
   echo "1 image     cached   in .generated/qemu/cache"
 else
@@ -27,7 +27,7 @@ case "$vm_state" in
     next="${next:-vm:start}"
     ;;
   *)
-    echo "2 vm        absent   run: mise run vm:build (or up for the whole thread)"
+    echo "2 vm        absent   run: mise run vm:build-provisioned (or up for the whole thread)"
     next="${next:-up}"
     ;;
 esac

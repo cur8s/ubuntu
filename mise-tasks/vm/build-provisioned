@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Assemble the VM on disk; nothing starts (next: vm:start)"
+#MISE description="Build the lab VM born through provisioning: first boot sets up access and patches; converge completes the baseline (next: vm:start)"
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
