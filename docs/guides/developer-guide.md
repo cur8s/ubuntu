@@ -3,7 +3,8 @@
 How to work on this repository — for humans and coding agents alike.
 `AGENTS.md` at the repo root is the short form agents load per request
 (`CLAUDE.md` carries the same content, kept in lockstep); this guide is
-the long form. This guide owns the how of *changing* the system;
+the long form. For the big picture first, `docs/guides/architecture.md`
+is the end-to-end map. This guide owns the how of *changing* the system;
 `docs/guides/user-guide.md` owns the how of *using* it; the RFCs in
 `docs/rfcs/` own the what and the why, and win every conflict.
 

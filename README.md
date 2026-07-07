@@ -10,10 +10,10 @@ the repo, in consumer-shaped harnesses beside the operator's cloud
 custody (the DigitalOcean one was developed here; history at `b0ba5ff`).
 
 **To understand the system**, read the mental model below, then
-`docs/rfcs/RFC-001 The Host Baseline.md` and onward for depth. **To change
-the system**, start instead at `docs/rfcs/RFC-000 The Role of RFCs.md` —
-the RFCs are the normative architecture contract, and changes must keep
-them true.
+`docs/guides/architecture.md` — the end-to-end map — and follow its
+pointers into the RFCs for depth. **To change the system**, the RFCs in
+`docs/rfcs/` are the normative architecture contract (start at RFC-000)
+and changes must keep them true.
 
 ## The mental model
 

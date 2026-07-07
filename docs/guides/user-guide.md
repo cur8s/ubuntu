@@ -2,7 +2,8 @@
 
 How to run the `cur8s.ubuntu` baseline on your own hosts: install the
 collection, bring hosts in (born conformant or adopted), and operate them
-for the rest of their lives. The RFCs in `docs/rfcs/` own the what and the
+for the rest of their lives. For the big picture first, `docs/guides/architecture.md`
+is the end-to-end map; the RFCs in `docs/rfcs/` own the what and the
 why; this guide owns the how, for consumers. If you are changing this
 repository rather than using it, you want `docs/guides/developer-guide.md`.
 
