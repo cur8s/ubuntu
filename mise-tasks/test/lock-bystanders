@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#MISE description="Locking one account must not strip sudo from the others in cloud-init's combined sudoers file; the file goes only when empty"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/lock-bystanders"
+mkdir -p "$log_dir"
+combined=/etc/sudoers.d/90-cloud-init-users
+
+qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
+lab_ssh() { qvm ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"; }
+
+echo "--- the provisioned lab, running and conformant"
+harness="$(qvm status)"
+occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
+vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
+if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
+  if [ -d "$QVM_DIR" ]; then
+    MISE_YES=1 mise run vm:destroy
+  fi
+  mise run up
+fi
+
+echo "--- the world C17 describes: two provisioning-time accounts, one combined grant file"
+lab_ssh 'for u in olduser bystander; do id "$u" >/dev/null 2>&1 || sudo useradd -m -s /bin/bash "$u"; done
+printf "olduser ALL=(ALL) NOPASSWD:ALL\nbystander ALL=(ALL) NOPASSWD:ALL\n" | sudo tee '"$combined"' >/dev/null
+sudo chmod 440 '"$combined"''
+
+echo "--- lock olduser: the bystander must keep sudo"
+l1="$log_dir/lock-olduser.log"
+if ! MISE_YES=1 LOCK_ACCOUNTS=olduser mise run host:lock-accounts > "$l1" 2>&1; then
+  cat "$l1"
+  echo "FAIL: locking olduser failed." >&2
+  exit 1
+fi
+remaining="$(lab_ssh "sudo cat $combined")"
+grep -q '^bystander ' <<<"$remaining" || {
+  echo "FAIL: the bystander's grant vanished with olduser's lock (the C17 bug)." >&2
+  exit 1
+}
+if grep -q '^olduser ' <<<"$remaining"; then
+  echo "FAIL: olduser's grant survived its own lock." >&2
+  exit 1
+fi
+lab_ssh 'sudo visudo -c >/dev/null' || {
+  echo "FAIL: sudoers no longer parses after the partial removal." >&2
+  exit 1
+}
+lab_ssh 'sudo sudo -l -U bystander' | grep -q 'NOPASSWD' || {
+  echo "FAIL: the bystander lost working sudo." >&2
+  exit 1
+}
+echo "    olduser's grant gone; bystander's intact and functional"
+
+echo "--- lock olduser again: idempotent, changed=0"
+l2="$log_dir/lock-olduser-again.log"
+if ! MISE_YES=1 LOCK_ACCOUNTS=olduser mise run host:lock-accounts > "$l2" 2>&1; then
+  cat "$l2"
+  echo "FAIL: the repeat lock failed." >&2
+  exit 1
+fi
+assert_changed_zero "$l2" "repeat lock"
+
+echo "--- lock the bystander: only now does the file go"
+l3="$log_dir/lock-bystander.log"
+if ! MISE_YES=1 LOCK_ACCOUNTS=bystander mise run host:lock-accounts > "$l3" 2>&1; then
+  cat "$l3"
+  echo "FAIL: locking the bystander failed." >&2
+  exit 1
+fi
+lab_ssh "test ! -e $combined" || {
+  echo "FAIL: the combined file should be gone once its last grant is." >&2
+  exit 1
+}
+echo "    combined file removed exactly when empty"
+
+echo "--- tidy and standard"
+lab_ssh 'for u in olduser bystander; do
+sudo loginctl terminate-user "$u" 2>/dev/null || true
+sudo pkill -KILL -u "$u" 2>/dev/null || true
+done
+sleep 1
+sudo userdel -r olduser
+sudo userdel -r bystander'
+report="$log_dir/final-report.log"
+if ! mise run host:report-access > "$report" 2>&1; then
+  cat "$report"
+  exit 1
+fi
+assert_two_doors "$report"
+flog="$log_dir/final-converge.log"
+if ! mise run host:converge > "$flog" 2>&1; then
+  cat "$flog"
+  echo "FAIL: final converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$flog" "post-suite converge"
+
+echo
+echo "test:lock-bystanders PASSED - one lock, one bystander untouched; repeat lock changed=0; file gone only when empty."

@@ -81,6 +81,30 @@
 
   pre_tasks:
     # ==========================================================================
+    # Input Policy (re-checked)
+    # ==========================================================================
+    # Duplicated from the localhost play on purpose: --limit can skip
+    # that play entirely, and a typo'd ROTATE_ACCOUNT must never reach
+    # the host unvalidated. Both asserts run on the controller, before
+    # any connection.
+    - name: Require a baseline account to rotate (re-checked on the host play)
+      ansible.builtin.assert:
+        that:
+          - rotate_account in ['ansible', 'sysadmin']
+        fail_msg: >-
+          Set ROTATE_ACCOUNT to ansible or sysadmin — one account per
+          invocation; the sibling stays untouched as the way in
+          (RFC-004: Identity and Trust).
+
+    - name: Require an ed25519 replacement key (re-checked on the host play)
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.file', rotate_new_pub_key_file) is match('ssh-ed25519 ')
+        fail_msg: >-
+          {{ rotate_new_pub_key_file }} is not an ssh-ed25519 public key;
+          other key types are not approved (RFC-004: Identity and Trust).
+
+    # ==========================================================================
     # Sibling Connection
     # ==========================================================================
     - name: Wait for SSH access as {{ rotate_sibling }}

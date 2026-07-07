@@ -41,8 +41,9 @@ activate_test_credentials() {
     if [[ ! -f "$QEMU_KEYS_DIR/$key" ]]; then
       mkdir -p "$QEMU_KEYS_DIR"
       ssh-keygen -q -t ed25519 -N '' -C "qemu-lab-$key" -f "$QEMU_KEYS_DIR/$key"
-      # 0600 like vault-extracted pubs: ssh tries identity files as
-      # private keys first and refuses world-readable ones.
+      # 0600 like vault-extracted pubs — convention, not necessity:
+      # with the agent holding the private half, ssh accepts a
+      # world-readable .pub identity (re-verified live 2026-07-07).
       chmod 600 "$QEMU_KEYS_DIR/$key.pub"
     fi
   done

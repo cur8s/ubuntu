@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #MISE description="Rotate both baseline accounts to new keys and back, entered through the sibling; a planted stranger key must refuse; the lab ends standard"
 set -euo pipefail
-. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+# The runner (which sources the credential shim itself) is needed for
+# the --limit negative: that case must drive ansible-playbook directly.
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
 . "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
 activate_test_credentials
 
@@ -81,6 +83,22 @@ grep -q 'Set ROTATE_ACCOUNT to ansible or sysadmin' "$nlog" || {
   exit 1
 }
 echo "    refused with the input-policy message"
+
+echo "--- refuse a bogus account even when --limit skips the input play"
+llog="$log_dir/bogus-limit.log"
+if ROTATE_ACCOUNT=bogus ROTATE_NEW_PUB_KEY="$keys/ubuntu-ansible-next.pub" \
+    run_lab_playbook "$MISE_CONFIG_ROOT/collection/playbooks/rotate_key.yml" \
+    --limit ubuntu-qemu-lab > "$llog" 2>&1; then
+  cat "$llog"
+  echo "FAIL: a bogus ROTATE_ACCOUNT slipped past --limit." >&2
+  exit 1
+fi
+grep -q 're-checked on the host play' "$llog" || {
+  cat "$llog"
+  echo "FAIL: the host-play re-check did not fire." >&2
+  exit 1
+}
+echo "    refused by the host play's own re-check"
 
 echo "--- refuse rotation while a stranger key sits on the account"
 rogue_line="$(cat "$rogue_pub")"

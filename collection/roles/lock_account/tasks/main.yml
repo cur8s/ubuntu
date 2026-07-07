@@ -46,10 +46,26 @@
 # which are precisely pre-baseline doors. The baseline accounts use per-user
 # files (/etc/sudoers.d/ansible, /etc/sudoers.d/sysadmin) written from the
 # same source as roles/users, so this removal cannot touch them.
-- name: Remove cloud-init provisioning sudoers
+# Only THIS account's grants go: the combined file can name several
+# provisioning-time accounts, and locking one must not strip sudo from
+# the bystanders. The file itself goes only once no grants remain.
+- name: Remove {{ lock_account_name }}'s cloud-init provisioning sudoers grants
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/90-cloud-init-users
+    regexp: '^\s*{{ lock_account_name }}\s'
+    state: absent
+
+- name: Count remaining grants in the combined cloud-init file
+  ansible.builtin.shell: |
+    grep -cvE '^\s*(#|$)' /etc/sudoers.d/90-cloud-init-users 2>/dev/null || true
+  register: lock_cloudinit_grants
+  changed_when: false
+
+- name: Remove the combined cloud-init file once no grants remain
   ansible.builtin.file:
     path: /etc/sudoers.d/90-cloud-init-users
     state: absent
+  when: lock_cloudinit_grants.stdout | trim == '0'
 
 # ==========================================================================
 # Remove privileged group memberships

@@ -27,7 +27,8 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all;
                                      adoption, adoption-refusals, adoption-verdicts,
-                                     rotation, render, patch, lock-refusals, reboot-refusal${R}
+                                     rotation, render, patch, lock-refusals,
+                                     lock-bystanders, reboot-refusal${R}
 
   ${B}workflows${R} ${D}(no object — the lab itself is the object)${R}
     ${C}up${R}      provision + converge ${D}(fetches keys and image on demand)${R}

@@ -109,8 +109,11 @@ Mechanics worth knowing when debugging:
   stand-in for the secrets manager's signer. Every lab SSH pins
   `-o IdentityAgent=` to that socket — necessary because 1Password's
   `~/.ssh/config` installs a global `IdentityAgent` that overrides
-  `SSH_AUTH_SOCK`. Public keys are 0600: ssh tries identity files as
-  private keys and refuses world-readable ones.
+  `SSH_AUTH_SOCK`. Public keys are kept 0600 to match vault-extracted
+  pubs — convention, not necessity: with the agent holding the private
+  half, ssh accepts a world-readable `.pub` identity (re-verified live
+  2026-07-07); without an agent a `.pub` identity fails as "invalid
+  format" regardless of permissions.
 - **Per-lab render**: the lab renders its own
   `.generated/cloud-init/ubuntu-baseline-qemu.yaml`; the DigitalOcean
   folder renders its own user-data inside itself.
@@ -245,8 +248,13 @@ by name; the lock-your-last-door safety (a sabotaged sysadmin proof
 stops everything with the target untouched); and the connection-user
 guard, reached by connecting as a throwaway account and asking the
 play to lock it. Ends with the standard two-door surface and
-`changed=0`. The C17-shaped case (the shared cloud-init sudoers file)
-joins once that finding is ruled.
+`changed=0`.
+
+`test:lock-bystanders` is the C17 world: two provisioning-time
+accounts sharing cloud-init's combined sudoers file. Locking one
+removes only its own grant — the bystander's sudo keeps working,
+verified by sudo itself — a repeat lock reports `changed=0`, and the
+combined file is deleted exactly when its last grant goes.
 
 `test:reboot-refusal` proves the acceptance gate discriminates: with a
 baseline service masked, `reboot_and_verify` must refuse — after a
@@ -312,8 +320,9 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
    leg), plus green CI and `mise run test:adoption-verdicts`,
    `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
    `mise run test:adoption`, `mise run test:adoption-refusals`,
-   `mise run test:patch`, `mise run test:lock-refusals`, and
-   `mise run test:reboot-refusal` locally.
+   `mise run test:patch`, `mise run test:lock-refusals`,
+   `mise run test:lock-bystanders`, and `mise run test:reboot-refusal`
+   locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
