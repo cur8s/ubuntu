@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+#MISE description="The reboot gate must refuse a broken host: mask a baseline service, reboot through the gate, nonzero; heal it, and the same gate passes"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/reboot-refusal"
+mkdir -p "$log_dir"
+
+qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
+lab_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
+
+# The broken thing is apt-daily.timer: it is on the gate's service list,
+# and masking it leaves SSH and both access proofs intact — so a refusal
+# can only come from the verification, not from a failure to connect.
+# The journal-history leg is deliberately not broken here: wiping the
+# persistent journal would poison the NEXT gate run's --boot=-1 check
+# too, and all three legs refuse through the same mechanics (a task
+# failing the play).
+
+echo "--- the provisioned lab, running and conformant"
+harness="$(qvm status)"
+occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
+vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
+if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
+  if [ -d "$QVM_DIR" ]; then
+    MISE_YES=1 mise run vm:destroy
+  fi
+  mise run up
+fi
+lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null || {
+  echo "FAIL: apt-daily.timer is not active before the rehearsal; the control is broken." >&2
+  exit 1
+}
+boot_id_start="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
+
+echo "--- break a baseline service, then ask the gate"
+lab_ssh 'sudo systemctl mask --now apt-daily.timer' >/dev/null 2>&1 || true
+if lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null 2>&1; then
+  echo "FAIL: the timer is still active after masking." >&2
+  exit 1
+fi
+glog="$log_dir/gate-broken.log"
+if mise run host:reboot-and-verify > "$glog" 2>&1; then
+  cat "$glog"
+  echo "FAIL: the gate passed a host with a masked baseline service." >&2
+  exit 1
+fi
+grep -qF 'Verify baseline service' "$glog" || {
+  cat "$glog"
+  echo "FAIL: the refusal did not come from the service verification." >&2
+  exit 1
+}
+boot_id_broken="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
+if [ "$boot_id_start" = "$boot_id_broken" ]; then
+  echo "FAIL: the gate refused without rebooting — the refusal must come from post-reboot verification." >&2
+  exit 1
+fi
+echo "    refused at the service check, after a real reboot"
+
+echo "--- heal the host; the same gate must pass"
+lab_ssh 'sudo systemctl unmask apt-daily.timer && sudo systemctl start apt-daily.timer' >/dev/null
+lab_ssh 'systemctl is-active apt-daily.timer' >/dev/null || {
+  echo "FAIL: the timer did not come back after unmasking." >&2
+  exit 1
+}
+mise run host:reboot-and-verify
+boot_id_healed="$(lab_ssh cat /proc/sys/kernel/random/boot_id)"
+if [ "$boot_id_broken" = "$boot_id_healed" ]; then
+  echo "FAIL: the healed gate run did not reboot." >&2
+  exit 1
+fi
+
+echo "--- the lab reads standard"
+flog="$log_dir/final-converge.log"
+if ! mise run host:converge > "$flog" 2>&1; then
+  cat "$flog"
+  echo "FAIL: final converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$flog" "post-gate converge"
+
+echo
+echo "test:reboot-refusal PASSED - broken host refused at the service check; healed host passed the same gate; changed=0."

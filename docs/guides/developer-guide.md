@@ -247,6 +247,14 @@ play to lock it. Ends with the standard two-door surface and
 `changed=0`. The C17-shaped case (the shared cloud-init sudoers file)
 joins once that finding is ruled.
 
+`test:reboot-refusal` proves the acceptance gate discriminates: with a
+baseline service masked, `reboot_and_verify` must refuse — after a
+real reboot (`boot_id` changes), at the service verification, not at
+the connection — and after healing, the same gate must pass the same
+host. The journal-history leg is deliberately not broken: wiping the
+persistent journal would poison the next run's `--boot=-1` check too,
+and all three verification legs refuse through the same mechanics.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
@@ -303,7 +311,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
    leg), plus green CI and `mise run test:adoption-verdicts`,
    `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
    `mise run test:adoption`, `mise run test:adoption-refusals`,
-   `mise run test:patch`, and `mise run test:lock-refusals` locally.
+   `mise run test:patch`, `mise run test:lock-refusals`, and
+   `mise run test:reboot-refusal` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.

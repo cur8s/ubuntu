@@ -94,17 +94,24 @@
     # ==========================================================================
     # Baseline services healthy
     # ==========================================================================
-    # is-active exits non-zero unless every unit is active, failing the play.
-    - name: Verify baseline services are active after reboot
+    # One unit per call, on purpose: given several units, systemctl
+    # is-active exits 0 when at least ONE is active — a combined call
+    # could never fail while ssh.socket was up.
+    - name: Verify baseline service {{ reboot_service }} is active after reboot
       ansible.builtin.command:
         argv:
           - systemctl
           - is-active
-          - ssh.socket
-          - systemd-journald.service
-          - apt-daily.timer
-          - apt-daily-upgrade.timer
+          - --quiet
+          - "{{ reboot_service }}"
       changed_when: false
+      loop:
+        - ssh.socket
+        - systemd-journald.service
+        - apt-daily.timer
+        - apt-daily-upgrade.timer
+      loop_control:
+        loop_var: reboot_service
 
     # The journald baseline pin promises history survives reboots; the previous
     # boot must be readable from the persistent journal.

@@ -94,6 +94,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mise run test:lock-refusals
 
+      - name: test:reboot-refusal — the gate refuses a broken host, passes it healed (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:reboot-refusal
+
       - name: Console log on failure
         if: failure()
         run: tail -n 200 .generated/qemu/vm/console.log 2>/dev/null || true
