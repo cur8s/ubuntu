@@ -24,7 +24,7 @@ jobs:
     env:
       MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Open /dev/kvm to the runner user
         run: |
@@ -42,7 +42,7 @@ jobs:
       - name: Install ansible-core
         run: pipx install ansible-core
 
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
         with:
           install: false
 
@@ -53,14 +53,14 @@ jobs:
         run: mise run test:render
 
       - name: Cache the Ubuntu cloud image
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .generated/qemu/cache
           key: qemu-image-noble-amd64-v1
 
       - name: Cache the stale point-release image (test:patch, main only)
         if: github.event_name != 'pull_request'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .generated/qemu/cache
           key: qemu-image-stale-release-20250805-amd64
