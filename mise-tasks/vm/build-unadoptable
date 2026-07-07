@@ -23,6 +23,9 @@ echo "Creating the unadoptable server (every plantable defect, seeded at birth)"
 user_data="$MISE_CONFIG_ROOT/.generated/cloud-init/unadoptable.yaml"
 mkdir -p "$(dirname "$user_data")"
 rogue_key="$(cat "$MISE_CONFIG_ROOT/collection/tests/adoptability/keys/fixture-rogue.pub")"
+# Checked like the rogue key above: a missing pub must fail here, not
+# render as an empty key ($(cat) inside a heredoc cannot trip set -e).
+bootstrap_key="$(cat "$BOOTSTRAP_PUB_KEY")"
 cat > "$user_data" <<EOF
 #cloud-config
 disable_root: false
@@ -30,7 +33,7 @@ ssh_pwauth: true
 users:
   - name: root
     ssh_authorized_keys:
-      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+      - "$bootstrap_key"
   # Both baseline accounts squatted at birth: they exist, holding a key
   # the baseline did not put there.
   - name: ansible

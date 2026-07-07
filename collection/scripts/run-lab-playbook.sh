@@ -51,6 +51,6 @@ run_lab_playbook() {
   # follows the user's ssh config, which is right everywhere except a
   # lab).
   VALIDATE_SSH_IDENTITY_AGENT="$QEMU_KEYS_DIR/agent.sock" \
-    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile=$QVM_DIR/known_hosts -o StrictHostKeyChecking=accept-new -o IdentityAgent=$QEMU_KEYS_DIR/agent.sock" \
+    ANSIBLE_SSH_COMMON_ARGS="-o UserKnownHostsFile='$QVM_DIR/known_hosts' -o StrictHostKeyChecking=accept-new -o IdentityAgent='$QEMU_KEYS_DIR/agent.sock'" \
     ansible-playbook -i "$(write_lab_inventory)" "$@"
 }

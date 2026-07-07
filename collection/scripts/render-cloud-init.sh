@@ -14,7 +14,7 @@
 # manager, no harness (RFC-011: Conventions Contract).
 set -euo pipefail
 
-if [[ ! -s $ANSIBLE_PUB_KEY || ! -s $SYSADMIN_PUB_KEY ]]; then
+if [[ ! -s ${ANSIBLE_PUB_KEY:-} || ! -s ${SYSADMIN_PUB_KEY:-} ]]; then
   echo "Missing public key files: point ANSIBLE_PUB_KEY and SYSADMIN_PUB_KEY at your extracted public keys." >&2
   exit 1
 fi
@@ -130,7 +130,7 @@ EOF
 # which silently poisons the whole document and drops every user. Fail loudly
 # rather than ship a broken image.
 if LC_ALL=C grep -q '[^ -~]' "$CLOUD_INIT_FILE"; then
-  echo "Rendered cloud-config contains non-ASCII characters; it must be ASCII-only." >&2
+  echo "Rendered cloud-config contains characters outside printable ASCII; it must be plain ASCII." >&2
   exit 1
 fi
 

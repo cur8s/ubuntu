@@ -14,9 +14,22 @@ assert_seed_parses() {
   # The banner holds several parenthesized groups; the interpreter path
   # is the one that starts with a slash, e.g.
   #   python version = 3.14.6 (main, ...) [Clang ...] (/opt/.../python)
-  py="$(ansible-playbook --version 2>/dev/null | sed -n 's/.*python version = .*(\(\/[^)]*\)).*/\1/p')"
-  if ! "${py:-python3}" -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$seed"; then
-    echo "Refusing to build: $seed is not valid YAML (parse error above)." >&2
+  # The || true keeps a missing/failing ansible-playbook from killing
+  # the caller under pipefail before the python3 fallback can engage.
+  py="$(ansible-playbook --version 2>/dev/null | sed -n 's/.*python version = .*(\(\/[^)]*\)).*/\1/p' || true)"
+  py="${py:-python3}"
+  # cloud-init silently ignores user-data without this exact first line
+  # — the same doorless-VM outcome a parse failure produces.
+  if [ "$(head -n 1 "$seed")" != "#cloud-config" ]; then
+    echo "Refusing to build: $seed does not start with '#cloud-config' (cloud-init would silently ignore it)." >&2
+    exit 1
+  fi
+  if ! "$py" -c 'import yaml' 2>/dev/null; then
+    echo "Refusing to build: $py cannot import PyYAML (ansible-core normally bundles it)." >&2
+    exit 1
+  fi
+  if ! "$py" -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$seed"; then
+    echo "Refusing to build: $seed is not valid YAML (parse error above; parser: $py)." >&2
     exit 1
   fi
 }

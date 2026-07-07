@@ -15,6 +15,10 @@ if [ -e "$QVM_DIR" ]; then
   exit 1
 fi
 activate_test_credentials
+# A checked assignment: a missing pub file must fail here, not render
+# as an empty key and boot a doorless VM ($(cat) inside a heredoc
+# cannot trip set -e).
+bootstrap_key="$(cat "$BOOTSTRAP_PUB_KEY")"
 
 # A rehearsal server models an existing server that predates the baseline, so
 # its seed deliberately does NOT use the baseline render. The seed embeds
@@ -38,12 +42,19 @@ ssh_pwauth: false
 users:
   - name: root
     ssh_authorized_keys:
-      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+      - "$bootstrap_key"
 EOF
     next_hint="ADOPT_USER=root mise run host:adoptable"
     ;;
   sudo-user)
     door_user="${DOOR_USER:-ubuntu}"
+    # A plain unix username only: most poisonings (spaces, '#', a
+    # newline) still PARSE as YAML, so the seed check cannot see them —
+    # they surface minutes later as a doorless VM.
+    if [[ ! $door_user =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+      echo "DOOR_USER must be a plain unix username, got: $door_user" >&2
+      exit 1
+    fi
     echo "Creating the sudo-user rehearsal server (door on: $door_user)"
     # The AWS/installer shape with the default name, the Azure shape with
     # DOOR_USER=azureuser (nothing in the collection may care which;
@@ -61,7 +72,7 @@ users:
     sudo: "ALL=(ALL) NOPASSWD:ALL"
     lock_passwd: true
     ssh_authorized_keys:
-      - "$(cat "$BOOTSTRAP_PUB_KEY")"
+      - "$bootstrap_key"
 EOF
     next_hint="mise run host:adoptable"
     ;;

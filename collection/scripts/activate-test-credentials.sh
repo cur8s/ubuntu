@@ -45,6 +45,11 @@ activate_test_credentials() {
       # with the agent holding the private half, ssh accepts a
       # world-readable .pub identity (re-verified live 2026-07-07).
       chmod 600 "$QEMU_KEYS_DIR/$key.pub"
+    elif [[ ! -f "$QEMU_KEYS_DIR/$key.pub" ]]; then
+      # The pub alone can go missing; a seed rendered from a missing pub
+      # would carry an empty key and boot a doorless VM. Rederive it.
+      ssh-keygen -y -f "$QEMU_KEYS_DIR/$key" > "$QEMU_KEYS_DIR/$key.pub"
+      chmod 600 "$QEMU_KEYS_DIR/$key.pub"
     fi
   done
 
@@ -52,16 +57,19 @@ activate_test_credentials() {
   local sock="$QEMU_KEYS_DIR/agent.sock" agent_state=0
   SSH_AUTH_SOCK="$sock" ssh-add -l >/dev/null 2>&1 || agent_state=$?
   if [[ $agent_state -eq 2 ]]; then
-    # No agent behind the socket (never started, or stale after a reboot).
+    # No agent behind the socket (never started, or stale after a
+    # reboot). A concurrent activation may win this start; losing is
+    # fine — the ssh-add below fails loudly only if NO agent answers.
     rm -f "$sock"
-    ssh-agent -a "$sock" >/dev/null
+    ssh-agent -a "$sock" >/dev/null 2>&1 || true
   fi
-  if [[ $agent_state -ne 0 ]]; then
-    SSH_AUTH_SOCK="$sock" ssh-add -q \
-      "$QEMU_KEYS_DIR/ubuntu-bootstrap" \
-      "$QEMU_KEYS_DIR/ubuntu-ansible" \
-      "$QEMU_KEYS_DIR/ubuntu-sysadmin"
-  fi
+  # Always (re)load: adding held keys is a quiet no-op, and this is the
+  # only path that heals an agent left holding stale identities after a
+  # keypair was regenerated.
+  SSH_AUTH_SOCK="$sock" ssh-add -q \
+    "$QEMU_KEYS_DIR/ubuntu-bootstrap" \
+    "$QEMU_KEYS_DIR/ubuntu-ansible" \
+    "$QEMU_KEYS_DIR/ubuntu-sysadmin"
   export SSH_AUTH_SOCK="$sock"
   export QVM_SSH_IDENTITY_AGENT="$sock"
 
