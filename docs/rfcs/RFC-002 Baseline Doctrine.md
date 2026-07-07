@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-RFC-001: The Host Baseline establishes the two-tier model: an immovable baseline of invariants beneath optional layers. This RFC defines what qualifies a control for the baseline, and the doctrine baseline roles are written under.
+RFC-001: The Host Baseline establishes the two-tier model: an immovable baseline of invariants beneath optional layers. This RFC defines what qualifies a control for the baseline, the doctrine baseline roles are written under, and the ownership doctrine that decides where work lives.
 
 ## The Baseline Inclusion Test
 
