@@ -141,7 +141,7 @@ The full on-ramp, each stage gated by the one before, the old access
 path surviving until the new one is proven:
 
 ```
-adoptable → adopt → converge → reboot_and_verify → lock the old doors (§6)
+adoptable → adopt → converge → reboot_and_verify → lock_accounts (§6)
 ```
 
 ## 6. Runbooks
@@ -190,7 +190,7 @@ jobs:
   converge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: ansible-galaxy collection install -r requirements.yml
       - name: Converge; any change is the drift alarm
         env:
@@ -218,10 +218,14 @@ It never removes packages — an upgrade that would require a removal is
 held back for a human — and it never reboots; if a reboot becomes
 pending it says so and defers to the gate below.
 
-**Validate-reboot** — the acceptance gate (RFC-009): reboots the host,
+**Reboot and verify** — the acceptance gate (RFC-009): reboots the host,
 re-verifies both accounts' SSH + sudo, baseline services, and journal
 history across the boot. Opt-in only; run it before anything
-lockout-sensitive.
+lockout-sensitive:
+
+```sh
+ansible-playbook -i inventory cur8s.ubuntu.reboot_and_verify
+```
 
 **Report access** — who can get in?
 

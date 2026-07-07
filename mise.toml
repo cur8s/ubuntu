@@ -1,7 +1,7 @@
 # Workstation CLIs are intentionally managed outside mise for now.
 # Expected commands: ssh, ansible-playbook, git, qemu (Homebrew, Apple
-# Silicon). The cloud integration folders list their own extras (doctl,
-# jq, op).
+# Silicon). The cloud harnesses beside the operator's cloud custody
+# list their own extras (doctl, jq, op).
 #
 # Tasks are file tasks under mise-tasks/ (directories namespace the names:
 # mise-tasks/vm/start -> vm:start). Grammar:
@@ -13,7 +13,7 @@
 # (baseline operations on the managed system — host:<action> runs the
 # cur8s.ubuntu.<action> playbook one-to-one; the one alias is
 # report-drift, converge in check mode), ssh (shell access, by user),
-# test (examples and the adoption suites). Workflows
+# test (the proof suites). Workflows
 # where the lab itself is the object (up, clean) take no object
 # segment. A namespace must have
 # multiple real members. Task scripts must be executable or mise silently

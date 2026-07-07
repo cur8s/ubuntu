@@ -2,10 +2,10 @@
 
 How to work on this repository — for humans and coding agents alike.
 `AGENTS.md` at the repo root is the short form agents load per request
-(`CLAUDE.md` links to it); this guide is the long form. This guide owns
-the how of *changing* the system; `docs/guides/user-guide.md` owns the how
-of *using* it; the RFCs in `docs/rfcs/` own the what and the why, and win
-every conflict.
+(`CLAUDE.md` carries the same content, kept in lockstep); this guide is
+the long form. This guide owns the how of *changing* the system;
+`docs/guides/user-guide.md` owns the how of *using* it; the RFCs in
+`docs/rfcs/` own the what and the why, and win every conflict.
 
 ## 1. How this repository decides things
 
@@ -21,17 +21,18 @@ The working rhythm, proven across every feature here: **align on the
 design in conversation → write the RFC or design change (a commit the
 operator approves) → implement → prove it live on a lab → commit with the
 proof in the message, docs updated in the same change.** Until the first
-release ships, RFCs are edited in place without revision-history noise,
-and RFC numbers may be renumbered to keep the reading order (a freedom
-that ends at `v24.4.0`).
+release ships, RFCs are edited in place without revision-history noise
+(a freedom that ends at `v24.4.0`); RFC numbers are stable identifiers
+either way, never renumbered or reused (RFC-000).
 
 Two standards with teeth:
 
 - **Names are the interface.** Task names read as sentences under the
-  grammar `<provider>:<object>:<action>` (the header comment in
-  `mise.toml` is authoritative). Descriptions say only what the name
-  cannot; a namespace must have multiple real members. When a name or
-  layout is confusing, that is a defect — rename until it reads plainly.
+  grammar `<object>:<action>` (the header comment in `mise.toml` is
+  authoritative; cloud harnesses are folder-namespaced, the same grammar
+  inside). Descriptions say only what the name cannot; a namespace must
+  have multiple real members. When a name or layout is confusing, that
+  is a defect — rename until it reads plainly.
 - **`changed=0` is the contract.** Everything idempotent proves it by
   running twice; test tasks enforce it mechanically. A proof on a real
   lab precedes every commit — recap lines belong in the commit message.
@@ -40,7 +41,7 @@ Two standards with teeth:
 
 CLIs (managed outside `mise` for now): `mise`, `ansible-playbook`
 (ansible-core ≥ 2.16), `ssh`, `git`, `qemu` (Homebrew, Apple Silicon) for
-the local lab. The DigitalOcean integration folder lists its own extras
+the local lab. The sandbox DigitalOcean harness lists its own extras
 (`doctl` + `jq`, and `op` for its default 1Password custody) — you need
 them only when you run it.
 
@@ -49,7 +50,7 @@ them only when you run it.
   (RFC-004: ephemeral test credentials), so the entire local loop is
   unattended — no prompts, no billing.
 - Everything generated lands in git-ignored `.generated/` (the
-  integration folders keep their own, inside themselves); `mise run
+  provider harnesses keep their own, inside themselves); `mise run
   clean` destroys the local VM and wipes the root one. Recover with
   `up` — it fetches keys and image on demand.
 
@@ -64,13 +65,13 @@ runnable by name. The grammar:
   Apple silicon, amd64 in CI) is the root harness's only lab.
   Cloud-provider harnesses are self-contained, consumer-shaped folders
   that live with the operator's cloud custody (the sandbox, later the
-  environment repository) — the folder is the namespace, so inside one
-  the same grammar reads `<object>:<action>` with no prefix.
+  environment repository) — the folder is the namespace, and inside one
+  the same `<object>:<action>` grammar applies.
 - objects: `vm` (the machine, provider plane), `host` (baseline
   operations on the managed system — each task runs its `cur8s.ubuntu.*`
   playbook one-to-one; the one alias is `host:report-drift`, converge
-  in check mode), `ssh` (a shell, by account), `test` (examples, and the adoption
-  chain).
+  in check mode), `ssh` (a shell, by account), `test` (the proof
+  suites — §6's ladder).
 - the one provider workflow with no object: `up` (provision +
   converge; fetches keys and image on demand). Workstation-scoped:
   `clean` and `default`.
@@ -334,8 +335,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
    `mise run test:render`, `mise run test:examples`, `mise run test:rotation`,
    `mise run test:adoption`, `mise run test:adoption-refusals`,
    `mise run test:patch`, `mise run test:lock-refusals`,
-   `mise run test:lock-bystanders`, and `mise run test:reboot-refusal`
-   locally.
+   `mise run test:lock-bystanders`, `mise run test:reboot-refusal`, and
+   `mise run test:fleet` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
