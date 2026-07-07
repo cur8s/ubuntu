@@ -56,10 +56,10 @@ them only when you run it.
 
 ## 3. The task surface
 
-Bare `mise run` prints the cheat sheet — the golden path through the
-labs. `mise tasks` lists the operator-level tasks; the one plumbing
-task pulled in as a dependency (`vm:fetch-image`) is hidden but
-runnable by name. The grammar:
+Bare `mise run` prints the cheat sheet — the curated golden path
+through the labs. `mise tasks` lists the full surface; the one task
+off the golden path is `vm:fetch-image`, an optional image pre-warm
+that `up` also pulls in as a dependency. The grammar:
 
 - the local QEMU lab (free; guest arch follows the host — arm64 on
   Apple silicon, amd64 in CI) is the root harness's only lab.
