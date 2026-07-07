@@ -58,7 +58,7 @@ always present, locked passwords, key-only SSH, passwordless sudo.
 | Playbook | Does |
 | --- | --- |
 | `cur8s.ubuntu.converge` | enforce the baseline; `changed=0` means conformant |
-| `cur8s.ubuntu.patch` | full package upgrade; never reboots |
+| `cur8s.ubuntu.patch` | package upgrade; never removes packages, never reboots |
 | `cur8s.ubuntu.reboot_and_verify` | acceptance gate: reboot, re-verify everything |
 | `cur8s.ubuntu.report_access` | read-only access surface; always `changed=0` |
 | `cur8s.ubuntu.lock_accounts` | close named accounts' login doors |
@@ -207,15 +207,16 @@ the repository and converges itself. That is an agent in a trench coat
 — git, credentials, and a schedule on every managed host — and it
 inverts the agentless trust model this collection is built on.
 
-**Patch** — deliberate full patching (the automatic baseline covers
+**Patch** — deliberate patching (the automatic baseline covers
 security updates only):
 
 ```sh
 ansible-playbook -i inventory cur8s.ubuntu.patch
 ```
 
-It never reboots; if a reboot becomes pending it says so and defers to
-the gate below.
+It never removes packages — an upgrade that would require a removal is
+held back for a human — and it never reboots; if a reboot becomes
+pending it says so and defers to the gate below.
 
 **Validate-reboot** — the acceptance gate (RFC-009): reboots the host,
 re-verifies both accounts' SSH + sudo, baseline services, and journal
