@@ -1,0 +1,32 @@
+---
+# Every adoptability verdict class, proven against fixture observations
+# on localhost in seconds — no VM, no credentials. Each file in cases/
+# hand-writes one adopt_observations dict (the seam documented in
+# playbooks/tasks/adoptability-probe.yml) and the exact verdict it must
+# produce; run-one-case.yml feeds it to adoptability-verdict.yml and
+# asserts the code sets and the refusal (RFC-007: verdict codes).
+- name: Verify every adoptability verdict against fixtures
+  hosts: localhost
+  gather_facts: false
+  vars:
+    verdict_cases: "{{ query('ansible.builtin.fileglob', playbook_dir ~ '/cases/*.yml') | sort }}"
+    adopt_ansible_public_key_file: "{{ playbook_dir }}/keys/fixture-ansible.pub"
+    adopt_sysadmin_public_key_file: "{{ playbook_dir }}/keys/fixture-sysadmin.pub"
+    # The lines a case can place in an account's authorized_keys: the two
+    # expected baseline keys, a stranger's key, and a previous baseline
+    # key that has since been rotated away.
+    fixture_ansible_key: "{{ lookup('ansible.builtin.file', adopt_ansible_public_key_file) }}"
+    fixture_sysadmin_key: "{{ lookup('ansible.builtin.file', adopt_sysadmin_public_key_file) }}"
+    fixture_rogue_key: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/keys/fixture-rogue.pub') }}"
+    fixture_stale_key: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/keys/fixture-stale.pub') }}"
+  tasks:
+    - name: Run every fixture case
+      ansible.builtin.include_tasks: run-one-case.yml
+      loop: "{{ verdict_cases }}"
+      loop_control:
+        loop_var: verdict_case_file
+        label: "{{ verdict_case_file | basename }}"
+
+    - name: Report the sweep
+      ansible.builtin.debug:
+        msg: "All {{ verdict_cases | length }} verdict cases held."

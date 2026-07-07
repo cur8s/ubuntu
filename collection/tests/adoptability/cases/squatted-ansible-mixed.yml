@@ -1,0 +1,23 @@
+---
+# The subtle squat RFC-007 spells out: the correct baseline key is
+# present, but so is a key the baseline did not put there — still a
+# squat, never merged into, never stripped.
+case_observations:
+  distribution: Ubuntu
+  distribution_version: "24.04"
+  sshd_include_found: true
+  sudoers_include_found: true
+  password_auth_enabled: false
+  competing_dropins: []
+  reboot_pending: false
+  accounts:
+    ansible: { exists: true, key_lines: ["{{ fixture_ansible_key }}", "{{ fixture_rogue_key }}"] }
+    sysadmin: { exists: false, key_lines: [] }
+  missing_pin_files:
+    - /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    - /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    - /etc/systemd/journald.conf.d/10-ubuntu-baseline.conf
+case_expected:
+  refuses: true
+  hard_failure_codes: ["SQUATTED_ACCOUNT:ansible"]
+  warning_codes: [FIRST_CONVERGE_DELTA]

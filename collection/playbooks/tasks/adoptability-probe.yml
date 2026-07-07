@@ -1,0 +1,106 @@
+---
+# The probing half of the adoptability checks (RFC-007: Adoption).
+# Read-only host examination; its sole product is the adopt_observations
+# dict — the seam between probing and judging, constructed here and
+# nowhere else:
+#
+#   distribution: str             distribution_version: str
+#   sshd_include_found: bool      sudoers_include_found: bool
+#   accounts: { ansible:  {exists: bool, key_lines: [str]},
+#               sysadmin: {exists: bool, key_lines: [str]} }
+#   password_auth_enabled: bool   competing_dropins: [str]
+#   reboot_pending: bool          missing_pin_files: [str]
+#
+# adoptability-verdict.yml consumes the dict; the fixture cases in
+# collection/tests/adoptability substitute for this file entirely.
+
+- name: Gather distribution facts
+  ansible.builtin.setup:
+    gather_subset:
+      - "!all"
+      - "!min"
+      - distribution
+
+- name: Check sshd_config includes sshd_config.d
+  ansible.builtin.command:
+    argv: ["grep", "-Eq", '^\s*Include\s+/etc/ssh/sshd_config\.d/\*\.conf', "/etc/ssh/sshd_config"]
+  register: adopt_sshd_include
+  changed_when: false
+  failed_when: adopt_sshd_include.rc not in [0, 1]
+
+- name: Check sudoers includes sudoers.d
+  ansible.builtin.command:
+    argv: ["grep", "-Eq", '^[#@]includedir\s+/etc/sudoers\.d', "/etc/sudoers"]
+  register: adopt_sudoers_include
+  changed_when: false
+  failed_when: adopt_sudoers_include.rc not in [0, 1]
+
+- name: Probe baseline accounts
+  ansible.builtin.shell: |
+    set -u
+    if entry="$(getent passwd {{ adopt_probe_name }})"; then
+      home="$(printf '%s' "$entry" | cut -d: -f6)"
+      echo "EXISTS"
+      cat "$home/.ssh/authorized_keys" "$home/.ssh/authorized_keys2" 2>/dev/null || true
+    else
+      echo "ABSENT"
+    fi
+  changed_when: false
+  register: adopt_account_probes
+  loop:
+    - ansible
+    - sysadmin
+  loop_control:
+    loop_var: adopt_probe_name
+
+- name: Probe effective sshd password authentication
+  ansible.builtin.command:
+    argv: ["sshd", "-T"]
+  changed_when: false
+  register: adopt_sshd_effective
+
+- name: Find sshd drop-ins sorting before the baseline drop-in
+  ansible.builtin.shell: |
+    ls -1 /etc/ssh/sshd_config.d/ 2>/dev/null | awk '$0 < "10-ubuntu-baseline.conf"' || true
+  changed_when: false
+  register: adopt_competing_dropins
+
+- name: Check for a pending reboot
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: adopt_reboot_required
+
+- name: Check for baseline-owned files not yet present
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: adopt_pin_files
+  loop:
+    - /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    - /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    - /etc/systemd/journald.conf.d/10-ubuntu-baseline.conf
+  loop_control:
+    label: "{{ item }}"
+
+- name: Normalize account observations
+  ansible.builtin.set_fact:
+    adopt_observed_accounts: >-
+      {{ (adopt_observed_accounts | default({}))
+         | combine({item.adopt_probe_name: {
+              'exists': item.stdout_lines[0] == 'EXISTS',
+              'key_lines': item.stdout_lines[1:] | reject('match', '^\s*(#|$)') | list }}) }}
+  loop: "{{ adopt_account_probes.results }}"
+  loop_control:
+    label: "{{ item.adopt_probe_name }}"
+
+- name: Assemble the observations
+  ansible.builtin.set_fact:
+    adopt_observations:
+      distribution: "{{ ansible_facts['distribution'] | default('unknown') }}"
+      distribution_version: "{{ ansible_facts['distribution_version'] | default('') }}"
+      sshd_include_found: "{{ adopt_sshd_include.rc == 0 }}"
+      sudoers_include_found: "{{ adopt_sudoers_include.rc == 0 }}"
+      accounts: "{{ adopt_observed_accounts }}"
+      password_auth_enabled: "{{ 'passwordauthentication yes' in adopt_sshd_effective.stdout }}"
+      competing_dropins: "{{ adopt_competing_dropins.stdout_lines }}"
+      reboot_pending: "{{ adopt_reboot_required.stat.exists }}"
+      missing_pin_files: "{{ adopt_pin_files.results | rejectattr('stat.exists') | map(attribute='item') | list }}"

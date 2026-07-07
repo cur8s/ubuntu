@@ -1,0 +1,128 @@
+---
+# The judging half of the adoptability checks (RFC-007: Adoption).
+# Pure: reads the adopt_observations dict (shape documented in
+# adoptability-probe.yml, its one construction site) plus the two
+# expected-key paths (adopt_ansible_public_key_file,
+# adopt_sysadmin_public_key_file — read on the controller). It never
+# touches the host, and that purity is load-bearing: the fixture cases
+# in collection/tests/adoptability feed this file hand-written
+# observations to prove every verdict class without a VM.
+#
+# Every hard-failure and warning line begins with a stable bracketed
+# verdict code (RFC-007 enumerates them; RFC-011 lists them as contract).
+# Scripts match codes and the exit status; the prose may be reworded.
+
+- name: Initialize the verdict
+  ansible.builtin.set_fact:
+    adopt_hard_failures: []
+    adopt_warnings: []
+    adopt_account_states: {}
+
+# ==========================================================================
+# Hard failure: unsupported release
+# ==========================================================================
+- name: Check the Ubuntu release
+  ansible.builtin.set_fact:
+    adopt_hard_failures: >-
+      {{ adopt_hard_failures + ['[UNSUPPORTED_RELEASE] unsupported release: '
+         ~ adopt_observations.distribution ~ ' '
+         ~ adopt_observations.distribution_version
+         ~ ' — this series targets Ubuntu 24.04 (RFC-010)'] }}
+  when: >-
+    not (adopt_observations.distribution == 'Ubuntu'
+         and adopt_observations.distribution_version == '24.04')
+
+# ==========================================================================
+# Hard failures: drop-in directories that would be silently ignored
+# ==========================================================================
+- name: Record missing sshd include
+  ansible.builtin.set_fact:
+    adopt_hard_failures: >-
+      {{ adopt_hard_failures + ['[NO_SSHD_INCLUDE] sshd_config does not Include sshd_config.d — the baseline SSH policy drop-in would be silently ignored'] }}
+  when: not (adopt_observations.sshd_include_found | bool)
+
+- name: Record missing sudoers include
+  ansible.builtin.set_fact:
+    adopt_hard_failures: >-
+      {{ adopt_hard_failures + ['[NO_SUDOERS_INCLUDE] sudoers does not include sudoers.d — the per-account sudo rules would be inert'] }}
+  when: not (adopt_observations.sudoers_include_found | bool)
+
+# ==========================================================================
+# Hard failure: squatted baseline accounts
+# ==========================================================================
+- name: Classify baseline accounts
+  ansible.builtin.set_fact:
+    adopt_account_states: "{{ adopt_account_states | combine({item.name: account_state}) }}"
+    adopt_hard_failures: "{{ adopt_hard_failures + ([] if account_ok else [account_problem]) }}"
+  vars:
+    account_obs: "{{ adopt_observations.accounts[item.name] }}"
+    account_exists: "{{ account_obs.exists | bool }}"
+    key_lines: "{{ account_obs.key_lines }}"
+    expected_prefix: "{{ (lookup('ansible.builtin.file', item.key_file).split())[0:2] | join(' ') }}"
+    unexpected_keys: "{{ key_lines | reject('search', expected_prefix | regex_escape) | list }}"
+    matching_keys: "{{ key_lines | select('search', expected_prefix | regex_escape) | list }}"
+    account_ok: "{{ (not account_exists) or (unexpected_keys | length == 0 and matching_keys | length > 0) }}"
+    account_state: >-
+      {{ 'absent — adopt will create it' if not account_exists
+         else ('baseline shape — already adopted' if account_ok else 'SQUATTED') }}
+    account_problem: >-
+      [SQUATTED_ACCOUNT:{{ item.name }}] squatted account {{ item.name }}: exists with
+      {{ unexpected_keys | length }} key(s) the baseline did not put there{{
+      ' and no baseline key' if matching_keys | length == 0 else '' }} —
+      never merged into, never stripped; a human resolves this. A stale key
+      from an earlier rotation reads as unexpected on purpose (RFC-007).
+  loop:
+    - { name: ansible, key_file: "{{ adopt_ansible_public_key_file }}" }
+    - { name: sysadmin, key_file: "{{ adopt_sysadmin_public_key_file }}" }
+  loop_control:
+    label: "{{ item.name }}"
+
+# ==========================================================================
+# Warnings: what the first converge will change
+# ==========================================================================
+- name: Record password authentication warning
+  ansible.builtin.set_fact:
+    adopt_warnings: >-
+      {{ adopt_warnings + ['[PASSWORD_AUTH_ENABLED] password authentication is enabled — converge will disable it after adopt has proven key access'] }}
+  when: adopt_observations.password_auth_enabled | bool
+
+- name: Record competing drop-in warning
+  ansible.builtin.set_fact:
+    adopt_warnings: >-
+      {{ adopt_warnings + ['[COMPETING_SSHD_DROPINS] sshd drop-ins sort before the baseline drop-in and would win conflicts: '
+         ~ (adopt_observations.competing_dropins | join(', '))] }}
+  when: adopt_observations.competing_dropins | length > 0
+
+- name: Record pending reboot warning
+  ansible.builtin.set_fact:
+    adopt_warnings: "{{ adopt_warnings + ['[PENDING_REBOOT] the OS already flags a pending reboot'] }}"
+  when: adopt_observations.reboot_pending | bool
+
+- name: Record expected first-converge delta
+  ansible.builtin.set_fact:
+    adopt_warnings: >-
+      {{ adopt_warnings + ['[FIRST_CONVERGE_DELTA] expected first-converge delta — converge will add: '
+         ~ (adopt_observations.missing_pin_files | join(', '))] }}
+  when: adopt_observations.missing_pin_files | length > 0
+
+# ==========================================================================
+# Verdict
+# ==========================================================================
+- name: Render the verdict
+  ansible.builtin.debug:
+    msg: >-
+      {{ ['ADOPTABILITY — ' ~ inventory_hostname]
+         + ['accounts:']
+         + ['  ansible: ' ~ adopt_account_states['ansible']]
+         + ['  sysadmin: ' ~ adopt_account_states['sysadmin']]
+         + ['hard failures:']
+         + ((adopt_hard_failures | map('regex_replace', '^', '  ') | list) or ['  (none)'])
+         + ['warnings:']
+         + ((adopt_warnings | map('regex_replace', '^', '  ') | list) or ['  (none)']) }}
+
+- name: Refuse on hard failures
+  ansible.builtin.fail:
+    msg: >-
+      Not adoptable until a human acts:
+      {{ adopt_hard_failures | join('; ') }}
+  when: adopt_hard_failures | length > 0

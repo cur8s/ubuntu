@@ -1,0 +1,22 @@
+---
+# Fact gathering produced nothing usable: the probe's defaults are
+# 'unknown' / '' — the verdict must refuse, not guess.
+case_observations:
+  distribution: unknown
+  distribution_version: ""
+  sshd_include_found: true
+  sudoers_include_found: true
+  password_auth_enabled: false
+  competing_dropins: []
+  reboot_pending: false
+  accounts:
+    ansible: { exists: false, key_lines: [] }
+    sysadmin: { exists: false, key_lines: [] }
+  missing_pin_files:
+    - /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    - /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    - /etc/systemd/journald.conf.d/10-ubuntu-baseline.conf
+case_expected:
+  refuses: true
+  hard_failure_codes: [UNSUPPORTED_RELEASE]
+  warning_codes: [FIRST_CONVERGE_DELTA]

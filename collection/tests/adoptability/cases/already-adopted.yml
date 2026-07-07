@@ -1,0 +1,20 @@
+---
+# A baseline-born or previously adopted host: both accounts match
+# baseline shape exactly, every pin present. The empty verdict — no
+# failures, no warnings — proving nothing fires on a healthy host.
+case_observations:
+  distribution: Ubuntu
+  distribution_version: "24.04"
+  sshd_include_found: true
+  sudoers_include_found: true
+  password_auth_enabled: false
+  competing_dropins: []
+  reboot_pending: false
+  accounts:
+    ansible: { exists: true, key_lines: ["{{ fixture_ansible_key }}"] }
+    sysadmin: { exists: true, key_lines: ["{{ fixture_sysadmin_key }}"] }
+  missing_pin_files: []
+case_expected:
+  refuses: false
+  hard_failure_codes: []
+  warning_codes: []

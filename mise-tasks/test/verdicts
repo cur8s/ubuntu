@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Every adoptability verdict against fixture observations — seconds, no VM"
+#MISE quiet=true
+set -euo pipefail
+ansible-playbook "$MISE_CONFIG_ROOT/collection/tests/adoptability/verify-verdicts.yml"

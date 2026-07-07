@@ -1,0 +1,44 @@
+---
+# One fixture case: load it, run the verdict half on its observations,
+# catch the refusal if it fires, then assert the exact outcome.
+
+- name: "Load {{ verdict_case_file | basename }}"
+  ansible.builtin.include_vars:
+    file: "{{ verdict_case_file }}"
+    name: verdict_case
+
+- name: "Judge {{ verdict_case_file | basename }}"
+  block:
+    - name: Feed the observations
+      ansible.builtin.set_fact:
+        adopt_observations: "{{ verdict_case.case_observations }}"
+
+    - name: Run the verdict
+      ansible.builtin.include_tasks: ../../playbooks/tasks/adoptability-verdict.yml
+
+    - name: Record that no refusal fired
+      ansible.builtin.set_fact:
+        verdict_refused: false
+  rescue:
+    - name: Record the refusal
+      ansible.builtin.set_fact:
+        verdict_refused: true
+
+- name: "Assert {{ verdict_case_file | basename }}"
+  ansible.builtin.assert:
+    that:
+      - verdict_refused == (verdict_case.case_expected.refuses | bool)
+      - observed_failure_codes == expected_failure_codes
+      - observed_warning_codes == expected_warning_codes
+    fail_msg: >-
+      {{ verdict_case_file | basename }} FAILED —
+      expected refuses={{ verdict_case.case_expected.refuses }}
+      failures={{ expected_failure_codes }} warnings={{ expected_warning_codes }};
+      observed refuses={{ verdict_refused }}
+      failures={{ observed_failure_codes }} warnings={{ observed_warning_codes }}
+    success_msg: "{{ verdict_case_file | basename }}: OK"
+  vars:
+    observed_failure_codes: "{{ adopt_hard_failures | map('regex_search', '^\\[([A-Za-z_:]+)\\]', '\\1') | map('first') | sort }}"
+    observed_warning_codes: "{{ adopt_warnings | map('regex_search', '^\\[([A-Za-z_:]+)\\]', '\\1') | map('first') | sort }}"
+    expected_failure_codes: "{{ verdict_case.case_expected.hard_failure_codes | sort }}"
+    expected_warning_codes: "{{ verdict_case.case_expected.warning_codes | sort }}"

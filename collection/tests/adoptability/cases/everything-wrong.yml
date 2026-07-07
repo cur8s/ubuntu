@@ -1,0 +1,23 @@
+---
+# Every plantable defect at once — the fixture mirror of the repo's
+# vm:build-unadoptable seed, so drift between the two layers fails one
+# of them.
+case_observations:
+  distribution: Ubuntu
+  distribution_version: "24.04"
+  sshd_include_found: false
+  sudoers_include_found: false
+  password_auth_enabled: true
+  competing_dropins: ["00-legacy.conf"]
+  reboot_pending: true
+  accounts:
+    ansible: { exists: true, key_lines: ["{{ fixture_rogue_key }}"] }
+    sysadmin: { exists: true, key_lines: ["{{ fixture_rogue_key }}"] }
+  missing_pin_files:
+    - /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    - /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    - /etc/systemd/journald.conf.d/10-ubuntu-baseline.conf
+case_expected:
+  refuses: true
+  hard_failure_codes: [NO_SSHD_INCLUDE, NO_SUDOERS_INCLUDE, "SQUATTED_ACCOUNT:ansible", "SQUATTED_ACCOUNT:sysadmin"]
+  warning_codes: [PASSWORD_AUTH_ENABLED, COMPETING_SSHD_DROPINS, PENDING_REBOOT, FIRST_CONVERGE_DELTA]

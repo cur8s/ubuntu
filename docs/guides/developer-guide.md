@@ -187,11 +187,21 @@ working tree, so examples resolve your live edits — no reinstall
 between iterations. `test:scenarios` is the second suite:
 both adoption rehearsals, each asserted end to end (§4).
 
+`test:verdicts` is the fast layer: every adoptability verdict class —
+including the unsupported-release refusals no local VM can boot —
+proven in seconds against fixture observations on localhost, no VM.
+The adoptability checks split at a documented seam (probe → the
+`adopt_observations` dict → verdict); the fixtures in
+`collection/tests/adoptability/` feed the verdict half directly and
+assert the stable verdict codes (RFC-007), never prose.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
-CI — `.github/workflows/ci.yml` runs `vm:fetch-image`, `up`, and `test:all` on
-every push and pull request on an amd64 KVM runner (no secrets, no
-billable resources), plus `test:scenarios` on pushes to main. The
+CI — `.github/workflows/ci.yml` runs `test:verdicts` first (it fails in
+the first minute, before any VM boots), then `vm:fetch-image`, `up`, and
+`test:all` on every push and pull request on an amd64 KVM runner (no
+secrets, no billable resources), plus `test:scenarios` on pushes to
+main. The
 sandbox DigitalOcean harness stays the real-provider leg at release
 cadence (§5). Nothing may assume an architecture it did not detect.
 

@@ -1,0 +1,22 @@
+---
+# All four warnings at once on an otherwise clean host — and the verdict
+# must still be adoptable: warnings warn, they never gate (RFC-007).
+case_observations:
+  distribution: Ubuntu
+  distribution_version: "24.04"
+  sshd_include_found: true
+  sudoers_include_found: true
+  password_auth_enabled: true
+  competing_dropins: ["00-legacy.conf"]
+  reboot_pending: true
+  accounts:
+    ansible: { exists: false, key_lines: [] }
+    sysadmin: { exists: false, key_lines: [] }
+  missing_pin_files:
+    - /etc/ssh/sshd_config.d/10-ubuntu-baseline.conf
+    - /etc/apt/apt.conf.d/52-baseline-unattended-upgrades
+    - /etc/systemd/journald.conf.d/10-ubuntu-baseline.conf
+case_expected:
+  refuses: false
+  hard_failure_codes: []
+  warning_codes: [PASSWORD_AUTH_ENABLED, COMPETING_SSHD_DROPINS, PENDING_REBOOT, FIRST_CONVERGE_DELTA]
