@@ -3,6 +3,7 @@
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/vm/seed-check.sh"
 
 if [ -e "$QVM_DIR" ]; then
   echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
@@ -67,6 +68,7 @@ runcmd:
   # PENDING_REBOOT
   - 'touch /var/run/reboot-required'
 EOF
+assert_seed_parses "$user_data"
 
 QVM_NAME="ubuntu-qemu-unadoptable" QVM_USER_DATA="$user_data" \
   bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm

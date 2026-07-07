@@ -49,6 +49,9 @@ jobs:
       - name: test:adoption-verdicts — every refusal class against fixtures, before any VM
         run: mise run test:adoption-verdicts
 
+      - name: test:render — every input guard of the cloud-init render
+        run: mise run test:render
+
       - name: Cache the Ubuntu cloud image
         uses: actions/cache@v4
         with:

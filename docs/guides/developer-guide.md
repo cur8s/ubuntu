@@ -218,10 +218,20 @@ refuse with the account untouched, a bogus `ROTATE_ACCOUNT` must fail
 the input policy, and the suite ends with the standard keys restored
 and `changed=0` — non-destructive, the lab stays up.
 
+`test:render` proves the cloud-init render's input guards: six
+refusals by name (missing and empty key files, a non-ed25519 key, a
+multi-line key file — the YAML-injection guard — plus both env slots),
+and a control pinning the rendered document ASCII, parseable, and
+deterministic. No VM. The same parse rule holds at build time: the
+three vm build tasks source `mise-tasks/vm/seed-check.sh` and refuse an
+unparseable seed instead of booting a doorless VM (the parser is
+ansible-core's own Python — no new workstation requirement).
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
-CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` first (it fails in
-the first minute, before any VM boots), then `vm:fetch-image`, `up`, and
+CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
+`test:render` first (they fail in the first minute, before any VM
+boots), then `vm:fetch-image`, `up`, and
 `test:all` on every push and pull request on an amd64 KVM runner (no
 secrets, no billable resources), plus `test:adoption` and
 `test:adoption-refusals` on pushes to main. The
@@ -270,9 +280,10 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
 
 1. Pass the release gate (RFC-009): the sandbox DigitalOcean harness's
    `mise run test` against the release-candidate ref (the real-provider
-   leg), plus green CI and `mise run test:adoption-verdicts`, `mise run test:all`,
-   `mise run test:rotation`, `mise run test:adoption`, and
-   `mise run test:adoption-refusals` locally.
+   leg), plus green CI and `mise run test:adoption-verdicts`,
+   `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
+   `mise run test:adoption`, and `mise run test:adoption-refusals`
+   locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.

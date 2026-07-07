@@ -3,6 +3,7 @@
 #MISE quiet=true
 set -euo pipefail
 . "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/vm/seed-check.sh"
 echo "Creating the local QEMU Ubuntu test VM"
 if [ -e "$QVM_DIR" ]; then
   echo "A local QEMU VM already exists at $QVM_DIR (mise run vm:destroy first)." >&2
@@ -17,6 +18,7 @@ export CLOUD_INIT_FILE="$QEMU_CLOUD_INIT_FILE"
 # Collection scripts ship without exec bits, so callers name the
 # interpreter their shebang names — uniformly bash.
 bash "$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
+assert_seed_parses "$QEMU_CLOUD_INIT_FILE"
 
 QVM_USER_DATA="$QEMU_CLOUD_INIT_FILE" \
   bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" build-vm

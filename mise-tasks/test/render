@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+#MISE description="Every input guard of the cloud-init render, refused by name — seconds, no VM"
+#MISE quiet=true
+set -euo pipefail
+
+# The render script is collection contract (RFC-011): consumers call it
+# with ANSIBLE_PUB_KEY / SYSADMIN_PUB_KEY / CLOUD_INIT_FILE. This suite
+# proves the refusals that protect the rendered document — including
+# the single-line shape guard, which is what stops a malformed key file
+# from poisoning the cloud-config YAML it is interpolated into.
+render="$MISE_CONFIG_ROOT/collection/scripts/render-cloud-init.sh"
+# Valid inputs are the same fixture public keys the adoptability cases
+# use — test data, not credentials.
+fixtures="$MISE_CONFIG_ROOT/collection/tests/adoptability/keys"
+work="$(mktemp -d "${TMPDIR:-/tmp}/render-guards.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+out="$work/rendered.yaml"
+
+# refuse <label> <expected-message> <ansible-pub> <sysadmin-pub>:
+# the render must exit nonzero, name the refusal, and write nothing.
+refuse() {
+  local label="$1" expected="$2" apub="$3" spub="$4" log="$work/$1.log"
+  if ANSIBLE_PUB_KEY="$apub" SYSADMIN_PUB_KEY="$spub" CLOUD_INIT_FILE="$out" \
+      bash "$render" > "$log" 2>&1; then
+    cat "$log"
+    echo "FAIL $label: render succeeded; expected a refusal." >&2
+    exit 1
+  fi
+  grep -qF "$expected" "$log" || {
+    cat "$log"
+    echo "FAIL $label: refused without the expected message." >&2
+    exit 1
+  }
+  if [ -e "$out" ]; then
+    echo "FAIL $label: a refused render left output behind." >&2
+    exit 1
+  fi
+  echo "    $label: refused by name"
+}
+
+echo "--- the refusals"
+printf 'ssh-rsa AAAAB3NzaC1yc2E fake@rsa\n' > "$work/rsa.pub"
+cat "$fixtures/fixture-ansible.pub" "$fixtures/fixture-rogue.pub" > "$work/two-keys.pub"
+printf 'not a key at all\n' > "$work/garbage.pub"
+: > "$work/empty.pub"
+
+refuse missing-file  "Missing public key files"                        "$work/nonexistent.pub" "$fixtures/fixture-sysadmin.pub"
+refuse empty-file    "Missing public key files"                        "$work/empty.pub"       "$fixtures/fixture-sysadmin.pub"
+refuse rsa-key       "not a single-line ssh-ed25519 public key"        "$work/rsa.pub"         "$fixtures/fixture-sysadmin.pub"
+refuse two-keys      "not a single-line ssh-ed25519 public key"        "$work/two-keys.pub"    "$fixtures/fixture-sysadmin.pub"
+refuse garbage       "not a single-line ssh-ed25519 public key"        "$work/garbage.pub"     "$fixtures/fixture-sysadmin.pub"
+refuse sysadmin-side "not a single-line ssh-ed25519 public key"        "$fixtures/fixture-ansible.pub" "$work/rsa.pub"
+
+echo "--- the control: valid keys render, ASCII, parseable, deterministic"
+ANSIBLE_PUB_KEY="$fixtures/fixture-ansible.pub" SYSADMIN_PUB_KEY="$fixtures/fixture-sysadmin.pub" \
+  CLOUD_INIT_FILE="$out" bash "$render" >/dev/null
+grep -qF "$(cat "$fixtures/fixture-ansible.pub")" "$out" || {
+  echo "FAIL: the ansible key is missing from the rendered document." >&2
+  exit 1
+}
+grep -qF "$(cat "$fixtures/fixture-sysadmin.pub")" "$out" || {
+  echo "FAIL: the sysadmin key is missing from the rendered document." >&2
+  exit 1
+}
+if LC_ALL=C grep -q '[^ -~]' "$out"; then
+  echo "FAIL: rendered output contains non-ASCII characters." >&2
+  exit 1
+fi
+# The seed-validity lesson (the 2026-07-06 unadoptable-seed bug): the
+# rendered document must parse as YAML before any VM boots from it.
+# Same parser the vm build tasks use (mise-tasks/vm/seed-check.sh).
+. "$MISE_CONFIG_ROOT/mise-tasks/vm/seed-check.sh"
+assert_seed_parses "$out"
+echo "    rendered document parses as YAML"
+cp "$out" "$work/first.yaml"
+ANSIBLE_PUB_KEY="$fixtures/fixture-ansible.pub" SYSADMIN_PUB_KEY="$fixtures/fixture-sysadmin.pub" \
+  CLOUD_INIT_FILE="$out" bash "$render" >/dev/null
+cmp -s "$work/first.yaml" "$out" || {
+  echo "FAIL: two renders of the same inputs differ." >&2
+  exit 1
+}
+
+echo
+echo "test:render PASSED - six refusals by name; the control renders ASCII, parseable, deterministic."
