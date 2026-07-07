@@ -25,7 +25,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
     ${C}vm${R}      the machine itself       ${D}build, start, wait-until-ready, status, destroy, ...${R}
     ${C}host${R}    the managed system       ${D}converge, adopt, reboot-and-verify, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
-    ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all; adoption, adoption-refusals, adoption-verdicts, rotation, render${R}
+    ${C}test${R}    an example, or a suite   ${D}docker, zot, tailscale, all; adoption, adoption-refusals, adoption-verdicts, rotation, render, patch${R}
 
   ${B}workflows${R} ${D}(no object — the lab itself is the object)${R}
     ${C}up${R}      provision + converge ${D}(fetches keys and image on demand)${R}

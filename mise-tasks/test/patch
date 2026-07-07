@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+#MISE description="Day two on a genuinely stale server: adopt, patch a real months-deep delta without rebooting, take the validating reboot, patch again to a no-op"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/activate-test-credentials.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/patch"
+mkdir -p "$log_dir"
+
+# The stale world: the previous Ubuntu point release, pinned by serial,
+# so the suite always patches a real months-deep delta with a kernel in
+# it (six months of -updates always carries one). Bump the serial when
+# a new point release ships — here and in the CI cache key
+# (.github/workflows/ci.yml).
+stale_serial="release-20250805"   # 24.04.3, published 2025-08-05
+case "$(uname -m)" in
+  arm64|aarch64) stale_arch=arm64 ;;
+  x86_64)        stale_arch=amd64 ;;
+  *) echo "unsupported host arch: $(uname -m)" >&2; exit 1 ;;
+esac
+stale_url="https://cloud-images.ubuntu.com/releases/noble/$stale_serial/ubuntu-24.04-server-cloudimg-$stale_arch.img"
+
+# Every release serial reuses the same filename, so a pin bump would
+# otherwise keep serving the old cached bytes forever: verify the
+# cached copy against the pinned serial's own checksums, refetch on
+# mismatch.
+cached="$QVM_CACHE_DIR/$(basename "$stale_url")"
+if [ -f "$cached" ]; then
+  expected="$(curl -fsSL "$(dirname "$stale_url")/SHA256SUMS" \
+    | awk -v f="*$(basename "$stale_url")" '$2 == f {print $1}')"
+  if command -v sha256sum >/dev/null 2>&1; then
+    actual="$(sha256sum "$cached" | awk '{print $1}')"
+  else
+    actual="$(shasum -a 256 "$cached" | awk '{print $1}')"
+  fi
+  if [ "$expected" != "$actual" ]; then
+    echo "cached stale image is not $stale_serial (pin bumped?) — refetching"
+    rm -f "$cached"
+  fi
+fi
+
+qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
+door_ssh() { qvm ssh ubuntu "$BOOTSTRAP_PUB_KEY" "$@"; }
+ansible_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
+
+echo "--- the stale adoptable server ($stale_serial, door on: ubuntu)"
+if [ -d "$QVM_DIR" ]; then
+  MISE_YES=1 mise run vm:destroy
+fi
+QVM_IMAGE_URL="$stale_url" mise run vm:build-adoptable sudo-user
+mise run vm:start
+qvm wait-until-ready ubuntu "$BOOTSTRAP_PUB_KEY"
+boot_id_start="$(door_ssh cat /proc/sys/kernel/random/boot_id)"
+
+echo "--- adopt it: the real on-ramp for a server like this"
+alog="$log_dir/adoptable.log"
+if ! ADOPT_USER=ubuntu mise run host:adoptable > "$alog" 2>&1; then
+  cat "$alog"
+  echo "FAIL: the stale server should assess adoptable." >&2
+  exit 1
+fi
+grep -qF '[FIRST_CONVERGE_DELTA]' "$alog" || {
+  cat "$alog"
+  echo "FAIL: verdict missing [FIRST_CONVERGE_DELTA]." >&2
+  exit 1
+}
+ADOPT_USER=ubuntu mise run host:adopt
+mise run host:converge
+clog="$log_dir/converge2.log"
+if ! mise run host:converge > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: second converge failed before patching." >&2
+  exit 1
+fi
+assert_changed_zero "$clog" "pre-patch converge"
+
+echo "--- patch #1: a real delta, and the play must not reboot"
+plog="$log_dir/patch1.log"
+if ! mise run host:patch > "$plog" 2>&1; then
+  cat "$plog"
+  echo "FAIL: patch failed on the stale server." >&2
+  exit 1
+fi
+grep -qE 'changed=[1-9]' "$plog" || {
+  cat "$plog"
+  echo "FAIL: patch reported no changes on a months-stale server." >&2
+  exit 1
+}
+grep -qF 'Patching requires a reboot' "$plog" || {
+  cat "$plog"
+  echo "FAIL: a kernel-bearing delta must end in the reboot-required report." >&2
+  exit 1
+}
+ansible_ssh test -f /var/run/reboot-required || {
+  echo "FAIL: the reboot-required report has no flag behind it." >&2
+  exit 1
+}
+boot_id_after_patch="$(ansible_ssh cat /proc/sys/kernel/random/boot_id)"
+if [ "$boot_id_start" != "$boot_id_after_patch" ]; then
+  echo "FAIL: patch rebooted the host (boot_id changed) — the play must never reboot." >&2
+  exit 1
+fi
+echo "    patched; reboot correctly deferred (same boot_id, flag present)"
+
+echo "--- the validating reboot the report pointed at"
+mise run host:reboot-and-verify
+boot_id_after_gate="$(ansible_ssh cat /proc/sys/kernel/random/boot_id)"
+if [ "$boot_id_start" = "$boot_id_after_gate" ]; then
+  echo "FAIL: reboot-and-verify did not actually reboot (boot_id unchanged)." >&2
+  exit 1
+fi
+
+echo "--- patch #2: nothing left, and the report says so"
+p2log="$log_dir/patch2.log"
+if ! mise run host:patch > "$p2log" 2>&1; then
+  cat "$p2log"
+  echo "FAIL: the repeat patch failed." >&2
+  exit 1
+fi
+grep -qF 'No reboot required.' "$p2log" || {
+  cat "$p2log"
+  echo "FAIL: after the reboot the report must say no reboot is required." >&2
+  exit 1
+}
+leftover="$(ansible_ssh 'sudo apt-get -s dist-upgrade 2>/dev/null | grep -E "^[0-9]+ upgraded"')"
+grep -q '^0 upgraded' <<<"$leftover" || {
+  echo "FAIL: packages left behind after patching: $leftover" >&2
+  exit 1
+}
+
+echo "--- the patched world stays conformant"
+flog="$log_dir/final-converge.log"
+if ! mise run host:converge > "$flog" 2>&1; then
+  cat "$flog"
+  echo "FAIL: final converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$flog" "post-patch converge"
+
+MISE_YES=1 mise run vm:destroy
+echo
+echo "test:patch PASSED - a $stale_serial server adopted, patched without self-reboot, gate-rebooted, repeat patch a no-op, changed=0."

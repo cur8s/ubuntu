@@ -114,7 +114,9 @@ Both door shapes the clouds hand you are rehearsed locally by
 refusal side — a server adoption must reject, rejected with nothing
 added — by `mise run test:adoption-refusals`. Key rotation is rehearsed
 the same way — both accounts re-keyed and back through the sibling
-door — by `mise run test:rotation`.
+door — by `mise run test:rotation`, and day-two patching — a genuinely
+stale point-release server adopted, patched, and taken through the
+validating reboot — by `mise run test:patch`.
 
 SSH shortcuts (local lab):
 

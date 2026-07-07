@@ -58,6 +58,13 @@ jobs:
           path: .generated/qemu/cache
           key: qemu-image-noble-amd64-v1
 
+      - name: Cache the stale point-release image (test:patch, main only)
+        if: github.event_name != 'pull_request'
+        uses: actions/cache@v4
+        with:
+          path: .generated/qemu/cache
+          key: qemu-image-stale-release-20250805-amd64
+
       - name: fetch-image — warm the image cache
         run: mise run vm:fetch-image
 
@@ -78,6 +85,10 @@ jobs:
       - name: test:adoption-refusals — the unadoptable server, refused with nothing added (main only)
         if: github.event_name != 'pull_request'
         run: mise run test:adoption-refusals
+
+      - name: test:patch — a stale server adopted, patched, gate-rebooted (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:patch
 
       - name: Console log on failure
         if: failure()

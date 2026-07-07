@@ -227,6 +227,17 @@ three vm build tasks source `mise-tasks/vm/seed-check.sh` and refuse an
 unparseable seed instead of booting a doorless VM (the parser is
 ansible-core's own Python — no new workstation requirement).
 
+`test:patch` runs day two on a genuinely stale server: an adoptable
+world built from the previous Ubuntu point release (pinned by serial
+inside the suite; bump it and the CI cache key when a new point
+release ships), adopted, then patched through a real months-deep
+delta. Asserted: the play never reboots (`boot_id` unchanged), the
+reboot-required report tells the truth in both directions, the
+validating reboot actually reboots, a repeat patch is a no-op, and the
+patched world converges with `changed=0`. The pinned serial is
+checksum-verified against Ubuntu's own SHA256SUMS, so a bumped pin can
+never silently serve stale cached bytes.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
@@ -282,8 +293,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
    `mise run test` against the release-candidate ref (the real-provider
    leg), plus green CI and `mise run test:adoption-verdicts`,
    `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
-   `mise run test:adoption`, and `mise run test:adoption-refusals`
-   locally.
+   `mise run test:adoption`, `mise run test:adoption-refusals`, and
+   `mise run test:patch` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.
