@@ -238,6 +238,15 @@ patched world converges with `changed=0`. The pinned serial is
 checksum-verified against Ubuntu's own SHA256SUMS, so a bumped pin can
 never silently serve stale cached bytes.
 
+`test:lock-refusals` proves the door-closing guards without ever
+closing a door: empty, baseline, mixed, and ghost target lists refused
+by name; the lock-your-last-door safety (a sabotaged sysadmin proof
+stops everything with the target untouched); and the connection-user
+guard, reached by connecting as a throwaway account and asking the
+play to lock it. Ends with the standard two-door surface and
+`changed=0`. The C17-shaped case (the shared cloud-init sudoers file)
+joins once that finding is ruled.
+
 Architecture coverage (RFC-009, RFC-010): the lab's guest arch follows
 the host, so the same tasks prove arm64 on Apple silicon and amd64 in
 CI — `.github/workflows/ci.yml` runs `test:adoption-verdicts` and
@@ -293,8 +302,8 @@ Policy is RFC-010 (`24.4.x`, git-only, `main` is prod):
    `mise run test` against the release-candidate ref (the real-provider
    leg), plus green CI and `mise run test:adoption-verdicts`,
    `mise run test:render`, `mise run test:all`, `mise run test:rotation`,
-   `mise run test:adoption`, `mise run test:adoption-refusals`, and
-   `mise run test:patch` locally.
+   `mise run test:adoption`, `mise run test:adoption-refusals`,
+   `mise run test:patch`, and `mise run test:lock-refusals` locally.
 2. Bump `version:` in `collection/galaxy.yml`.
 3. `mise x -- ansible-galaxy collection build collection/ --output-path
    /tmp` — inspect the tarball if `build_ignore` changed.

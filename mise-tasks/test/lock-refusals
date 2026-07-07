@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+#MISE description="Every lock_accounts refusal: empty and baseline and ghost targets, the connection-user guard, and the lock-your-last-door safety — no door closes"
+set -euo pipefail
+. "$MISE_CONFIG_ROOT/collection/scripts/run-lab-playbook.sh"
+. "$MISE_CONFIG_ROOT/mise-tasks/test/suite-asserts.sh"
+activate_test_credentials
+
+log_dir="$MISE_CONFIG_ROOT/.generated/lock-refusals"
+mkdir -p "$log_dir"
+rogue_pub="$MISE_CONFIG_ROOT/collection/tests/adoptability/keys/fixture-rogue.pub"
+
+qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
+lab_ssh() { qvm ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"; }
+
+# refuse_via_mise <label> <expected> <lock-accounts-value>
+refuse_via_mise() {
+  local label="$1" expected="$2" targets="$3" log="$log_dir/$1.log"
+  if MISE_YES=1 LOCK_ACCOUNTS="$targets" mise run host:lock-accounts > "$log" 2>&1; then
+    cat "$log"
+    echo "FAIL $label: lock proceeded; expected a refusal." >&2
+    exit 1
+  fi
+  grep -qF "$expected" "$log" || {
+    cat "$log"
+    echo "FAIL $label: refused without the expected message." >&2
+    exit 1
+  }
+  echo "    $label: refused by name"
+}
+
+echo "--- the provisioned lab, running and conformant"
+harness="$(qvm status)"
+occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
+vm_state="$(awk '$1 == "vm" {print $2}' <<<"$harness")"
+if [ "$occupant" != "ubuntu-qemu-lab" ] || [ "$vm_state" != "running" ]; then
+  if [ -d "$QVM_DIR" ]; then
+    MISE_YES=1 mise run vm:destroy
+  fi
+  mise run up
+fi
+
+echo "--- input refusals (no connection to the host needed to be safe)"
+refuse_via_mise empty-list    "Set LOCK_ACCOUNTS to a comma-separated list"  ", ,"
+refuse_via_mise baseline      "never valid lock targets"                     "sysadmin"
+refuse_via_mise baseline-mixed "never valid lock targets"                    "ubuntu,ansible"
+refuse_via_mise ghost         "could not be found"                           "ghost"
+
+echo "--- the lock-your-last-door safety: a failed baseline proof stops everything"
+# A throwaway non-baseline account is the lock target; the sysadmin
+# proof is sabotaged by pointing its expected key at the fixture rogue
+# key (valid shape, but no agent anywhere holds its private half).
+# Tolerant of a leftover from an interrupted run: the cases only need
+# the account to exist.
+lab_ssh 'id doorstop >/dev/null 2>&1 || sudo useradd -m -s /bin/bash doorstop'
+before="$(lab_ssh 'sudo passwd -S doorstop; sudo ls /etc/sudoers.d')"
+slog="$log_dir/last-door.log"
+if LOCK_ACCOUNTS=doorstop run_lab_playbook \
+    "$MISE_CONFIG_ROOT/collection/playbooks/lock_accounts.yml" \
+    -e lock_sysadmin_public_key_file="$rogue_pub" > "$slog" 2>&1; then
+  cat "$slog"
+  echo "FAIL: lock proceeded although the sysadmin proof cannot pass." >&2
+  exit 1
+fi
+grep -qF 'Validate sysadmin SSH and sudo access' "$slog" || {
+  cat "$slog"
+  echo "FAIL: the failure did not happen at the sysadmin access proof." >&2
+  exit 1
+}
+after="$(lab_ssh 'sudo passwd -S doorstop; sudo ls /etc/sudoers.d')"
+if [ "$before" != "$after" ]; then
+  echo "FAIL: a refused lock changed account state." >&2
+  exit 1
+fi
+echo "    refused at the sysadmin proof; nothing changed"
+
+echo "--- the connection-user guard: the play refuses to saw off its own branch"
+# Give doorstop a real door (bootstrap key + sudo) and connect as it.
+rogue_bootstrap="$(cat "$BOOTSTRAP_PUB_KEY")"
+lab_ssh "sudo install -d -m 700 -o doorstop -g doorstop /home/doorstop/.ssh
+sudo tee /home/doorstop/.ssh/authorized_keys >/dev/null <<< '$rogue_bootstrap'
+sudo chown doorstop:doorstop /home/doorstop/.ssh/authorized_keys
+sudo chmod 600 /home/doorstop/.ssh/authorized_keys
+echo 'doorstop ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/doorstop >/dev/null
+sudo chmod 440 /etc/sudoers.d/doorstop"
+clog="$log_dir/connection-user.log"
+if LOCK_ACCOUNTS=doorstop run_lab_playbook \
+    "$MISE_CONFIG_ROOT/collection/playbooks/lock_accounts.yml" \
+    -e ansible_user=doorstop \
+    -e ansible_ssh_private_key_file="$BOOTSTRAP_PUB_KEY" > "$clog" 2>&1; then
+  cat "$clog"
+  echo "FAIL: the play locked the very account it was connected as." >&2
+  exit 1
+fi
+grep -qF 'Refusing to lock doorstop' "$clog" || {
+  cat "$clog"
+  echo "FAIL: refused without naming the connection user." >&2
+  exit 1
+}
+echo "    refused: connected as the target"
+
+echo "--- remove the fixture account; the lab must read standard again"
+# The connection-user case leaves doorstop's sshd session alive for the
+# life of ansible's ControlPersist (~60s): end it before deleting.
+lab_ssh 'sudo rm -f /etc/sudoers.d/doorstop
+sudo loginctl terminate-user doorstop 2>/dev/null || true
+sudo pkill -KILL -u doorstop 2>/dev/null || true
+sleep 2
+sudo userdel -r doorstop'
+report="$log_dir/final-report.log"
+if ! mise run host:report-access > "$report" 2>&1; then
+  cat "$report"
+  exit 1
+fi
+assert_two_doors "$report"
+flog="$log_dir/final-converge.log"
+if ! mise run host:converge > "$flog" 2>&1; then
+  cat "$flog"
+  echo "FAIL: final converge failed." >&2
+  exit 1
+fi
+assert_changed_zero "$flog" "post-refusals converge"
+
+echo
+echo "test:lock-refusals PASSED - five refusals by name; no door closed; the lab reads standard."

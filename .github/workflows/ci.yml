@@ -90,6 +90,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mise run test:patch
 
+      - name: test:lock-refusals — every lock refusal, no door closes (main only)
+        if: github.event_name != 'pull_request'
+        run: mise run test:lock-refusals
+
       - name: Console log on failure
         if: failure()
         run: tail -n 200 .generated/qemu/vm/console.log 2>/dev/null || true
