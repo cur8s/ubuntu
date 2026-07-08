@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#MISE description="From zero: vm:build-provisioned -> vm:start -> vm:wait-until-ready -> host:converge"
+#MISE description="From zero: vm:build-conformant -> vm:start -> vm:wait-until-ready -> host:converge"
 set -euo pipefail
-mise run vm:build-provisioned
+mise run vm:build-conformant
 mise run vm:start
 mise run vm:wait-until-ready
 mise run host:converge

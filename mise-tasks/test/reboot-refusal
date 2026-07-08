@@ -20,8 +20,8 @@ lab_ssh() { qvm ssh ansible "$ANSIBLE_PUB_KEY" "$@"; }
 # too, and all three legs refuse through the same mechanics (a task
 # failing the play).
 
-echo "--- the provisioned lab, running and conformant"
-require_provisioned_lab
+echo "--- the standing lab, running and conformant"
+require_conformant_lab
 # Heal a previous aborted run first: the mask survives reboots and
 # suite deaths, and both commands are no-ops on a healthy unit.
 lab_ssh 'sudo systemctl unmask apt-daily.timer >/dev/null 2>&1 || true; sudo systemctl start apt-daily.timer 2>/dev/null || true'

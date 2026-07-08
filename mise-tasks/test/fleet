@@ -57,15 +57,15 @@ extract_host_report() {  # extract_host_report <log> <host> <out-file>
   ' "$1" > "$3"
 }
 
-echo "--- two fresh provisioned slots (the standing lab is not touched)"
+echo "--- two fresh conformant hosts, one per slot (the standing lab is not touched)"
 for n in 1 2; do
   if [ -e "$(fleet_dir "$n")" ]; then
     slot "$n" env MISE_YES=1 mise run vm:destroy
   fi
 done
-slot 1 mise run vm:build-provisioned
+slot 1 mise run vm:build-conformant
 slot 1 mise run vm:start
-slot 2 mise run vm:build-provisioned
+slot 2 mise run vm:build-conformant
 slot 2 mise run vm:start
 for n in 1 2; do
   slot "$n" mise run vm:wait-until-ready

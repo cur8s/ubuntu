@@ -29,8 +29,8 @@ refuse_via_mise() {
   echo "    $label: refused by name"
 }
 
-echo "--- the provisioned lab, running and conformant"
-require_provisioned_lab
+echo "--- the standing lab, running and conformant"
+require_conformant_lab
 
 echo "--- input refusals (no connection to the host needed to be safe)"
 refuse_via_mise empty-list    "Set LOCK_ACCOUNTS to a comma-separated list"  ", ,"

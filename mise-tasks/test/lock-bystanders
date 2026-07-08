@@ -13,8 +13,8 @@ combined=/etc/sudoers.d/90-cloud-init-users
 qvm() { bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" "$@"; }
 lab_ssh() { qvm ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"; }
 
-echo "--- the provisioned lab, running and conformant"
-require_provisioned_lab
+echo "--- the standing lab, running and conformant"
+require_conformant_lab
 
 echo "--- the world C17 describes: two provisioning-time accounts, one combined grant file"
 lab_ssh 'set -e

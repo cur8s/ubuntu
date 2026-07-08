@@ -22,7 +22,7 @@ ${B}GRAMMAR${R}   ${D}mise run${R} ${C}<object>:<action>${R} ${D}— everything 
           live with the operator's cloud custody, same grammar inside${R}
 
   ${B}objects${R}
-    ${C}vm${R}      the machine itself       ${D}build-provisioned, build-adoptable, build-unadoptable, start, status, destroy, ...${R}
+    ${C}vm${R}      the machine itself       ${D}build-conformant, build-adoptable, build-unadoptable, start, status, destroy, ...${R}
     ${C}host${R}    the managed system       ${D}converge, adopt, reboot-and-verify, ...${R}
     ${C}ssh${R}     a shell, as this user    ${D}ansible, sysadmin${R}
     ${C}test${R}    an example, or a suite   ${D}example-docker, example-zot, examples;
@@ -38,7 +38,7 @@ ${B}A SESSION, START TO FINISH${R}
 
   ${D}mise run${R} ${C}vm:fetch-image${R}         optional pre-warm: the ~600MB image ${D}(up fetches on demand)${R}
   ${D}mise run${R} ${C}up${R}                     stand up the lab, unattended
-                                ${D}(= vm:build-provisioned -> vm:start -> vm:wait-until-ready -> host:converge)${R}
+                                ${D}(= vm:build-conformant -> vm:start -> vm:wait-until-ready -> host:converge)${R}
   ${D}mise run${R} ${C}vm:status${R}              where am I? stages done, which VM, the next command
   ${D}mise run${R} ${C}ssh:ansible${R}            inspect by hand ${D}(boot problems: vm:show-boot-log)${R}
   ${D}mise run${R} ${C}host:report-drift${R}      is anything drifting? read-only, like report-access

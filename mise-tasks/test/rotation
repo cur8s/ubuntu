@@ -21,8 +21,8 @@ lab_ssh_sysadmin() {
   bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" ssh sysadmin "$SYSADMIN_PUB_KEY" "$@"
 }
 
-echo "--- the provisioned lab, running and conformant"
-require_provisioned_lab
+echo "--- the standing lab, running and conformant"
+require_conformant_lab
 clog="$log_dir/converge0.log"
 if ! mise run host:converge > "$clog" 2>&1; then
   cat "$clog"

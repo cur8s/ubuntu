@@ -55,10 +55,10 @@ assert_two_doors() {
   echo "Access surface: exactly ansible + sysadmin."
 }
 
-# Ensure the provisioned lab is the occupant and running; rebuild the
+# Ensure the conformant lab is the occupant and running; rebuild the
 # slot if anything else (or nothing) sits in it. The harness's name row
 # is read from the built VM's own seed, so it names the actual occupant.
-require_provisioned_lab() {
+require_conformant_lab() {
   local harness occupant vm_state
   harness="$(bash "$MISE_CONFIG_ROOT/mise-tasks/vendor/qemu-vm.sh" status)"
   occupant="$(awk '$1 == "name" {print $2}' <<<"$harness")"
